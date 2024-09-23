@@ -1,7 +1,5 @@
-import React from 'react'
+import Layout from "../components/Layout";
 
 export default function Question() {
-  return (
-    <div>Question</div>
-  )
+  return <Layout>Application</Layout>;
 }

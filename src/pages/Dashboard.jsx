@@ -1,24 +1,22 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import Layout from "../components/Layout";
 import { Book, CheckCheck, X, LoaderCircle, Trash2 } from "lucide-react";
+import { TEChart } from "tw-elements-react";
 
 function Todo() {
-  // Parse the initial todos from localStorage or set an empty array
   const [todos, setTodos] = useState(() => {
     const savedTodos = localStorage.getItem("todos");
     return savedTodos ? JSON.parse(savedTodos) : [];
   });
 
-  // Sync todos to localStorage whenever the todos array changes
   useEffect(() => {
     localStorage.setItem("todos", JSON.stringify(todos));
   }, [todos]);
 
-  // Function to handle adding a new todo on Enter key press
   const addTodo = (e) => {
     if (e.key === "Enter" && e.target.value.trim() !== "") {
-      setTodos([...todos, { text: e.target.value.trim(), completed: false }]); // Added a completed flag
-      e.target.value = ""; // Clear the input after adding
+      setTodos([...todos, { text: e.target.value.trim(), completed: false }]); 
+      e.target.value = "";
     }
   };
 
@@ -29,7 +27,6 @@ function Todo() {
     setTodos(updatedTodos);
   };
 
-  // Function to delete a todo item by index
   const deleteTodo = (indexToDelete) => {
     const updatedTodos = todos.filter((_, index) => index !== indexToDelete);
     setTodos(updatedTodos);
@@ -56,7 +53,7 @@ function Todo() {
                     onChange={() => toggleCompletion(index)}
                     className="cursor-pointer"
                   />
-                  {/* Strike through text if completed */}
+
                   <p
                     className={`${
                       todo.completed ? "line-through text-gray-400" : ""
@@ -77,7 +74,6 @@ function Todo() {
         </div>
       </div>
 
-      {/* Input for adding a new task */}
       <input
         type="text"
         onKeyDown={addTodo}
@@ -140,8 +136,78 @@ export default function Dashboard() {
           ))}
         </div>
         <div className="grid grid-cols-4 gap-6 h-full">
-          <div className="bg-white col-span-3 rounded-lg p-6 shadow-md">df</div>
+          <div className="bg-white col-span-3 rounded-lg p-6 shadow-md">
+            <TEChart
+              type="line"
+              data={{
+                labels: [
+                  "Monday",
+                  "Tuesday",
+                  "Wednesday",
+                  "Thursday",
+                  "Friday",
+                  "Saturday",
+                  "Sunday",
+                ],
+                datasets: [
+                  {
+                    label: "Applications",
+                    data: [2112, 2343, 2545, 3423, 2365, 1985, 987],
+                  },
+                  {
+                    label: "Acceptences",
+                    data: [2112, 2343, 2545, 3423, 2365, 1985, 987],
+                  },
+                  {
+                    label: "Pendings",
+                    data: [2112, 2343, 2545, 3423, 2365, 1985, 987],
+                  },
+                  {
+                    label: "Rejections",
+                    data: [2112, 2343, 2545, 3423, 2365, 1985, 987],
+                  },
+                ],
+              }}
+            />
+          </div>
           <Todo />
+        </div>
+        <div className="grid grid-cols-4 gap-6">
+          <div className="bg-white col-span-3 rounded-lg p-6 shadow-md ">
+            <TEChart
+              type="pie"
+              data={{
+                labels: [
+                  "Monday",
+                  "Tuesday",
+                  "Wednesday",
+                  "Thursday",
+                  "Friday",
+                  "Saturday",
+                  "Sunday ",
+                ],
+                datasets: [
+                  {
+                    label: "Traffic",
+                    data: [2112, 2343, 2545, 3423, 2365, 1985, 987],
+                    backgroundColor: [
+                      "rgba(63, 81, 181, 0.5)",
+                      "rgba(77, 182, 172, 0.5)",
+                      "rgba(66, 133, 244, 0.5)",
+                      "rgba(156, 39, 176, 0.5)",
+                      "rgba(233, 30, 99, 0.5)",
+                      "rgba(66, 73, 244, 0.4)",
+                      "rgba(66, 133, 244, 0.2)",
+                    ],
+                  },
+                ],
+              }}
+              options={{
+                maintainAspectRatio: false,
+              }}
+              height={500}
+            />
+          </div>
         </div>
       </div>
     </Layout>
