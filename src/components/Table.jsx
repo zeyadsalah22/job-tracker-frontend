@@ -41,6 +41,7 @@ export default function Table({
   handleOpenDelete,
   handleOpenEdit,
   handleOpenView,
+  search,
   setSearch,
   isLoading,
 }) {
@@ -107,7 +108,7 @@ export default function Table({
           ) : table_rows.length === 0 && search ? (
             <div className="p-4">No search results</div>
           ) : table_rows.length === 0 ? (
-            <div className="p-4">No data yet. Add some data to</div>
+            <div className="p-4">The table is empty. Add data to show it!</div>
           ) : (
             table_rows.map((object, rowIndex) => (
               <tr key={rowIndex} className="even:bg-[#ECEFF1]">

@@ -70,6 +70,7 @@ export default function Application() {
           </div>
           <Table
             isLoading={isLoading}
+            search={search}
             setSearch={setSearch}
             table_head={table_head}
             table_rows={companies?.results.map(

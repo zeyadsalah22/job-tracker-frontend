@@ -37,3 +37,15 @@ export const employeeSchema = Yup.object().shape({
   contacted: Yup.string().required("Required"),
   company_id: Yup.string().required("Required"),
 });
+
+export const applicationSchema = Yup.object().shape({
+  job_title: Yup.string().required("Required"),
+  job_type: Yup.string().required("Required"),
+  description: Yup.string().required("Required"),
+  link: Yup.string().required("Required"),
+  ats_score: Yup.number().required("Required"),
+  stage: Yup.string().required("Required"),
+  status: Yup.string().required("Required"),
+  submission_date: Yup.string().required("Required"),
+  contacted_employees: Yup.string().required("Required"),
+});
