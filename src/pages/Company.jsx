@@ -36,7 +36,7 @@ export default function Application() {
 
   const fetchCompanies = async () => {
     const { data } = await axios.get(
-      `http://127.0.0.1:8000/api/companies?search=${search}`,
+      `http://127.0.0.1:8000/api/companies?page=${page}&search=${search}`,
       {
         headers: {
           Authorization: `Token ${localStorage.getItem("token")}`,
@@ -50,7 +50,7 @@ export default function Application() {
     data: companies,
     isLoading,
     refetch,
-  } = useQuery(["companies", search], fetchCompanies);
+  } = useQuery(["companies", { search, page }], fetchCompanies);
 
   const table_head = ["Name", "Location", "Careers Link"];
 

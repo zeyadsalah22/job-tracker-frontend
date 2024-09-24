@@ -8,12 +8,71 @@ import FormInput from "../FormInput";
 import ReactLoading from "react-loading";
 import { useQuery } from "react-query";
 import useUserStore from "../../store/user.store";
+import AddModalEmployees from "../employees/AddModal";
+import AddModalCompanies from "../companies/AddModal";
 
 export default function AddModal({ refetch, openAdd, setOpenAdd }) {
   const token = localStorage.getItem("token");
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const user = useUserStore((state) => state.user);
+  const [addEmployee, setAddEmployee] = useState(false);
+  const [addCompany, setAddCompany] = useState(false);
+
+  const { values, errors, handleSubmit, handleChange, touched, setFieldValue } =
+    useFormik({
+      initialValues: {
+        user_id: "",
+        company_id: "",
+        job_title: "",
+        job_type: "",
+        description: "",
+        link: "",
+        submitted_cv: null,
+        ats_score: "",
+        stage: "",
+        status: "",
+        submission_date: "",
+        contacted_employees: [],
+      },
+
+      validationSchema: applicationSchema,
+      onSubmit: async (values) => {
+        setLoading(true);
+        const formData = new FormData();
+        for (const key in values) {
+          if (key === "contacted_employees") {
+            values[key].forEach((employeeId) => {
+              formData.append("contacted_employees", employeeId);
+            });
+          } else {
+            formData.append(key, values[key]);
+          }
+        }
+
+        await axios
+          .post("http://127.0.0.1:8000/api/applications", formData, {
+            headers: {
+              Authorization: `Token ${token}`,
+              "Content-Type": "multipart/form-data",
+            },
+          })
+          .then(() => {
+            setOpenAdd(false);
+            setLoading(false);
+            toast.success("Application added successfully");
+            refetch();
+          })
+          .catch((error) => {
+            setLoading(false);
+            setError(error);
+            toast.error(
+              error.response.data.name.map((error) => error) ||
+                "An error occurred. Please try again"
+            );
+          });
+      },
+    });
 
   const fetchCompanies = async () => {
     const { data } = await axios.get(`http://127.0.0.1:8000/api/companies`, {
@@ -24,75 +83,14 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
     return data.results;
   };
 
-  const { data: companies } = useQuery(["companies"], fetchCompanies);
-
-  // {
-  //   "id": 0,
-  //   "user_id": 0,
-  //   "company_id": 0,
-  //   "job_title": "string",
-  //   "job_type": "string",
-  //   "description": "string",
-  //   "link": "string",
-  //   "submitted_cv": {},
-  //   "ats_score": 0,
-  //   "stage": "string",
-  //   "status": "string",
-  //   "submission_date": "2024-09-23",
-  //   "contacted_employees": [
-  //     0
-  //   ]
-  // }
-
-  const { values, errors, handleSubmit, handleChange, touched } = useFormik({
-    initialValues: {
-      user_id: "",
-      company_id: "",
-      job_title: "",
-      job_type: "",
-      description: "",
-      link: "",
-      submitted_cv: "",
-      ats_score: "",
-      stage: "",
-      status: "",
-      submission_date: "",
-      contacted_employees: "",
-    },
-
-    validationSchema: applicationSchema,
-    onSubmit: async (values) => {
-      setLoading(true);
-      await axios
-        .post(
-          "http://127.0.0.1:8000/api/applicationscompany_id=${companyId}",
-          values,
-          {
-            headers: {
-              Authorization: `Token ${token}`,
-            },
-          }
-        )
-        .then(() => {
-          setOpenAdd(false);
-          setLoading(false);
-          toast.success("Application added successfully");
-          refetch();
-        })
-        .catch((error) => {
-          setLoading(false);
-          setError(error);
-          toast.error(
-            error.response.data.name.map((error) => error) ||
-              "An error occurred. Please try again"
-          );
-        });
-    },
-  });
+  const { data: companies, refetch: company_refetch } = useQuery(
+    ["companies"],
+    fetchCompanies
+  );
 
   const fetchEmployees = async () => {
     const { data } = await axios.get(
-      `http://127.0.0.1:8000/api/employees`,
+      `http://127.0.0.1:8000/api/employees?company__id=${values.company_id}`,
       {
         headers: {
           Authorization: `Token ${localStorage.getItem("token")}`,
@@ -102,22 +100,22 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
     return data.results;
   };
 
-  const { data: employees } = useQuery(
+  const { data: employees, refetch: employee_refetch } = useQuery(
     ["employees", values.company_id],
-    () => fetchEmployees(values.company_id),
+    fetchEmployees,
     {
       enabled: !!values.company_id,
     }
   );
 
-  const filteredEmployees = employees
-    ?.filter((employee) => employee?.company?.id === values.company_id)
-    .map((employee) => employee.name);
-
-  console.log(filteredEmployees);
-
   const stage = ["Applied", "Phone Screen", "Assessment", "Interview", "Offer"];
-  const status = ["Pending", "Assessment", "Interview", "Rejected", "Accepted"];
+  const status = [
+    { name: "Pending", value: "PENDING" },
+    { name: "Assessment", value: "ASSESSMENT" },
+    { name: "Interview", value: "INTERVIEW" },
+    { name: "Rejected", value: "REJECTED" },
+    { name: "Accepted", value: "ACCEPTED" },
+  ];
 
   useEffect(() => {
     if (user) {
@@ -127,13 +125,37 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
 
   return (
     <Modal open={openAdd} setOpen={setOpenAdd} width="600px">
+      <div className="z-[100]">
+        {addEmployee && (
+          <AddModalEmployees
+            refetch={employee_refetch}
+            openAdd={addEmployee}
+            setOpenAdd={setAddEmployee}
+          />
+        )}
+      </div>
+      <div className="z-[100]">
+        {addCompany && (
+          <AddModalCompanies
+            openAdd={addCompany}
+            setOpenAdd={setAddCompany}
+            refetch={company_refetch}
+          />
+        )}
+      </div>
       <div className="flex flex-col gap-4">
         <h1 className="font-semibold text-lg">Add Employee</h1>
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
           <select
+            onChange={(e) => {
+              if (e.target.value === "add-company") {
+                setAddCompany(true);
+              } else {
+                handleChange(e);
+              }
+            }}
             name="company_id"
             value={values.company_id}
-            onChange={handleChange}
             className={`${
               touched.company_id && errors.company_id && "border-red-500"
             } w-full rounded-md border px-4 py-2 text-gray-500 focus:border-primary focus:outline-none
@@ -154,6 +176,7 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
                   {company.name}
                 </option>
               ))}
+            <option value={"add-company"}>Add Company</option>
           </select>
           <div className="flex gap-6">
             <FormInput
@@ -193,8 +216,9 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
               name="submitted_cv"
               placeHolder="Submitted CV"
               type="file"
-              onChange={handleChange}
-              value={values.submitted_cv}
+              onChange={(e) =>
+                setFieldValue("submitted_cv", e.currentTarget.files[0])
+              }
               error={errors.submitted_cv}
               touched={touched.submitted_cv}
             />
@@ -246,9 +270,9 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
                 <option value="" disabled className="text-gray-500">
                   Select Status
                 </option>
-                {status.map((status, index) => (
-                  <option key={index} value={status}>
-                    {status}
+                {status.map((status) => (
+                  <option key={status.value} value={status.value}>
+                    {status.name}
                   </option>
                 ))}
               </select>
@@ -259,33 +283,81 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
               )}
             </div>
           </div>
-          <select
-            name="contacted_employees"
-            value={values.contacted_employees}
-            onChange={handleChange}
-            className={`${
-              touched.contacted_employees &&
-              errors.contacted_employees &&
-              "border-red-500"
-            } w-full rounded-md border px-4 py-2 text-gray-500 focus:border-primary focus:outline-none
-                ${
-                  values.contacted_employees ? "text-black" : "text-gray-500"
-                } focus:ring-primary`}
-          >
-            <option value="" disabled className="text-gray-400">
-              Select Contacted Employees
-            </option>
-            {filteredEmployees?.length > 0 &&
-              filteredEmployees.map((employee) => (
-                <option
-                  key={employee.id}
-                  value={employee.id}
-                  className="text-black"
-                >
-                  {employee.name}
-                </option>
-              ))}
-          </select>
+          <div className="flex flex-col gap-2">
+            <select
+              onChange={(e) => {
+                if (e.target.value === "add-employee") {
+                  setAddEmployee(true);
+                } else {
+                  setFieldValue("contacted_employees", [
+                    ...values.contacted_employees,
+                    parseInt(e.target.value, 10),
+                  ]);
+                }
+              }}
+              name="contacted_employees"
+              value={values.contacted_employees}
+              className={`${
+                touched.contacted_employees &&
+                errors.contacted_employees &&
+                "border-red-500"
+              } w-full rounded-md border px-4 py-2 text-gray-500 focus:border-primary focus:outline-none ${
+                values.contacted_employees ? "text-black" : "text-gray-500"
+              } focus:ring-primary`}
+            >
+              <option value="" disabled className="text-gray-400">
+                Select Contacted Employees
+              </option>
+              {employees?.length > 0 &&
+                employees.map((employee) => (
+                  <option
+                    key={employee.id}
+                    value={employee.id}
+                    className="text-black"
+                  >
+                    {employee.name}
+                  </option>
+                ))}
+              <option value={"add-employee"}>Add Employee</option>
+            </select>
+
+            {errors.contacted_employees && touched.contacted_employees && (
+              <span className="mt-1 text-xs text-red-500">
+                {errors.contacted_employees}
+              </span>
+            )}
+
+            <div className="flex flex-wrap">
+              {Array.isArray(values?.contacted_employees) &&
+                values?.contacted_employees.length !== 0 &&
+                values.contacted_employees.map((employeeId) => {
+                  const employee = employees?.find((emp) => {
+                    return emp.id === Number(employeeId);
+                  });
+
+                  return (
+                    <div
+                      key={employeeId}
+                      className="flex bg-primary text-white px-2 py-1 rounded-full text-xs items-center gap-2"
+                    >
+                      <p>{employee?.name || "Loading..."}</p>
+                      <button
+                        onClick={() =>
+                          setFieldValue(
+                            "contacted_employees",
+                            values.contacted_employees.filter(
+                              (id) => id !== employeeId
+                            )
+                          )
+                        }
+                      >
+                        x
+                      </button>
+                    </div>
+                  );
+                })}
+            </div>
+          </div>
           <FormInput
             label="Submission Date"
             name="submission_date"

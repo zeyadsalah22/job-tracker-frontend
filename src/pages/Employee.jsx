@@ -36,7 +36,7 @@ export default function Employee() {
 
   const fetchEmployees = async () => {
     const { data } = await axios.get(
-      `http://127.0.0.1:8000/api/employees?search=${search}`,
+      `http://127.0.0.1:8000/api/employees?page=${page}&page_size=8&search=${search}`,
       {
         headers: {
           Authorization: `Token ${localStorage.getItem("token")}`,
@@ -50,7 +50,7 @@ export default function Employee() {
     data: employees,
     isLoading,
     refetch,
-  } = useQuery(["employees", search], fetchEmployees);
+  } = useQuery(["employees", { search, page }], fetchEmployees);
 
   const table_head = ["Employee Name", "Job Title", "Company Name"];
 

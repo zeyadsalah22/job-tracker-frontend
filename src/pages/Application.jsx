@@ -36,7 +36,7 @@ export default function Application() {
 
   const fetchApplications = async () => {
     const { data } = await axios.get(
-      `http://127.0.0.1:8000/api/applications?search=${search}`,
+      `http://127.0.0.1:8000/api/applications?page=${page}&search=${search}`,
       {
         headers: {
           Authorization: `Token  ${localStorage.getItem("token")}`,
@@ -50,19 +50,20 @@ export default function Application() {
     data: applications,
     isLoading,
     refetch,
-  } = useQuery(["applications", search], fetchApplications);
+  } = useQuery(["applications", { search, page }], fetchApplications);
 
   const table_head = ["Company Name", "Job Title", "Submission Date", "Status"];
 
   const table_rows = applications?.results?.map(
-    ({ company: { name }, job_title, submission_date, status }) => ({
+    ({ id, company: { name }, job_title, submission_date, status }) => ({
+      id,
       name,
       job_title,
       submission_date,
       status,
     })
   );
-
+  console.log(id);
   return (
     <Layout>
       <div className="bg-white rounded-lg h-full flex flex-col p-4 justify-between">

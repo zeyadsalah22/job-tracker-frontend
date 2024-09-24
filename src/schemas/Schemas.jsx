@@ -47,5 +47,5 @@ export const applicationSchema = Yup.object().shape({
   stage: Yup.string().required("Required"),
   status: Yup.string().required("Required"),
   submission_date: Yup.string().required("Required"),
-  contacted_employees: Yup.string().required("Required"),
+  contacted_employees: Yup.array().required("Required"),
 });
