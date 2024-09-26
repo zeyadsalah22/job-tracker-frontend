@@ -55,15 +55,10 @@ export default function Login() {
         toast.success("Login successful");
       } catch (error) {
         setLoading(false);
-
-        if (error.response?.data?.detail === "Invalid token.") {
-          handleLogout(); // Logout if token is invalid
-        } else {
-          toast.error(
-            error.response?.data?.non_field_errors?.[0] ||
-              "An error occurred. Please try again"
-          );
-        }
+        toast.error(
+          error.response?.data?.non_field_errors?.[0] ||
+            "An error occurred. Please try again"
+        );
       }
     },
   });

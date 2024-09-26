@@ -7,3 +7,34 @@
 body {
   font-family: "Poppins", sans-serif;
 }
+
+.dropdown {
+  position: relative;
+  width: 100%;
+}
+
+.dropdown input {
+  width: 100%;
+  padding: 8px;
+  box-sizing: border-box;
+}
+
+.dropdown-list {
+  position: absolute;
+  width: 100%;
+  overflow-y: auto;
+  border: 1px solid #ccc;
+  border-top: none;
+  background-color: #fff;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  z-index: 1;
+}
+
+.dropdown-list-item {
+  padding: 16px;
+  cursor: pointer;
+}
+
+.dropdown-list-item:hover {
+  background-color: #f1f1f1;
+}

@@ -1,14 +1,20 @@
 import { Routes, Route } from "react-router-dom";
 import Login from "./pages/Login";
-import Application from "./pages/Application";
-import Company from "./pages/Company";
 import Dashboard from "./pages/Dashboard";
-import Employee from "./pages/Employee";
-import Question from "./pages/Question";
 import Table from "./components/Table";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Register from "./pages/Register";
+import Profile from "./pages/Profile";
+import Apllication from "./components/applications/ViewModal";
+import Company from "./components/companies/ViewModal";
+import Employee from "./components/employees/ViewModal";
+import Applications from "./pages/Applications";
+import Companies from "./pages/Companies";
+import Employees from "./pages/Employees";
+import Questions from "./pages/Questions";
+import Question from "./components/questions/ViewModal";
+
 // import Home from "./pages/Home";
 // import axios from "axios";
 // import AdminRoute from "./utils/AdminRoute";
@@ -62,13 +68,21 @@ export default function App() {
   return (
     <>
       <Routes>
+        <Route path="/profile" element={<Profile />} />
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
         <Route path="/" element={<Dashboard />} />
-        <Route path="/applications" element={<Application />} />
-        <Route path="/companies" element={<Company />} />
-        <Route path="/employees" element={<Employee />} />
-        <Route path="/questions" element={<Question />} />
+        <Route path="/applications" element={<Applications />} />
+        <Route path="/applications/:id" element={<Apllication />} />
+
+        <Route path="/companies" element={<Companies />} />
+        <Route path="/companies/:id" element={<Company />} />
+
+        <Route path="/employees" element={<Employees />} />
+        <Route path="/employees/:id" element={<Employee />} />
+
+        <Route path="/questions" element={<Questions />} />
+        <Route path="/questions/:id" element={<Question />} />
         <Route path="/table" element={<Table />} />
         <Route
           path="*"

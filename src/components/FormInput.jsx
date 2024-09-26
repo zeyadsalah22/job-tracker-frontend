@@ -1,55 +1,44 @@
-import { motion, AnimatePresence } from "framer-motion";
-
-export default function FormInput(props) {
+export default function FormInput({
+  required,
+  placeHolder,
+  name,
+  type,
+  onChange,
+  value,
+  error,
+  touched,
+  textArea,
+}) {
   return (
-    <div className="relative z-0 flex flex-col">
-      <AnimatePresence>
-        {props.value && (
-          <motion.label
-            initial={{ top: "-9px" }}
-            animate={{ top: "-12px" }}
-            exit={{ top: "-9px" }}
-            transition={{
-              type: "tween",
-              duration: 0.2,
-              ease: "easeInOut",
-            }}
-            className={`absolute left-2 rounded bg-white px-1 text-sm 
-               text-gray-500`}
-          >
-            {props.required ? props.placeHolder + "*" : props.placeHolder}
-          </motion.label>
-        )}
-      </AnimatePresence>
-      {props.textarea ? (
+    <div className="flex flex-col gap-2 w-full">
+      <label className="text-sm flex items-center text-gray-600">
+        <p>{placeHolder}</p>
+        <p className="text-red-500">{required && "*"}</p>
+      </label>
+      {textArea ? (
         <textarea
-          name={props.name}
-          type={props.type || "text"}
-          onChange={props.onChange}
-          value={props.value}
-          placeholder={
-            props.required ? props.placeHolder + "*" : props.placeHolder
-          }
+          name={name}
+          onChange={onChange}
+          value={value}
+          placeholder={placeHolder}
           className={`${
-            props.touched && props.error && "border-red-500 ring-red-500"
-          } h-28 max-h-48 w-full resize-none overflow-y-auto rounded-md border px-4 py-3`}
+            touched && error && "border-red-500 ring-red-500"
+          } w-full h-[100px] resize-none rounded-md border px-4 py-2`}
         />
       ) : (
         <input
-          name={props.name}
-          type={props.type || "text"}
-          onChange={props.onChange}
-          value={props.value}
-          placeholder={
-            props.required ? props.placeHolder + "*" : props.placeHolder
-          }
+          name={name}
+          type={type || "text"}
+          onChange={onChange}
+          value={value}
+          placeholder={placeHolder}
           className={`${
-            props.touched && props.error && "border-red-500 ring-red-500"
-          } w-full rounded-md border px-4 py-2 focus:border-primary focus:outline-none focus:ring-primary`}
+            touched && error && "border-red-500 ring-red-500"
+          } w-full rounded-md border px-4 py-2`}
         />
       )}
-      {props.touched && props.error && (
-        <span className="mt-1 text-xs text-red-500">{props.error}</span>
+      {touched && error && (
+        <span className="mt-1 text-xs text-red-500">{error}</span>
       )}
     </div>
   );

@@ -3,6 +3,8 @@ import Layout from "../components/Layout";
 import { Book, CheckCheck, X, LoaderCircle, Trash2 } from "lucide-react";
 import { TEChart } from "tw-elements-react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import { useQuery } from "react-query";
 
 function Todo() {
   const [todos, setTodos] = useState(() => {
@@ -88,31 +90,62 @@ function Todo() {
 export default function Dashboard() {
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
+
+  const fetchStatistics = async () => {
+    const { data } = await axios.get(`http://127.0.0.1:8000/api/statistics`, {
+      headers: {
+        Authorization: `Token  ${localStorage.getItem("token")}`,
+      },
+    });
+    return data;
+  };
+
+  const {
+    data: statistics,
+    isLoading,
+    refetch,
+  } = useQuery(["statistics"], fetchStatistics);
+
+  const fetchPercents = async () => {
+    const { data } = await axios.get(`http://127.0.0.1:8000/api/percents`, {
+      headers: {
+        Authorization: `Token  ${localStorage.getItem("token")}`,
+      },
+    });
+    return data;
+  };
+
+  const {
+    data: percents,
+    isLoading: percentsLoading,
+    refetch: refetchPercents,
+  } = useQuery(["percents"], fetchPercents);
+
   const cards = [
     {
       title: "Applications",
-      value: 10,
+      value: statistics?.total_applications,
       date: "Last 7 days",
       icon: <Book size={50} />,
       color: "#8055F9",
     },
     {
       title: "Rejections",
-      value: 5,
+      value: statistics?.rejected_applications,
       date: "Last 7 days",
       icon: <X size={50} />,
       color: "#FC678D",
     },
     {
       title: "Pendings",
-      value: 15,
+      value: statistics?.pending_applications,
       date: "Last 7 days",
       icon: <LoaderCircle size={50} />,
       color: "#FF7F43",
     },
     {
       title: "Acceptences",
-      value: 20,
+      value: statistics?.accepted_applications,
       date: "Last 7 days",
       icon: <CheckCheck size={50} />,
       color: "#2059FD",
@@ -124,6 +157,8 @@ export default function Dashboard() {
       navigate("/login");
     }
   }, [navigate, token]);
+
+  console.log(percents);
 
   return (
     <Layout>
@@ -181,32 +216,35 @@ export default function Dashboard() {
           </div>
           <Todo />
         </div>
+
         <div className="grid grid-cols-4 gap-6">
           <div className="bg-white col-span-3 rounded-lg p-6 shadow-md ">
             <TEChart
               type="pie"
               data={{
                 labels: [
-                  "Monday",
-                  "Tuesday",
-                  "Wednesday",
-                  "Thursday",
-                  "Friday",
-                  "Saturday",
-                  "Sunday ",
+                  "Applied",
+                  "Assessment",
+                  "Interview",
+                  "Offer",
+                  "Phone Screen",
                 ],
                 datasets: [
                   {
-                    label: "Traffic",
-                    data: [2112, 2343, 2545, 3423, 2365, 1985, 987],
+                    label: "Percents",
+                    data: [
+                      percents?.applied_stage,
+                      percents?.assessment_stage,
+                      percents?.interview_stage,
+                      percents?.offer_stage,
+                      percents?.phonescreen_stage,
+                    ],
                     backgroundColor: [
                       "rgba(63, 81, 181, 0.5)",
                       "rgba(77, 182, 172, 0.5)",
                       "rgba(66, 133, 244, 0.5)",
                       "rgba(156, 39, 176, 0.5)",
-                      "rgba(233, 30, 99, 0.5)",
-                      "rgba(66, 73, 244, 0.4)",
-                      "rgba(66, 133, 244, 0.2)",
+                      "rgba(244, 67, 54, 0.5)",
                     ],
                   },
                 ],

@@ -1,25 +1,17 @@
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import { toast } from "react-toastify";
-import { useState } from "react";
+import { Link, useLocation } from "react-router-dom";
 import {
   Gauge,
   AppWindowMac,
   Building2,
   UserPen,
   CircleHelp,
-  LogOut,
+  ChevronRight,
 } from "lucide-react";
 import useUserStore from "../store/user.store";
-import axios from "axios";
-import UserProfile from "./UserProfile";
 
 export default function SideNav() {
-  const navigate = useNavigate();
   const { pathname } = useLocation();
-  const userLogout = useUserStore((state) => state.logout);
   const user = useUserStore((state) => state.user);
-
-  const [isProfileModalOpen, setProfileModalOpen] = useState(false); // State for controlling the modal
 
   const navItems = [
     {
@@ -49,40 +41,8 @@ export default function SideNav() {
     },
   ];
 
-  const handleLogout = async () => {
-    try {
-      // Attempt to send the logout request to the server
-      await axios.post(
-        "http://127.0.0.1:8000/api/token/logout",
-        {},
-        {
-          headers: {
-            Authorization: `Token ${localStorage.getItem("token")}`,
-          },
-        }
-      );
-      // Successful logout
-      userLogout(); // Function to clear user state (if any)
-      localStorage.removeItem("token"); // Remove token from localStorage
-      navigate("/login"); // Redirect to login page
-      toast.success("Logout successful");
-    } catch (error) {
-      // Handle invalid or expired token
-      if (error.response?.data?.detail === "Invalid token.") {
-        // If the token is invalid, still proceed with logging the user out
-        userLogout();
-        localStorage.removeItem("token");
-        navigate("/login");
-        toast.warning("Session expired. You have been logged out.");
-      } else {
-        // Handle other errors
-        toast.error("An error occurred while logging out. Please try again.");
-      }
-    }
-  };
-
   return (
-    <div className="w-[250px] flex flex-col justify-between">
+    <div className="w-[300px] flex flex-col justify-between">
       <div className="flex flex-col">
         <div className="bg-primary py-7 px-8 text-xl font-semibold text-white">
           Company
@@ -102,36 +62,25 @@ export default function SideNav() {
           ))}
         </div>
       </div>
-      <div className="flex justify-between items-center p-6">
-        <div
-          className="flex items-center gap-2 text-sm cursor-pointer"
-          onClick={() => {
-            setProfileModalOpen(true); // Open the modal
-          }}
-        >
+      <Link
+        to={"/profile"}
+        className="flex justify-between items-center m-3 p-4 bg-[#F1F1F9] rounded-xl group border border-transparent hover:border-primary transition-all"
+      >
+        <div className="flex items-center gap-2 text-sm cursor-pointer">
           <img
             src="https://i.pinimg.com/originals/a6/58/32/a65832155622ac173337874f02b218fb.png"
             className="h-10 w-10 rounded-full"
             alt="Profile"
           />
           <div className="flex flex-col">
-            <p className="text-[16px]">{user?.username}</p>
+            <p className="text-sm">{user?.username}</p>
+            <p className="text-xs text-gray-600">{user?.email}</p>
           </div>
         </div>
-        <button
-          onClick={handleLogout}
-          className="hover:text-primary transition-all"
-        >
-          <LogOut size={18} />
-        </button>
-      </div>
-
-      {/* User Profile Modal */}
-      <UserProfile
-        open={isProfileModalOpen}
-        setOpen={setProfileModalOpen}
-        user={user}
-      />
+        <span className="hover:text-primary transition-all group-hover:text-primary group-hover:scale-125">
+          <ChevronRight size={20} />
+        </span>
+      </Link>
     </div>
   );
 }

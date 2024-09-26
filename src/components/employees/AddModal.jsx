@@ -8,12 +8,16 @@ import FormInput from "../FormInput";
 import ReactLoading from "react-loading";
 import { useQuery } from "react-query";
 import useUserStore from "../../store/user.store";
+import Dropdown from "../Dropdown";
+import AddModalCompanies from "../companies/AddModal";
 
 export default function AddModal({ refetch, openAdd, setOpenAdd }) {
   const token = localStorage.getItem("token");
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const user = useUserStore((state) => state.user);
+  const [companySearch, setCompanySearch] = useState("");
+  const [addCompany, setAddCompany] = useState(false);
 
   const contacted = [
     {
@@ -39,52 +43,60 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
   ];
 
   const fetchCompanies = async () => {
-    const { data } = await axios.get(`http://127.0.0.1:8000/api/companies`, {
-      headers: {
-        Authorization: `Token ${localStorage.getItem("token")}`,
-      },
-    });
-    return data.results;
+    const { data } = await axios.get(
+      `http://127.0.0.1:8000/api/companies?search=${companySearch}`,
+      {
+        headers: {
+          Authorization: `Token ${localStorage.getItem("token")}`,
+        },
+      }
+    );
+    return data;
   };
 
-  const { data: companies } = useQuery(["companies"], fetchCompanies);
+  const {
+    data: companies,
+    isLoading: companyies_Loading,
+    refetch: company_refetch,
+  } = useQuery(["companies", companySearch], fetchCompanies);
 
-  const { values, errors, handleSubmit, handleChange, touched } = useFormik({
-    initialValues: {
-      user_id: "",
-      name: "",
-      linkedin_link: "",
-      email: "",
-      job_title: "",
-      contacted: "",
-      company_id: "",
-    },
+  const { values, errors, handleSubmit, handleChange, touched, setFieldValue } =
+    useFormik({
+      initialValues: {
+        user_id: "",
+        name: "",
+        linkedin_link: "",
+        email: "",
+        job_title: "",
+        contacted: "",
+        company_id: "",
+      },
 
-    validationSchema: employeeSchema,
-    onSubmit: async (values) => {
-      setLoading(true);
-      await axios
-        .post("http://127.0.0.1:8000/api/employees", values, {
-          headers: {
-            Authorization: `Token ${token}`,
-          },
-        })
-        .then(() => {
-          setOpenAdd(false);
-          setLoading(false);
-          toast.success("Employee added successfully");
-          refetch();
-        })
-        .catch((error) => {
-          setLoading(false);
-          setError(error);
-          toast.error(
-            error.response.data.name.map((error) => error) ||
-              "An error occurred. Please try again"
-          );
-        });
-    },
-  });
+      validationSchema: employeeSchema,
+      onSubmit: async (values) => {
+        setLoading(true);
+        await axios
+          .post("http://127.0.0.1:8000/api/employees", values, {
+            headers: {
+              Authorization: `Token ${token}`,
+            },
+          })
+          .then(() => {
+            setOpenAdd(false);
+            setLoading(false);
+            toast.success("Employee added successfully");
+            refetch();
+          })
+          .catch((error) => {
+            setLoading(false);
+            setError(error);
+            toast.error(
+              error.response.data.name.map((error) => error) ||
+                "An error occurred. Please try again"
+            );
+          });
+      },
+    });
 
   useEffect(() => {
     if (user) {
@@ -92,10 +104,26 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
     }
   }, [user, values]);
 
+  const setCompanyId = (id) => {
+    if (id === "add-company") {
+      setAddCompany(true);
+    }
+    setFieldValue("company_id", id);
+  };
+
   return (
     <Modal open={openAdd} setOpen={setOpenAdd} width="600px">
       <div className="flex flex-col gap-4">
         <h1 className="font-semibold text-lg">Add Employee</h1>
+        <div className="z-[100]">
+          {addCompany && (
+            <AddModalCompanies
+              openAdd={addCompany}
+              setOpenAdd={setAddCompany}
+              refetch={company_refetch}
+            />
+          )}
+        </div>
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
           <FormInput
             name="name"
@@ -138,7 +166,10 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
           />
 
           <div className="flex gap-6 w-full">
-            <div className="w-full">
+            <div className="flex flex-col gap-2 w-full">
+              <p className="text-sm text-gray-600">
+                Choose Status<span className="text-red-500">*</span>
+              </p>
               <select
                 name="contacted"
                 value={values.contacted}
@@ -163,36 +194,22 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
               )}
             </div>
             {console.log(errors)}
-
-            <div className="w-full">
-              <select
-                name="company_id"
-                value={values.company_id}
-                onChange={handleChange}
-                className={`${
-                  touched.company_id && errors.company_id && "border-red-500"
-                } w-full rounded-md border px-4 py-2 text-gray-500 focus:border-primary focus:outline-none
-                ${values.company_id ? "text-black" : "text-gray-500"} focus:ring-primary`}
-              >
-                <option value="" disabled className="text-gray-400">
-                  Select Company
-                </option>
-                {companies?.length > 0 &&
-                  companies.map((company) => (
-                    <option
-                      key={company.id}
-                      value={company.id}
-                      className="text-black"
-                    >
-                      {company.name}
-                    </option>
-                  ))}
-              </select>
-              {errors.company_id && touched.company_id && (
-                <span className="mt-1 text-xs text-red-500">
-                  {errors.company_id}
-                </span>
-              )}
+            <div className="flex flex-col gap-2 w-full">
+              <p className="text-sm text-gray-600">
+                Choose Company<span className="text-red-500">*</span>
+              </p>
+              <Dropdown
+                add={{
+                  name: "Add Company",
+                  value: "add-company",
+                }}
+                id={values.company_id}
+                options={companies?.results}
+                query={companySearch}
+                setQuery={setCompanySearch}
+                setValue={setCompanyId}
+                isLoading={companyies_Loading}
+              />
             </div>
           </div>
 

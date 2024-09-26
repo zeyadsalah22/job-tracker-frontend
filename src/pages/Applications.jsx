@@ -2,22 +2,21 @@ import { Plus } from "lucide-react";
 import Layout from "../components/Layout";
 import Table from "../components/Table";
 import React from "react";
-import EditModal from "../components/employees/EditModal";
-import DeleteModal from "../components/employees/DeleteModal";
-import ViewModal from "../components/employees/ViewModal";
+import EditModal from "../components/applications/EditModal";
+import DeleteModal from "../components/applications/DeleteModal";
 import axios from "axios";
 import { useQuery } from "react-query";
 import Pagination from "../components/Pagination";
-import AddModal from "../components/employees/AddModal";
+import AddModal from "../components/applications/AddModal";
 
-export default function Employee() {
+export default function Applications() {
   const [openEdit, setOpenEdit] = React.useState(false);
   const [openDelete, setOpenDelete] = React.useState(false);
-  const [openView, setOpenView] = React.useState(false);
   const [id, setId] = React.useState(null);
   const [page, setPage] = React.useState(1);
-  const [openAdd, setOpenAdd] = React.useState(false);
   const [search, setSearch] = React.useState("");
+  const [openAdd, setOpenAdd] = React.useState(false);
+  const [order, setOrder] = React.useState("");
 
   const handleOpenEdit = (id) => {
     setOpenEdit(true);
@@ -29,17 +28,12 @@ export default function Employee() {
     setId(id);
   };
 
-  const handleOpenView = (id) => {
-    setOpenView(true);
-    setId(id);
-  };
-
-  const fetchEmployees = async () => {
+  const fetchApplications = async () => {
     const { data } = await axios.get(
-      `http://127.0.0.1:8000/api/employees?page=${page}&page_size=8&search=${search}`,
+      `http://127.0.0.1:8000/api/applications?page=${page}&search=${search}&ordering=${order}`,
       {
         headers: {
-          Authorization: `Token ${localStorage.getItem("token")}`,
+          Authorization: `Token  ${localStorage.getItem("token")}`,
         },
       }
     );
@@ -47,39 +41,58 @@ export default function Employee() {
   };
 
   const {
-    data: employees,
+    data: applications,
     isLoading,
     refetch,
-  } = useQuery(["employees", { search, page }], fetchEmployees);
+  } = useQuery(["applications", { search, page, order }], fetchApplications);
 
-  const table_head = ["Employee Name", "Job Title", "Company Name"];
+  const table_head = [
+    {
+      name: "Company Name",
+      key: "name",
+    },
+    {
+      name: "Job Title",
+      key: "job_title",
+    },
+    {
+      name: "Submission Date",
+      key: "submission_date",
+    },
+    {
+      name: "Status",
+      key: "status",
+    },
+  ];
 
-  const table_rows = employees?.results?.map(
-    ({ id, name, job_title, company }) => {
-      return {
-        id,
-        name,
-        job_title,
-        company_name: company?.name,
-      };
-    }
+  const table_rows = applications?.results?.map(
+    ({ id, company: { name }, job_title, submission_date, status }) => ({
+      id,
+      name,
+      job_title,
+      submission_date,
+      status,
+    })
   );
-
+  console.log(id);
   return (
     <Layout>
       <div className="bg-white rounded-lg h-full flex flex-col p-4 justify-between">
         <div className="flex flex-col">
           <div className="flex items-center justify-between pb-4 border-b-2">
-            <h1 className="text-2xl font-bold">Employees</h1>
+            <h1 className="text-2xl font-bold">Applications</h1>
             <button
               onClick={() => setOpenAdd(true)}
               className="bg-primary hover:bg-primary/85 transition-all text-white py-2 px-4 rounded-lg flex items-center justify-center gap-2"
             >
               <Plus size={18} />
-              Add Employee
+              Add Application
             </button>
           </div>
           <Table
+            viewSearch
+            actions
+            setOrder={setOrder}
             isLoading={isLoading}
             search={search}
             setSearch={setSearch}
@@ -87,22 +100,28 @@ export default function Employee() {
             table_rows={table_rows}
             handleOpenDelete={handleOpenDelete}
             handleOpenEdit={handleOpenEdit}
-            handleOpenView={handleOpenView}
+            handleOpenView={"applications"}
           />
         </div>
 
-        {employees?.results?.length !== 0 && (
+        {applications?.results?.length !== 0 && (
           <div className="self-center">
             <Pagination
-              nextPage={employees?.next}
-              prevPage={employees?.previous}
               page={page}
               setPage={setPage}
-              totalPages={employees?.total_pages}
+              totalPages={applications?.total_pages}
+              nextPage={applications?.next}
+              prevPage={applications?.previous}
             />
           </div>
         )}
-
+        {openAdd && (
+          <AddModal
+            openAdd={openAdd}
+            setOpenAdd={setOpenAdd}
+            refetch={refetch}
+          />
+        )}
         {openEdit && (
           <EditModal
             id={id}
@@ -112,24 +131,12 @@ export default function Employee() {
           />
         )}
 
-        {openView && (
-          <ViewModal id={id} openView={openView} setOpenView={setOpenView} />
-        )}
-
         {openDelete && (
           <DeleteModal
+            refetch={refetch}
             id={id}
             openDelete={openDelete}
             setOpenDelete={setOpenDelete}
-            refetch={refetch}
-          />
-        )}
-
-        {openAdd && (
-          <AddModal
-            refetch={refetch}
-            openAdd={openAdd}
-            setOpenAdd={setOpenAdd}
           />
         )}
       </div>

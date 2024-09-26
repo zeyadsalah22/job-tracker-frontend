@@ -2,22 +2,21 @@ import { Plus } from "lucide-react";
 import Layout from "../components/Layout";
 import Table from "../components/Table";
 import React from "react";
-import EditModal from "../components/applications/EditModal";
-import DeleteModal from "../components/applications/DeleteModal";
-import ViewModal from "../components/applications/ViewModal";
+import EditModal from "../components/companies/EditModal";
+import DeleteModal from "../components/companies/DeleteModal";
 import axios from "axios";
 import { useQuery } from "react-query";
 import Pagination from "../components/Pagination";
-import AddModal from "../components/applications/AddModal";
+import AddModal from "../components/companies/AddModal";
 
-export default function Application() {
+export default function Companies() {
   const [openEdit, setOpenEdit] = React.useState(false);
   const [openDelete, setOpenDelete] = React.useState(false);
-  const [openView, setOpenView] = React.useState(false);
+  const [openAdd, setOpenAdd] = React.useState(false);
   const [id, setId] = React.useState(null);
   const [page, setPage] = React.useState(1);
   const [search, setSearch] = React.useState("");
-  const [openAdd, setOpenAdd] = React.useState(false);
+  const [order, setOrder] = React.useState("");
 
   const handleOpenEdit = (id) => {
     setOpenEdit(true);
@@ -29,17 +28,12 @@ export default function Application() {
     setId(id);
   };
 
-  const handleOpenView = (id) => {
-    setOpenView(true);
-    setId(id);
-  };
-
-  const fetchApplications = async () => {
+  const fetchCompanies = async () => {
     const { data } = await axios.get(
-      `http://127.0.0.1:8000/api/applications?page=${page}&search=${search}`,
+      `http://127.0.0.1:8000/api/companies?page_size=8&page=${page}&search=${search}&ordering=${order}`,
       {
         headers: {
-          Authorization: `Token  ${localStorage.getItem("token")}`,
+          Authorization: `Token ${localStorage.getItem("token")}`,
         },
       }
     );
@@ -47,84 +41,96 @@ export default function Application() {
   };
 
   const {
-    data: applications,
+    data: companies,
     isLoading,
     refetch,
-  } = useQuery(["applications", { search, page }], fetchApplications);
+  } = useQuery(["companies", { search, page, order }], fetchCompanies);
 
-  const table_head = ["Company Name", "Job Title", "Submission Date", "Status"];
+  console.log(order);
 
-  const table_rows = applications?.results?.map(
-    ({ id, company: { name }, job_title, submission_date, status }) => ({
-      id,
-      name,
-      job_title,
-      submission_date,
-      status,
-    })
-  );
-  console.log(id);
+  const table_head = [
+    {
+      name: "Name",
+      key: "name",
+    },
+    {
+      name: "Location",
+      key: "location",
+    },
+    {
+      name: "Careers Link",
+      key: "careers_link",
+    },
+  ];
+
   return (
     <Layout>
       <div className="bg-white rounded-lg h-full flex flex-col p-4 justify-between">
         <div className="flex flex-col">
           <div className="flex items-center justify-between pb-4 border-b-2">
-            <h1 className="text-2xl font-bold">Applications</h1>
+            <h1 className="text-2xl font-bold">Companies</h1>
             <button
               onClick={() => setOpenAdd(true)}
               className="bg-primary hover:bg-primary/85 transition-all text-white py-2 px-4 rounded-lg flex items-center justify-center gap-2"
             >
               <Plus size={18} />
-              Add Application
+              Add Company
             </button>
           </div>
           <Table
+            actions
+            viewSearch
             isLoading={isLoading}
             search={search}
             setSearch={setSearch}
             table_head={table_head}
-            table_rows={table_rows}
+            table_rows={companies?.results.map(
+              ({ id, name, careers_link, location }) => {
+                return {
+                  id,
+                  name,
+                  location,
+                  careers_link,
+                };
+              }
+            )}
             handleOpenDelete={handleOpenDelete}
             handleOpenEdit={handleOpenEdit}
-            handleOpenView={handleOpenView}
+            handleOpenView={"companies"}
+            setOrder={setOrder}
           />
         </div>
-
-        {applications?.results?.length !== 0 && (
-          <div className="self-center">
-            <Pagination
-              page={page}
-              setPage={setPage}
-              totalPages={applications?.total_pages}
-              nextPage={applications?.next}
-              prevPage={applications?.previous}
-            />
-          </div>
-        )}
-        {openAdd && (
-          <AddModal
-            openAdd={openAdd}
-            setOpenAdd={setOpenAdd}
-            refetch={refetch}
+        <div className="self-center">
+          <Pagination
+            nextPage={companies?.next}
+            prevPage={companies?.previous}
+            page={page}
+            setPage={setPage}
+            totalPages={companies?.total_pages}
           />
-        )}
+        </div>
         {openEdit && (
           <EditModal
             id={id}
+            refetch={refetch}
             openEdit={openEdit}
             setOpenEdit={setOpenEdit}
-            refetch={refetch}
           />
         )}
-        {openView && (
-          <ViewModal id={id} openView={openView} setOpenView={setOpenView} />
-        )}
+
         {openDelete && (
           <DeleteModal
-            refetch={refetch}
             id={id}
             openDelete={openDelete}
             setOpenDelete={setOpenDelete}
+            refetch={refetch}
+          />
+        )}
+        {openAdd && (
+          <AddModal
+            refetch={refetch}
+            openAdd={openAdd}
+            setOpenAdd={setOpenAdd}
           />
         )}
       </div>

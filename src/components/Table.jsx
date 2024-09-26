@@ -1,8 +1,9 @@
 import React, { useEffect, useRef } from "react";
 import { Typography } from "@material-tailwind/react";
-import { Ellipsis, Trash2, PencilLine, Rows3 } from "lucide-react";
+import { Ellipsis, Trash2, PencilLine, Rows3, ArrowDownUp } from "lucide-react";
 import Search from "./Search";
 import ReactLoading from "react-loading";
+import { Link } from "react-router-dom";
 
 function Actions({ handleOpenEdit, handleOpenDelete, handleOpenView }) {
   return (
@@ -29,7 +30,9 @@ function Actions({ handleOpenEdit, handleOpenDelete, handleOpenView }) {
         color="blue-gray"
         className="font-normal cursor-pointer hover:text-primary transition-all"
       >
-        <Rows3 size={18} />
+        <Link to={handleOpenView}>
+          <Rows3 size={18} />
+        </Link>
       </Typography>
     </div>
   );
@@ -44,6 +47,9 @@ export default function Table({
   search,
   setSearch,
   isLoading,
+  actions,
+  setOrder,
+  viewSearch,
 }) {
   const [openDropdownIndex, setOpenDropdownIndex] = React.useState(null);
 
@@ -69,37 +75,45 @@ export default function Table({
   }, []);
 
   return (
-    <div className="flex flex-col gap-4 mt-4">
+    <div className="flex flex-col gap-4 mt-2">
       <div className="flex justify-between items-center">
         <p className="font-semibold">Data Table</p>
-        <Search setSearch={setSearch} />
+        {viewSearch && <Search setSearch={setSearch} />}
       </div>
       <table className="w-full min-w-max table-auto text-left border">
         <thead>
           <tr>
             {table_head.map((head) => (
               <th
-                key={head}
+                key={head.key}
                 className="border-b border-blue-gray-100 bg-[#ECEFF1] p-4"
               >
                 <Typography
                   variant="small"
                   color="blue-gray"
-                  className="leading-none font-semibold"
+                  className="leading-none font-semibold flex items-center gap-2"
                 >
-                  {head}
+                  <p> {head.name}</p>
+                  <span
+                    className="cursor-pointer"
+                    onClick={() => setOrder(head.key)}
+                  >
+                    <ArrowDownUp size={15} />
+                  </span>
                 </Typography>
               </th>
             ))}
-            <th className="border-b border-blue-gray-100 bg-[#ECEFF1] p-4">
-              <Typography
-                variant="small"
-                color="blue-gray"
-                className="leading-none font-semibold"
-              >
-                Actions
-              </Typography>
-            </th>
+            {actions && (
+              <th className="border-b border-blue-gray-100 bg-[#ECEFF1] p-4">
+                <Typography
+                  variant="small"
+                  color="blue-gray"
+                  className="leading-none font-semibold"
+                >
+                  Actions
+                </Typography>
+              </th>
+            )}
           </tr>
         </thead>
         <tbody>
@@ -114,43 +128,63 @@ export default function Table({
               <tr key={rowIndex} className="even:bg-[#ECEFF1]">
                 {Object.entries(object)
                   .filter(([key]) => key !== "id")
-                  .map(([key, value], valueIndex) => (
-                    <td key={valueIndex} className="p-4">
-                      <Typography
-                        variant="small"
-                        color="blue-gray"
-                        className="font-normal"
-                      >
-                        {value}
-                      </Typography>
-                    </td>
-                  ))}
-                <td className="p-4 cursor-pointer">
-                  <div ref={(el) => (dropdownRefs.current[rowIndex] = el)}>
-                    {openDropdownIndex === rowIndex ? (
-                      <Typography
-                        variant="small"
-                        color="blue-gray"
-                        className="font-normal"
-                      >
-                        <Actions
-                          handleOpenEdit={() => handleOpenEdit(object.id)}
-                          handleOpenDelete={() => handleOpenDelete(object.id)}
-                          handleOpenView={() => handleOpenView(object.id)}
-                        />
-                      </Typography>
+                  .map(([key, value], valueIndex) =>
+                    key === "careers_link" || key === "linked_in_link" ? (
+                      <td key={valueIndex} className="p-4">
+                        <Typography
+                          variant="small"
+                          color="blue-gray"
+                          className="font-normal"
+                        >
+                          <a
+                            className="text-blue-500 underline hover:text-blue-800 transition-all"
+                            href={value}
+                            target="_blank"
+                          >
+                            {value}
+                          </a>
+                        </Typography>
+                      </td>
                     ) : (
-                      <Typography
-                        onClick={() => handleOpen(rowIndex)}
-                        variant="small"
-                        color="blue-gray"
-                        className="font-normal hover:text-primary transition-all"
-                      >
-                        <Ellipsis size={18} />
-                      </Typography>
-                    )}
-                  </div>
-                </td>
+                      <td key={valueIndex} className="p-4">
+                        <Typography
+                          variant="small"
+                          color="blue-gray"
+                          className="font-normal"
+                        >
+                          {value}
+                        </Typography>
+                      </td>
+                    )
+                  )}
+                {actions && (
+                  <td className="p-4 cursor-pointer">
+                    <div ref={(el) => (dropdownRefs.current[rowIndex] = el)}>
+                      {openDropdownIndex === rowIndex ? (
+                        <Typography
+                          variant="small"
+                          color="blue-gray"
+                          className="font-normal"
+                        >
+                          <Actions
+                            handleOpenEdit={() => handleOpenEdit(object.id)}
+                            handleOpenDelete={() => handleOpenDelete(object.id)}
+                            handleOpenView={`/${handleOpenView}/${object.id}`}
+                          />
+                        </Typography>
+                      ) : (
+                        <Typography
+                          onClick={() => handleOpen(rowIndex)}
+                          variant="small"
+                          color="blue-gray"
+                          className="font-normal hover:text-primary transition-all"
+                        >
+                          <Ellipsis size={18} />
+                        </Typography>
+                      )}
+                    </div>
+                  </td>
+                )}
               </tr>
             ))
           )}

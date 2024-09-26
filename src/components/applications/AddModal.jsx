@@ -10,6 +10,7 @@ import { useQuery } from "react-query";
 import useUserStore from "../../store/user.store";
 import AddModalEmployees from "../employees/AddModal";
 import AddModalCompanies from "../companies/AddModal";
+import Dropdown from "../Dropdown";
 
 export default function AddModal({ refetch, openAdd, setOpenAdd }) {
   const token = localStorage.getItem("token");
@@ -18,6 +19,8 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
   const user = useUserStore((state) => state.user);
   const [addEmployee, setAddEmployee] = useState(false);
   const [addCompany, setAddCompany] = useState(false);
+  const [companySearch, setCompanySearch] = useState("");
+  const [employeeSearch, setEmployeeSearch] = useState("");
 
   const { values, errors, handleSubmit, handleChange, touched, setFieldValue } =
     useFormik({
@@ -75,33 +78,41 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
     });
 
   const fetchCompanies = async () => {
-    const { data } = await axios.get(`http://127.0.0.1:8000/api/companies`, {
-      headers: {
-        Authorization: `Token ${localStorage.getItem("token")}`,
-      },
-    });
-    return data.results;
-  };
-
-  const { data: companies, refetch: company_refetch } = useQuery(
-    ["companies"],
-    fetchCompanies
-  );
-
-  const fetchEmployees = async () => {
     const { data } = await axios.get(
-      `http://127.0.0.1:8000/api/employees?company__id=${values.company_id}`,
+      `http://127.0.0.1:8000/api/companies?search=${companySearch}`,
       {
         headers: {
           Authorization: `Token ${localStorage.getItem("token")}`,
         },
       }
     );
-    return data.results;
+    return data;
   };
 
-  const { data: employees, refetch: employee_refetch } = useQuery(
-    ["employees", values.company_id],
+  const {
+    data: companies,
+    isLoading: companyies_Loading,
+    refetch: company_refetch,
+  } = useQuery(["companies", companySearch], fetchCompanies);
+
+  const fetchEmployees = async () => {
+    const { data } = await axios.get(
+      `http://127.0.0.1:8000/api/employees?company__id=${values.company_id}&search=${employeeSearch}`,
+      {
+        headers: {
+          Authorization: `Token ${localStorage.getItem("token")}`,
+        },
+      }
+    );
+    return data;
+  };
+
+  const {
+    data: employees,
+    isLoading: employees_loading,
+    refetch: employee_refetch,
+  } = useQuery(
+    ["employees", { id: values.company_id, employeeSearch }],
     fetchEmployees,
     {
       enabled: !!values.company_id,
@@ -123,6 +134,20 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
     }
   }, [user, values]);
 
+  const setCompanyId = (id) => {
+    if (id === "add-company") {
+      setAddCompany(true);
+    }
+    setFieldValue("company_id", id);
+  };
+
+  const setEmployeeId = (id) => {
+    if (id === "add-employee") {
+      setAddEmployee(true);
+    }
+    setFieldValue("contacted_employees", [...values.contacted_employees, id]);
+  };
+
   return (
     <Modal open={openAdd} setOpen={setOpenAdd} width="600px">
       <div className="z-[100]">
@@ -143,62 +168,53 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
           />
         )}
       </div>
+      {console.log(values)}
       <div className="flex flex-col gap-4">
         <h1 className="font-semibold text-lg">Add Employee</h1>
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-          <select
-            onChange={(e) => {
-              if (e.target.value === "add-company") {
-                setAddCompany(true);
-              } else {
-                handleChange(e);
-              }
-            }}
-            name="company_id"
-            value={values.company_id}
-            className={`${
-              touched.company_id && errors.company_id && "border-red-500"
-            } w-full rounded-md border px-4 py-2 text-gray-500 focus:border-primary focus:outline-none
-                ${
-                  values.company_id ? "text-black" : "text-gray-500"
-                } focus:ring-primary`}
-          >
-            <option value="" disabled className="text-gray-400">
-              Select Company
-            </option>
-            {companies?.length > 0 &&
-              companies.map((company) => (
-                <option
-                  key={company.id}
-                  value={company.id}
-                  className="text-black"
-                >
-                  {company.name}
-                </option>
-              ))}
-            <option value={"add-company"}>Add Company</option>
-          </select>
-          <div className="flex gap-6">
-            <FormInput
-              label="Job Title"
-              name="job_title"
-              placeHolder="Job Title"
-              type="text"
-              onChange={handleChange}
-              value={values.job_title}
-              error={errors.job_title}
-              touched={touched.job_title}
+          <div className="flex flex-col gap-2 w-full">
+            <p className="text-sm text-gray-600">
+              Choose Company<span className="text-red-500">*</span>
+            </p>
+            <Dropdown
+              add={{
+                name: "Add Company",
+                value: "add-company",
+              }}
+              // id={values.company_id}
+              options={companies?.results}
+              query={companySearch}
+              setQuery={setCompanySearch}
+              setValue={setCompanyId}
+              isLoading={companyies_Loading}
             />
-            <FormInput
-              label="Job Type"
-              name="job_type"
-              placeHolder="Job Type"
-              type="text"
-              onChange={handleChange}
-              value={values.job_type}
-              error={errors.job_type}
-              touched={touched.job_type}
-            />
+          </div>
+
+          <div className="flex gap-6 w-full">
+            <div className="w-full">
+              <FormInput
+                label="Job Title"
+                name="job_title"
+                placeHolder="Job Title"
+                type="text"
+                onChange={handleChange}
+                value={values.job_title}
+                error={errors.job_title}
+                touched={touched.job_title}
+              />
+            </div>
+            <div className="w-full">
+              <FormInput
+                label="Job Type"
+                name="job_type"
+                placeHolder="Job Type"
+                type="text"
+                onChange={handleChange}
+                value={values.job_type}
+                error={errors.job_type}
+                touched={touched.job_type}
+              />
+            </div>
           </div>
           <FormInput
             label="Link"
@@ -234,7 +250,10 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
             />
           </div>
           <div className="flex gap-6 w-full">
-            <div className="w-full">
+            <div className="flex flex-col gap-2 w-full">
+              <p className="text-sm text-gray-600">
+                Choose Stage<span className="text-red-500">*</span>
+              </p>
               <select
                 name="stage"
                 value={values.stage}
@@ -258,7 +277,10 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
                 </span>
               )}
             </div>
-            <div className="w-full">
+            <div className="flex flex-col gap-2 w-full">
+              <p className="text-sm text-gray-600">
+                Choose Status<span className="text-red-500">*</span>
+              </p>
               <select
                 name="status"
                 value={values.status}
@@ -284,57 +306,30 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
             </div>
           </div>
           <div className="flex flex-col gap-2">
-            <select
-              onChange={(e) => {
-                if (e.target.value === "add-employee") {
-                  setAddEmployee(true);
-                } else {
-                  setFieldValue("contacted_employees", [
-                    ...values.contacted_employees,
-                    parseInt(e.target.value, 10),
-                  ]);
-                }
-              }}
-              name="contacted_employees"
-              value={values.contacted_employees}
-              className={`${
-                touched.contacted_employees &&
-                errors.contacted_employees &&
-                "border-red-500"
-              } w-full rounded-md border px-4 py-2 text-gray-500 focus:border-primary focus:outline-none ${
-                values.contacted_employees ? "text-black" : "text-gray-500"
-              } focus:ring-primary`}
-            >
-              <option value="" disabled className="text-gray-400">
-                Select Contacted Employees
-              </option>
-              {employees?.length > 0 &&
-                employees.map((employee) => (
-                  <option
-                    key={employee.id}
-                    value={employee.id}
-                    className="text-black"
-                  >
-                    {employee.name}
-                  </option>
-                ))}
-              <option value={"add-employee"}>Add Employee</option>
-            </select>
-
-            {errors.contacted_employees && touched.contacted_employees && (
-              <span className="mt-1 text-xs text-red-500">
-                {errors.contacted_employees}
-              </span>
-            )}
+            <div className="flex flex-col gap-2 w-full">
+              <p className="text-sm text-gray-600">
+                Choose Employee<span className="text-red-500">*</span>
+              </p>
+              <Dropdown
+                add={{
+                  name: "Add Employee",
+                  value: "add-employee",
+                }}
+                options={employees?.results}
+                query={employeeSearch}
+                setQuery={setEmployeeSearch}
+                setValue={setEmployeeId}
+                isLoading={employees_loading}
+              />
+            </div>
 
             <div className="flex flex-wrap">
               {Array.isArray(values?.contacted_employees) &&
                 values?.contacted_employees.length !== 0 &&
                 values.contacted_employees.map((employeeId) => {
-                  const employee = employees?.find((emp) => {
+                  const employee = employees?.results?.find((emp) => {
                     return emp.id === Number(employeeId);
                   });
-
                   return (
                     <div
                       key={employeeId}
@@ -372,7 +367,7 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
             label="Description"
             name="description"
             placeHolder="Description"
-            textarea
+            textArea
             onChange={handleChange}
             value={values.description}
             error={errors.description}

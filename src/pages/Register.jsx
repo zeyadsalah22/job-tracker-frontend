@@ -28,23 +28,9 @@ export default function Register() {
       setLoading(true);
       await axios
         .post("http://127.0.0.1:8000/api/users/", values)
-        .then((response) => {
-          localStorage.setItem("token", response.data.auth_token);
-          setTimeout(() => {
-            if (response.data.auth_token) {
-              axios
-                .get("http://127.0.0.1:8000/api/users/me", {
-                  headers: {
-                    Authorization: `Token ${response.data.auth_token}`,
-                  },
-                })
-                .then((response) => {
-                  setUser(response.data);
-                });
-            }
-            navigate("/");
-            toast.success("Account is created");
-          }, 500);
+        .then(() => {
+          navigate("/login");
+          toast.success("Registration successful. Please login to continue.");
         })
         .catch((error) => {
           setLoading(false);
@@ -78,7 +64,7 @@ export default function Register() {
           label="Username"
           value={values?.username}
           onChange={handleChange}
-          error={errors?.username || errors?.response?.data?.username}
+          error={errors?.username || error?.response?.data?.username}
           touched={touched.username}
         />
         <FormInput
@@ -88,7 +74,7 @@ export default function Register() {
           label="Email"
           value={values?.email}
           onChange={handleChange}
-          error={errors?.email}
+          error={errors?.email || error?.response?.data?.email}
           touched={touched.email}
         />
         <FormInput
@@ -98,10 +84,9 @@ export default function Register() {
           label="Password"
           value={values?.password}
           onChange={handleChange}
-          error={errors?.password}
+          error={errors?.password || error?.response?.data?.password}
           touched={touched.password}
         />
-
         <FormInput
           type="password"
           name="re_password"
@@ -109,7 +94,7 @@ export default function Register() {
           label="Confirm Password"
           value={values?.re_password}
           onChange={handleChange}
-          error={errors.re_password || errors?.response?.data?.password}
+          error={errors.re_password}
           touched={touched.re_password}
         />
 

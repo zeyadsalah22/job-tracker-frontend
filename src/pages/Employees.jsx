@@ -2,22 +2,21 @@ import { Plus } from "lucide-react";
 import Layout from "../components/Layout";
 import Table from "../components/Table";
 import React from "react";
-import EditModal from "../components/companies/EditModal";
-import DeleteModal from "../components/companies/DeleteModal";
-import ViewModal from "../components/companies/ViewModal";
+import EditModal from "../components/employees/EditModal";
+import DeleteModal from "../components/employees/DeleteModal";
 import axios from "axios";
 import { useQuery } from "react-query";
 import Pagination from "../components/Pagination";
-import AddModal from "../components/companies/AddModal";
+import AddModal from "../components/employees/AddModal";
 
-export default function Application() {
+export default function Employees() {
   const [openEdit, setOpenEdit] = React.useState(false);
   const [openDelete, setOpenDelete] = React.useState(false);
-  const [openView, setOpenView] = React.useState(false);
-  const [openAdd, setOpenAdd] = React.useState(false);
   const [id, setId] = React.useState(null);
   const [page, setPage] = React.useState(1);
+  const [openAdd, setOpenAdd] = React.useState(false);
   const [search, setSearch] = React.useState("");
+  const [order, setOrder] = React.useState("");
 
   const handleOpenEdit = (id) => {
     setOpenEdit(true);
@@ -29,14 +28,9 @@ export default function Application() {
     setId(id);
   };
 
-  const handleOpenView = (id) => {
-    setOpenView(true);
-    setId(id);
-  };
-
-  const fetchCompanies = async () => {
+  const fetchEmployees = async () => {
     const { data } = await axios.get(
-      `http://127.0.0.1:8000/api/companies?page=${page}&search=${search}`,
+      `http://127.0.0.1:8000/api/employees?page=${page}&page_size=8&search=${search}&ordering=${order}`,
       {
         headers: {
           Authorization: `Token ${localStorage.getItem("token")}`,
@@ -47,68 +41,87 @@ export default function Application() {
   };
 
   const {
-    data: companies,
+    data: employees,
     isLoading,
     refetch,
-  } = useQuery(["companies", { search, page }], fetchCompanies);
+  } = useQuery(["employees", { search, page, order }], fetchEmployees);
 
-  const table_head = ["Name", "Location", "Careers Link"];
+  const table_head = [
+    {
+      name: "Name",
+      key: "name",
+    },
+    {
+      name: "Job Title",
+      key: "job_title",
+    },
+    {
+      name: "Company Name",
+      key: "company_name",
+    },
+  ];
+
+  const table_rows = employees?.results?.map(
+    ({ id, name, job_title, company }) => {
+      return {
+        id,
+        name,
+        job_title,
+        company_name: company?.name,
+      };
+    }
+  );
 
   return (
     <Layout>
       <div className="bg-white rounded-lg h-full flex flex-col p-4 justify-between">
         <div className="flex flex-col">
           <div className="flex items-center justify-between pb-4 border-b-2">
-            <h1 className="text-2xl font-bold">Companies</h1>
+            <h1 className="text-2xl font-bold">Employees</h1>
             <button
               onClick={() => setOpenAdd(true)}
               className="bg-primary hover:bg-primary/85 transition-all text-white py-2 px-4 rounded-lg flex items-center justify-center gap-2"
             >
               <Plus size={18} />
-              Add Company
+              Add Employee
             </button>
           </div>
           <Table
+            viewSearch
+            actions
             isLoading={isLoading}
             search={search}
             setSearch={setSearch}
             table_head={table_head}
-            table_rows={companies?.results.map(
-              ({ id, name, careers_link, location }) => {
-                return {
-                  id,
-                  name,
-                  location,
-                  careers_link,
-                };
-              }
-            )}
+            table_rows={table_rows}
             handleOpenDelete={handleOpenDelete}
             handleOpenEdit={handleOpenEdit}
-            handleOpenView={handleOpenView}
+            handleOpenView={"employees"}
+            setOrder={setOrder}
           />
         </div>
-        <div className="self-center">
-          <Pagination
-            nextPage={companies?.next}
-            prevPage={companies?.previous}
-            page={page}
-            setPage={setPage}
-            totalPages={companies?.total_pages}
-          />
-        </div>
+
+        {employees?.results?.length !== 0 && (
+          <div className="self-center">
+            <Pagination
+              nextPage={employees?.next}
+              prevPage={employees?.previous}
+              page={page}
+              setPage={setPage}
+              totalPages={employees?.total_pages}
+            />
+          </div>
+        )}
+
         {openEdit && (
           <EditModal
             id={id}
-            refetch={refetch}
             openEdit={openEdit}
             setOpenEdit={setOpenEdit}
+            refetch={refetch}
           />
         )}
 
-        {openView && (
-          <ViewModal id={id} openView={openView} setOpenView={setOpenView} />
-        )}
         {openDelete && (
           <DeleteModal
             id={id}
@@ -117,6 +130,7 @@ export default function Application() {
             refetch={refetch}
           />
         )}
+
         {openAdd && (
           <AddModal
             refetch={refetch}
