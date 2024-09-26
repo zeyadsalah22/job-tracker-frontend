@@ -7,6 +7,7 @@ import { loginSchema } from "../schemas/Schemas";
 import ReactLoading from "react-loading";
 import { toast } from "react-toastify";
 import useUserStore from "../store/user.store";
+import { Link } from "react-router-dom";
 
 export default function Login() {
   const token = localStorage.getItem("token");
@@ -14,6 +15,14 @@ export default function Login() {
   const setUser = useUserStore((state) => state.setUser);
 
   const [loading, setLoading] = useState(false);
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    setUser(null);
+    navigate("/login");
+    toast.info("Session expired. Please log in again.");
+  };
+
   const { values, errors, handleSubmit, handleChange, touched } = useFormik({
     initialValues: {
       username: "",
@@ -22,39 +31,46 @@ export default function Login() {
     validationSchema: loginSchema,
     onSubmit: async (values) => {
       setLoading(true);
-      await axios
-        .post("http://127.0.0.1:8000/api/token/login", values)
-        .then((response) => {
-          localStorage.setItem("token", response.data.auth_token);
-          if (response.data.auth_token) {
-            axios
-              .get("http://127.0.0.1:8000/api/users/me", {
-                headers: {
-                  Authorization: `Token ${response.data.auth_token}`,
-                },
-              })
-              .then((response) => {
-                setUser(response.data);
-              });
-          }
+      try {
+        const response = await axios.post(
+          "http://127.0.0.1:8000/api/token/login",
+          values
+        );
+        const authToken = response.data.auth_token;
+        localStorage.setItem("token", authToken);
 
-          navigate("/dashboard");
-          toast.success("Login successful");
-        })
-        .catch((error) => {
-          setLoading(false);
-          console.log(error);
+        if (authToken) {
+          const userResponse = await axios.get(
+            "http://127.0.0.1:8000/api/users/me",
+            {
+              headers: {
+                Authorization: `Token ${authToken}`,
+              },
+            }
+          );
+          setUser(userResponse.data);
+        }
+
+        navigate("/");
+        toast.success("Login successful");
+      } catch (error) {
+        setLoading(false);
+
+        if (error.response?.data?.detail === "Invalid token.") {
+          handleLogout(); // Logout if token is invalid
+        } else {
           toast.error(
-            error.response.data.non_field_errors.map((error) => error) ||
+            error.response?.data?.non_field_errors?.[0] ||
               "An error occurred. Please try again"
           );
-        });
+        }
+      }
     },
   });
 
   useEffect(() => {
     if (token) {
-      navigate("/dashboard");
+      navigate("/");
     }
   }, [token, navigate]);
 
@@ -104,6 +120,12 @@ export default function Login() {
             Login
           </button>
         )}
+        <div className="flex gap-1">
+          <p className="text-sm">{"Don't have an account?"}</p>
+          <Link to="/register" className="text-sm underline text-primary">
+            Register here
+          </Link>
+        </div>
       </form>
     </div>
   );

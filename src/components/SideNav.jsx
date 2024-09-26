@@ -1,5 +1,6 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import { useState } from "react";
 import {
   Gauge,
   AppWindowMac,
@@ -10,6 +11,7 @@ import {
 } from "lucide-react";
 import useUserStore from "../store/user.store";
 import axios from "axios";
+import UserProfile from "./UserProfile";
 
 export default function SideNav() {
   const navigate = useNavigate();
@@ -17,10 +19,12 @@ export default function SideNav() {
   const userLogout = useUserStore((state) => state.logout);
   const user = useUserStore((state) => state.user);
 
+  const [isProfileModalOpen, setProfileModalOpen] = useState(false); // State for controlling the modal
+
   const navItems = [
     {
       name: "Dashboard",
-      href: "/dashboard",
+      href: "/",
       icon: <Gauge size={20} />,
     },
     {
@@ -46,12 +50,35 @@ export default function SideNav() {
   ];
 
   const handleLogout = async () => {
-    await axios.post("http://127.0.0.1:8000/api/token/logout").then(() => {
-      userLogout();
-      localStorage.removeItem("token");
-      navigate("/");
+    try {
+      // Attempt to send the logout request to the server
+      await axios.post(
+        "http://127.0.0.1:8000/api/token/logout",
+        {},
+        {
+          headers: {
+            Authorization: `Token ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+      // Successful logout
+      userLogout(); // Function to clear user state (if any)
+      localStorage.removeItem("token"); // Remove token from localStorage
+      navigate("/login"); // Redirect to login page
       toast.success("Logout successful");
-    });
+    } catch (error) {
+      // Handle invalid or expired token
+      if (error.response?.data?.detail === "Invalid token.") {
+        // If the token is invalid, still proceed with logging the user out
+        userLogout();
+        localStorage.removeItem("token");
+        navigate("/login");
+        toast.warning("Session expired. You have been logged out.");
+      } else {
+        // Handle other errors
+        toast.error("An error occurred while logging out. Please try again.");
+      }
+    }
   };
 
   return (
@@ -76,13 +103,19 @@ export default function SideNav() {
         </div>
       </div>
       <div className="flex justify-between items-center p-6">
-        <div className="flex items-center gap-2 text-sm">
+        <div
+          className="flex items-center gap-2 text-sm cursor-pointer"
+          onClick={() => {
+            setProfileModalOpen(true); // Open the modal
+          }}
+        >
           <img
             src="https://i.pinimg.com/originals/a6/58/32/a65832155622ac173337874f02b218fb.png"
             className="h-10 w-10 rounded-full"
+            alt="Profile"
           />
           <div className="flex flex-col">
-            <p className="text-[16px]">{user.username}</p>
+            <p className="text-[16px]">{user?.username}</p>
           </div>
         </div>
         <button
@@ -92,6 +125,13 @@ export default function SideNav() {
           <LogOut size={18} />
         </button>
       </div>
+
+      {/* User Profile Modal */}
+      <UserProfile
+        open={isProfileModalOpen}
+        setOpen={setProfileModalOpen}
+        user={user}
+      />
     </div>
   );
 }

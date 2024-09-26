@@ -7,6 +7,17 @@ export const loginSchema = Yup.object().shape({
     .min(5, "Password is too short - should be 6 chars minimum."),
 });
 
+export const registerSchema = Yup.object().shape({
+  username: Yup.string().required("Required"),
+  email: Yup.string().email("Invalid email").required("Required"),
+  password: Yup.string()
+    .required("Required")
+    .min(8, "Password is too short - should be 8 chars minimum."),
+  re_password: Yup.string()
+    .required("Required")
+    .oneOf([Yup.ref("password"), null], "Passwords must match"),
+});
+
 export const comapnySchema = Yup.object().shape({
   name: Yup.string().required("Required"),
   location: Yup.string().required("Required"),
@@ -39,11 +50,19 @@ export const employeeSchema = Yup.object().shape({
 });
 
 export const applicationSchema = Yup.object().shape({
+  company_id: Yup.string().required("Required"),
   job_title: Yup.string().required("Required"),
   job_type: Yup.string().required("Required"),
   description: Yup.string().required("Required"),
   link: Yup.string().required("Required"),
-  ats_score: Yup.number().required("Required"),
+  // submitted_cv: Yup.object()
+  //   .shape({
+  //     file: Yup.object().shape({
+  //       name: Yup.string().required(),
+  //     }),
+  //   })
+  //   .required("File required"),
+  ats_score: Yup.number().optional(),
   stage: Yup.string().required("Required"),
   status: Yup.string().required("Required"),
   submission_date: Yup.string().required("Required"),

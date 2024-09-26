@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import Layout from "../components/Layout";
 import { Book, CheckCheck, X, LoaderCircle, Trash2 } from "lucide-react";
 import { TEChart } from "tw-elements-react";
+import { useNavigate } from "react-router-dom";
 
 function Todo() {
   const [todos, setTodos] = useState(() => {
@@ -15,7 +16,7 @@ function Todo() {
 
   const addTodo = (e) => {
     if (e.key === "Enter" && e.target.value.trim() !== "") {
-      setTodos([...todos, { text: e.target.value.trim(), completed: false }]); 
+      setTodos([...todos, { text: e.target.value.trim(), completed: false }]);
       e.target.value = "";
     }
   };
@@ -85,6 +86,8 @@ function Todo() {
 }
 
 export default function Dashboard() {
+  const navigate = useNavigate();
+  const token = localStorage.getItem("token");
   const cards = [
     {
       title: "Applications",
@@ -115,6 +118,12 @@ export default function Dashboard() {
       color: "#2059FD",
     },
   ];
+
+  useEffect(() => {
+    if (!token) {
+      navigate("/login");
+    }
+  }, [navigate, token]);
 
   return (
     <Layout>

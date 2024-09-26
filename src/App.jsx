@@ -8,6 +8,7 @@ import Question from "./pages/Question";
 import Table from "./components/Table";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import Register from "./pages/Register";
 // import Home from "./pages/Home";
 // import axios from "axios";
 // import AdminRoute from "./utils/AdminRoute";
@@ -61,8 +62,9 @@ export default function App() {
   return (
     <>
       <Routes>
-        <Route path="/" element={<Login />} />
-        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/" element={<Dashboard />} />
         <Route path="/applications" element={<Application />} />
         <Route path="/companies" element={<Company />} />
         <Route path="/employees" element={<Employee />} />

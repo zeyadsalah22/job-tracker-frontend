@@ -101,16 +101,32 @@ export default function Application() {
             />
           </div>
         )}
-
-        <AddModal openAdd={openAdd} setOpenAdd={setOpenAdd} refetch={refetch} />
-        <EditModal id={id} openEdit={openEdit} setOpenEdit={setOpenEdit} />
-        <ViewModal id={id} openView={openView} setOpenView={setOpenView} />
-        <DeleteModal
-          refetch={refetch}
-          id={id}
-          openDelete={openDelete}
-          setOpenDelete={setOpenDelete}
-        />
+        {openAdd && (
+          <AddModal
+            openAdd={openAdd}
+            setOpenAdd={setOpenAdd}
+            refetch={refetch}
+          />
+        )}
+        {openEdit && (
+          <EditModal
+            id={id}
+            openEdit={openEdit}
+            setOpenEdit={setOpenEdit}
+            refetch={refetch}
+          />
+        )}
+        {openView && (
+          <ViewModal id={id} openView={openView} setOpenView={setOpenView} />
+        )}
+        {openDelete && (
+          <DeleteModal
+            refetch={refetch}
+            id={id}
+            openDelete={openDelete}
+            setOpenDelete={setOpenDelete}
+          />
+        )}
       </div>
     </Layout>
   );

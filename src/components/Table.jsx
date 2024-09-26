@@ -105,12 +105,12 @@ export default function Table({
         <tbody>
           {isLoading ? (
             <ReactLoading type="spinningBubbles" color="#11664F" />
-          ) : table_rows.length === 0 && search ? (
+          ) : table_rows?.length === 0 && search ? (
             <div className="p-4">No search results</div>
-          ) : table_rows.length === 0 ? (
+          ) : table_rows?.length === 0 ? (
             <div className="p-4">The table is empty. Add data to show it!</div>
           ) : (
-            table_rows.map((object, rowIndex) => (
+            table_rows?.map((object, rowIndex) => (
               <tr key={rowIndex} className="even:bg-[#ECEFF1]">
                 {Object.entries(object)
                   .filter(([key]) => key !== "id")
