@@ -2,7 +2,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
 
 export default function UserProfile({ open, setOpen, user }) {
-    
   return (
     <AnimatePresence>
       {open && (
@@ -12,20 +11,15 @@ export default function UserProfile({ open, setOpen, user }) {
           exit={{ opacity: 0 }}
           className="fixed inset-0 z-[9999] flex min-h-screen items-center justify-center overflow-y-hidden"
         >
-          {/* Background overlay */}
           <div className="fixed inset-0 z-[1] bg-black/70 backdrop-blur-[4px]" />
-
-          {/* Modal content */}
           <div className="relative z-[2] mx-4 w-[500px] rounded-lg bg-white p-6 text-black">
-            {/* Close button */}
             <button
-              onClick={() => setOpen(false)} // Close the modal
+              onClick={() => setOpen(false)}
               className="absolute right-4 top-4 text-3xl"
             >
               <X />
             </button>
 
-            {/* User info */}
             <div className="flex items-center gap-4">
               <div className="w-16 h-16 rounded-full overflow-hidden">
                 <img
@@ -39,11 +33,10 @@ export default function UserProfile({ open, setOpen, user }) {
               </div>
             </div>
 
-            {/* Optional additional content (e.g. more profile details, actions) */}
             <div className="mt-6">
               <button
                 onClick={() => {
-                  setOpen(false); // Close the modal on action
+                  setOpen(false);
                 }}
                 className="text-red-500"
               >

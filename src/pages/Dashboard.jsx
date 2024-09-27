@@ -121,6 +121,24 @@ export default function Dashboard() {
     refetch: refetchPercents,
   } = useQuery(["percents"], fetchPercents);
 
+  const fetchTimeseries = async () => {
+    const { data } = await axios.get(
+      `http://127.0.0.1:8000/api/timeseries?start_date=2024-09-26&points=6&interval=week`,
+      {
+        headers: {
+          Authorization: `Token  ${localStorage.getItem("token")}`,
+        },
+      }
+    );
+    return data;
+  };
+
+  const {
+    data: timeseries,
+    isLoading: timeseriesLoading,
+    refetch: refetchTimeseries,
+  } = useQuery(["timeseries"], fetchTimeseries);
+
   const cards = [
     {
       title: "Applications",

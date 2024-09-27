@@ -30,45 +30,46 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
     fetchApplications
   );
 
-  const { values, errors, handleSubmit, handleChange, touched } = useFormik({
-    initialValues: {
-      user_id: "",
-      question: "",
-      answer: "",
-      application_id: "",
-    },
+  const { values, errors, handleSubmit, handleChange, touched, setFieldValue } =
+    useFormik({
+      initialValues: {
+        user_id: "",
+        question: "",
+        answer: "",
+        application_id: "",
+      },
 
-    validationSchema: questionSchema,
-    onSubmit: async (values) => {
-      setLoading(true);
-      await axios
-        .post("http://127.0.0.1:8000/api/questions", values, {
-          headers: {
-            Authorization: `Token ${token}`,
-          },
-        })
-        .then(() => {
-          setOpenAdd(false);
-          setLoading(false);
-          toast.success("Question added successfully");
-          refetch();
-        })
-        .catch((error) => {
-          setLoading(false);
-          setError(error);
-          toast.error(
-            error.response.data.name.map((error) => error) ||
-              "An error occurred. Please try again"
-          );
-        });
-    },
-  });
+      validationSchema: questionSchema,
+      onSubmit: async (values) => {
+        setLoading(true);
+        await axios
+          .post("http://127.0.0.1:8000/api/questions", values, {
+            headers: {
+              Authorization: `Token ${token}`,
+            },
+          })
+          .then(() => {
+            setOpenAdd(false);
+            setLoading(false);
+            toast.success("Question added successfully");
+            refetch();
+          })
+          .catch((error) => {
+            setLoading(false);
+            setError(error);
+            toast.error(
+              error.response.data.name.map((error) => error) ||
+                "An error occurred. Please try again"
+            );
+          });
+      },
+    });
 
   useEffect(() => {
     if (user) {
-      values.user_id = user.id;
+      setFieldValue("user_id", user.id);
     }
-  }, [user, values]);
+  }, [user, setFieldValue]);
 
   return (
     <Modal open={openAdd} setOpen={setOpenAdd} width="600px">
@@ -77,7 +78,7 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
           <FormInput
             label="Question"
-            type="text"
+            textArea={true}
             name="question"
             placeHolder="Question"
             value={values.question}
@@ -87,7 +88,7 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
           />
           <FormInput
             label="Answer"
-            type="text"
+            textArea={true}
             name="answer"
             placeHolder="Answer"
             value={values.answer}
@@ -98,7 +99,7 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
 
           <div className="flex flex-col gap-2 w-full">
             <p className="text-sm text-gray-600">
-              Choose Application<span className="text-red-500">*</span>
+              Choose job title<span className="text-red-500">*</span>
             </p>
             <select
               name="application_id"
@@ -114,7 +115,7 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
                 } focus:ring-primary`}
             >
               <option value="" disabled className="text-gray-400">
-                Select Application
+                Select job title
               </option>
               {applications?.results?.map((application) => (
                 <option
@@ -123,6 +124,43 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
                   className="text-black"
                 >
                   {application.job_title}
+                </option>
+              ))}
+            </select>
+            {errors.application_id && touched.application_id && (
+              <span className="mt-1 text-xs text-red-500">
+                {errors.application_id}
+              </span>
+            )}
+          </div>
+
+          <div className="flex flex-col gap-2 w-full">
+            <p className="text-sm text-gray-600">
+              Choose submission date<span className="text-red-500">*</span>
+            </p>
+            <select
+              name="application_id"
+              value={values.application_id}
+              onChange={handleChange}
+              className={`${
+                touched.application_id &&
+                errors.application_id &&
+                "border-red-500"
+              } w-full rounded-md border px-4 py-2 text-gray-500 focus:border-primary focus:outline-none
+                ${
+                  values.application_id ? "text-black" : "text-gray-500"
+                } focus:ring-primary`}
+            >
+              <option value="" disabled className="text-gray-400">
+                Select date
+              </option>
+              {applications?.results?.map((application) => (
+                <option
+                  key={application.id}
+                  value={application.id}
+                  className="text-black"
+                >
+                  {application.submission_date}
                 </option>
               ))}
             </select>

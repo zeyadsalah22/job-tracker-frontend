@@ -30,7 +30,7 @@ export default function Applications() {
 
   const fetchApplications = async () => {
     const { data } = await axios.get(
-      `http://127.0.0.1:8000/api/applications?page=${page}&search=${search}&ordering=${order}`,
+      `http://127.0.0.1:8000/api/applications?page_size=8&page=${page}&search=${search}&ordering=${order}`,
       {
         headers: {
           Authorization: `Token  ${localStorage.getItem("token")}`,

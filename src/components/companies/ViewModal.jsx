@@ -2,7 +2,13 @@ import axios from "axios";
 import { useQuery } from "react-query";
 import { Link, useParams } from "react-router-dom";
 import Layout from "../Layout";
-import { MoveLeft } from "lucide-react";
+import {
+  ArrowLeft,
+  Building2,
+  MapPin,
+  Link as Career,
+  Linkedin,
+} from "lucide-react";
 import Table from "../Table";
 import React from "react";
 import EditModal from "../employees/EditModal";
@@ -76,74 +82,68 @@ export default function ViewModal() {
           <div className="flex items-center gap-2 pb-4 border-b-2">
             <Link
               to={`/companies`}
-              className="py-2 px-4 bg-[#f7f7f7] hover:bg-[#f1f1f1] transition-all w-fit rounded-lg flex items-center gap-2"
+              className="py-2 px-4 hover:bg-[#f1f1f1] transition-all w-fit rounded-lg flex items-center gap-2"
             >
-              <MoveLeft /> Back
+              <ArrowLeft size={19} />
             </Link>
-            <h1 className="text-2xl font-bold">Company Details</h1>
+            <h1 className="text-lg font-semibold">Company Details</h1>
           </div>
           {isLoading ? (
             <p>Loading...</p>
           ) : (
-            <div className="flex flex-col gap-2">
-              <p className="font-semibold mb-1 text-gray-500">
-                company Information
-              </p>
-              <div className="flex gap-1">
-                <p className="font-semibold">Company name: </p>
-                <p>
-                  {company.name === ""
-                    ? "No provided Information."
-                    : company.name}
-                </p>
+            <div className="flex flex-col gap-9">
+              <div className="flex border rounded-md w-[300px] p-4 bg-[#fcfcfd] mt-4">
+                <div className="flex items-center justify-center gap-5">
+                  <div className="border rounded-md w-fit p-2 self-start text-primary">
+                    <Building2 size={32} />
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <p>
+                      {company.name === ""
+                        ? "No provided Information."
+                        : company.name}
+                    </p>
+                    <p className="flex items-center gap-2">
+                      {company.location === "" ? (
+                        "No provided Information."
+                      ) : (
+                        <>
+                          <MapPin size={16} />
+                          {company.location}
+                        </>
+                      )}
+                    </p>
+                    <p>
+                      {company.careers_link === "" ? (
+                        "No provided Information."
+                      ) : (
+                        <a
+                          className="text-primary hover:text-blue-800 transition-all flex items-center gap-1"
+                          href={company.careers_link}
+                          target="_blank"
+                        >
+                          <Career size={16} />
+                          {"Career Link"}
+                        </a>
+                      )}
+                    </p>
+                    <p>
+                      {company.linkedin_link === "" ? (
+                        "No provided Information."
+                      ) : (
+                        <a
+                          className="text-primary hover:text-blue-800 transition-all flex items-center gap-1"
+                          href={company.linkedin_link}
+                          target="_blank"
+                        >
+                          <Linkedin size={16} />
+                          {"LinkedIn link"}
+                        </a>
+                      )}
+                    </p>
+                  </div>
+                </div>
               </div>
-
-              <div className="flex gap-1">
-                <p className="font-semibold">location: </p>
-                <p>
-                  {company.location === ""
-                    ? "No provided Information."
-                    : company.location}
-                </p>
-              </div>
-
-              <div className="flex gap-1">
-                <p className="font-semibold">Careers Link: </p>
-                <p>
-                  {company.careers_link === "" ? (
-                    "No provided Information."
-                  ) : (
-                    <a
-                      className="text-blue-500 underline hover:text-blue-800 transition-all"
-                      href={company.careers_link}
-                      target="_blank"
-                    >
-                      {company.careers_link}
-                    </a>
-                  )}
-                </p>
-              </div>
-
-              <div className="flex gap-1">
-                <p className="font-semibold">Company Linked in: </p>
-                <p>
-                  {company.linkedin_link === "" ? (
-                    "No provided Information."
-                  ) : (
-                    <a
-                      className="text-blue-500 underline hover:text-blue-800 transition-all"
-                      href={company.linkedin_link}
-                      target="_blank"
-                    >
-                      {company.linkedin_link}
-                    </a>
-                  )}
-                </p>
-              </div>
-
-              <p className="font-semibold mt-4 mb-1 text-gray-500">
-                Employees ascoiated with company
-              </p>
 
               <Table
                 actions

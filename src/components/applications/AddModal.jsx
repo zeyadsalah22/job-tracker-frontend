@@ -119,7 +119,14 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
     }
   );
 
-  const stage = ["Applied", "Phone Screen", "Assessment", "Interview", "Offer"];
+  const stage = [
+    { name: "Applied", value: "APPLIED" },
+    { name: "Phone Screen", value: "PHONE_SCREEN" },
+    { name: "Assessment", value: "ASSESSMENT" },
+    { name: "Interview", value: "INTERVIEW" },
+    { name: "Offer", value: "OFFER" },
+  ];
+
   const status = [
     { name: "Pending", value: "PENDING" },
     { name: "Assessment", value: "ASSESSMENT" },
@@ -265,9 +272,9 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
                 <option value="" disabled>
                   Select Stage
                 </option>
-                {stage.map((stage, index) => (
-                  <option key={index} value={stage}>
-                    {stage}
+                {stage.map((stage) => (
+                  <option key={stage.value} value={stage.value}>
+                    {stage.name}
                   </option>
                 ))}
               </select>

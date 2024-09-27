@@ -1,10 +1,19 @@
 import axios from "axios";
-import Modal from "../Modal";
 import { useQuery } from "react-query";
 import { useParams } from "react-router-dom";
 import Layout from "../Layout";
 import { Link } from "react-router-dom";
-import { MoveLeft } from "lucide-react";
+import {
+  ArrowLeft,
+  Building2,
+  MapPin,
+  Link as Career,
+  Linkedin,
+  User,
+  MailPlus,
+  Mails,
+  UserRound,
+} from "lucide-react";
 
 export default function ViewModal() {
   const { id } = useParams();
@@ -59,116 +68,134 @@ export default function ViewModal() {
           <div className="flex items-center gap-2 pb-4 border-b-2">
             <Link
               to={`/employees`}
-              className="py-2 px-4 bg-[#f7f7f7] hover:bg-[#f1f1f1] transition-all w-fit rounded-lg flex items-center gap-2"
+              className="py-2 px-4 hover:bg-[#f1f1f1] transition-all w-fit rounded-lg flex items-center gap-2"
             >
-              <MoveLeft /> Back
+              <ArrowLeft size={19} />
             </Link>
-            <h1 className="text-2xl font-bold">Employee Details</h1>
+            <h1 className="text-lg font-semibold">Employee Details</h1>
           </div>
           {isLoading ? (
             <p>Loading...</p>
           ) : (
             <div className="flex flex-col gap-2">
-              <p className="font-semibold mb-1 text-gray-500">
-                Personal Information
-              </p>
-              <div className="flex gap-1">
-                <p className="font-semibold">Employee Name: </p>
-                <p>
-                  {employee.name === ""
-                    ? "No provided Information."
-                    : employee.name}
-                </p>
-              </div>
+              <div className="flex border rounded-md w-[350px] p-4 bg-[#fcfcfd] mt-4">
+                <div className="flex items-center justify-center gap-5">
+                  <div className="border rounded-md w-fit p-2 self-start text-primary">
+                    <User size={32} />
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <p className="flex items-center">
+                      {employee.name === ""
+                        ? "No provided Information."
+                        : employee.name}
+                    </p>
+                    <p>
+                      {employee.email === "" ? (
+                        "No provided Information."
+                      ) : (
+                        <a
+                          className="text-primary hover:text-blue-800 transition-all flex items-center gap-1"
+                          href={employee.email}
+                          target="_blank"
+                        >
+                          <MailPlus size={16} />
+                          {employee.name}
+                        </a>
+                      )}
+                    </p>
+                    <p>
+                      {employee.linkedin_link === "" ? (
+                        "No provided Information."
+                      ) : (
+                        <a
+                          className="text-primary hover:text-blue-800 transition-all flex items-center gap-1"
+                          href={employee.linkedin_link}
+                          target="_blank"
+                        >
+                          <Linkedin size={16} />
+                          {"LinkedIn link"}
+                        </a>
+                      )}
+                    </p>
+                    <p className="flex items-center gap-1">
+                      {employee.job_title === "" ? (
+                        "No provided Information."
+                      ) : (
+                        <>
+                          <UserRound size={16} />
+                          {employee.job_title}
+                        </>
+                      )}
+                    </p>
 
-              <div className="flex gap-1">
-                <p className="font-semibold">email: </p>
-                <p>
-                  {employee.email === ""
-                    ? "No provided Information."
-                    : employee.email}
-                </p>
-              </div>
-
-              <div className="flex gap-1">
-                <p className="font-semibold">Linked in: </p>
-                <p>
-                  {employee.linkedin_link === ""
-                    ? "No provided Information."
-                    : employee.linkedin_link}
-                </p>
-              </div>
-
-              <div className="flex gap-1">
-                <p className="font-semibold">Job title: </p>
-                <p>{employee.job_title}</p>
-              </div>
-
-              <div className="flex gap-1">
-                <p className="font-semibold">Contacted status: </p>
-                <p>
-                  {employee.contacted === ""
-                    ? "No provided Information."
-                    : contacted.find((c) => c.value === employee.contacted)
-                        .name}
-                </p>
-              </div>
-
-              <div className="flex flex-col gap-2">
-                <p className="font-semibold mt-4 mb-1 text-gray-500">
-                  Company Details
-                </p>
-
-                <div className="flex gap-1">
-                  <p className="font-semibold">Company name: </p>
-                  <p>
-                    {employee.company.name === ""
-                      ? "No provided Information."
-                      : employee.company.name}
-                  </p>
+                    <p className="flex items-center gap-1">
+                      {employee.contacted === "" ? (
+                        "No provided Information."
+                      ) : (
+                        <>
+                          <Mails size={16} />
+                          {
+                            contacted.find(
+                              (c) => c.value === employee.contacted
+                            ).name
+                          }
+                        </>
+                      )}
+                    </p>
+                  </div>
                 </div>
+              </div>
 
-                <div className="flex gap-1">
-                  <p className="font-semibold">location: </p>
-                  <p>
-                    {employee.company.location === ""
-                      ? "No provided Information."
-                      : employee.company.location}
-                  </p>
-                </div>
-
-                <div className="flex gap-1">
-                  <p className="font-semibold">Careers Link: </p>
-                  <p>
-                    {employee.company.careers_link === "" ? (
-                      "No provided Information."
-                    ) : (
-                      <a
-                        className="text-blue-500 underline hover:text-blue-800 transition-all"
-                        href={employee.company.careers_link}
-                        target="_blank"
-                      >
-                        {employee.company.careers_link}
-                      </a>
-                    )}
-                  </p>
-                </div>
-
-                <div className="flex gap-1">
-                  <p className="font-semibold">Company Linked in: </p>
-                  <p>
-                    {employee.company.linkedin_link === "" ? (
-                      "No provided Information."
-                    ) : (
-                      <a
-                        className="text-blue-500 underline hover:text-blue-800 transition-all"
-                        href={employee.company.linkedin_link}
-                        target="_blank"
-                      >
-                        {employee.company.linkedin_link}
-                      </a>
-                    )}
-                  </p>
+              <div className="flex border rounded-md w-[300px] p-4 bg-[#fcfcfd] mt-4">
+                <div className="flex items-center justify-center gap-5">
+                  <div className="border rounded-md w-fit p-2 self-start text-primary">
+                    <Building2 size={32} />
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <p>
+                      {employee.company.name === ""
+                        ? "No provided Information."
+                        : employee.company.name}
+                    </p>
+                    <p className="flex items-center gap-2">
+                      {employee.company.location === "" ? (
+                        "No provided Information."
+                      ) : (
+                        <>
+                          <MapPin size={16} />
+                          {employee.company.location}
+                        </>
+                      )}
+                    </p>
+                    <p>
+                      {employee.company.careers_link === "" ? (
+                        "No provided Information."
+                      ) : (
+                        <a
+                          className="text-primary hover:text-blue-800 transition-all flex items-center gap-1"
+                          href={employee.company.careers_link}
+                          target="_blank"
+                        >
+                          <Career size={16} />
+                          {"Career Link"}
+                        </a>
+                      )}
+                    </p>
+                    <p>
+                      {employee.company.linkedin_link === "" ? (
+                        "No provided Information."
+                      ) : (
+                        <a
+                          className="text-primary hover:text-blue-800 transition-all flex items-center gap-1"
+                          href={employee.company.linkedin_link}
+                          target="_blank"
+                        >
+                          <Linkedin size={16} />
+                          {"LinkedIn link"}
+                        </a>
+                      )}
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>

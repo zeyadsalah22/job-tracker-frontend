@@ -1,4 +1,3 @@
-// src/Dropdown.js
 import { useState, useEffect, useRef } from "react";
 import { useDebouncedCallback } from "use-debounce";
 
@@ -19,11 +18,9 @@ const Dropdown = ({ options, setQuery, setValue, isLoading, add, id }) => {
   };
 
   const debounced = useDebouncedCallback(
-    // function
     (value) => {
       setQuery(value);
     },
-    // delay in ms
     500
   );
 

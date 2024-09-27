@@ -8,7 +8,7 @@ import FormInput from "../components/FormInput";
 import ReactLoading from "react-loading";
 import DeleteModal from "../components/user/DeleteModal";
 import { useNavigate } from "react-router-dom";
-import { LogOut } from "lucide-react";
+import { LogOut, Trash2 } from "lucide-react";
 
 export default function Profile() {
   const user = useUserStore((state) => state.user);
@@ -59,16 +59,14 @@ export default function Profile() {
   }, [user, setFieldValue]);
 
   const handleLogout = async () => {
-    // Attempt to send the logout request to the server
     await axios.post("http://127.0.0.1:8000/api/token/logout", null, {
       headers: {
         Authorization: `Token ${localStorage.getItem("token")}`,
       },
     });
-    // Successful logout
-    userLogout(); // Function to clear user state (if any)
-    localStorage.removeItem("token"); // Remove token from localStorage
-    navigate("/login"); // Redirect to login page
+    userLogout();
+    localStorage.removeItem("token");
+    navigate("/login");
     toast.success("Logout successful");
   };
 
@@ -119,6 +117,7 @@ export default function Profile() {
               onChange={handleChange}
               error={errors?.password || error?.response?.data?.password}
               touched={touched.password}
+              disabled
             />
             <FormInput
               type="password"
@@ -129,6 +128,7 @@ export default function Profile() {
               onChange={handleChange}
               error={errors.re_password}
               touched={touched.re_password}
+              disabled
             />
 
             {loading ? (
@@ -144,25 +144,26 @@ export default function Profile() {
                 />
               </button>
             ) : (
-              <button
-                type="submit"
-                className="rounded bg-primary px-8 py-2 text-white transition hover:bg-primary/80 h-12"
-              >
-                Update user
-              </button>
+              <div className="flex items-center justify-between">
+                <button
+                  type="submit"
+                  className="rounded-lg bg-primary px-4 py-2 text-white transition hover:bg-primary/80 w-fit text-sm font-semibold"
+                >
+                  Save changes
+                </button>
+
+                <button
+                  onClick={() => {
+                    setDeleteModal(true);
+                  }}
+                  className="text-red-700 font-semibold flex items-center gap-1 text-sm bg-red-50 w-fit rounded-lg px-4 py-2 transition hover:bg-red-100/65"
+                >
+                  <Trash2 size={18} />
+                  Delete user
+                </button>
+              </div>
             )}
           </form>
-          <div className="flex gap-1">
-            <p className="text-sm">{"Do you want to delete your account?"}</p>
-            <button
-              onClick={() => {
-                setDeleteModal(true);
-              }}
-              className="text-sm underline text-red-500"
-            >
-              Delete
-            </button>
-          </div>
         </div>
         {deleteModal && (
           <DeleteModal
