@@ -8,6 +8,7 @@ export default function FormInput({
   error,
   touched,
   textArea,
+  disabled,
 }) {
   return (
     <div className="flex flex-col gap-2 w-full">
@@ -32,6 +33,7 @@ export default function FormInput({
           onChange={onChange}
           value={value}
           placeholder={placeHolder}
+          disabled={disabled}
           className={`${
             touched && error && "border-red-500 ring-red-500"
           } w-full rounded-md border px-4 py-2`}

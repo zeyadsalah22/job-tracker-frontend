@@ -74,8 +74,8 @@ export default function Login() {
   }
 
   return (
-    <div className="h-screen flex flex-col justify-center items-center">
-      <p className="text-xl font-semibold">LOGO</p>
+    <div className="h-screen flex flex-col justify-center items-center gap-4">
+      <img src="/logo.png" alt="logo" className="w-32 h-24" />
       <form onSubmit={handleSubmit} className="flex flex-col w-[500px] gap-5">
         <FormInput
           name="username"

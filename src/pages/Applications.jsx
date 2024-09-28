@@ -8,6 +8,7 @@ import axios from "axios";
 import { useQuery } from "react-query";
 import Pagination from "../components/Pagination";
 import AddModal from "../components/applications/AddModal";
+import ReactLoading from "react-loading";
 
 export default function Applications() {
   const [openEdit, setOpenEdit] = React.useState(false);
@@ -44,7 +45,16 @@ export default function Applications() {
     data: applications,
     isLoading,
     refetch,
+    error,
   } = useQuery(["applications", { search, page, order }], fetchApplications);
+
+  const statusEnum = [
+    { name: "Pending", value: "PENDING" },
+    { name: "Assessment", value: "ASSESSMENT" },
+    { name: "Interview", value: "INTERVIEW" },
+    { name: "Rejected", value: "REJECTED" },
+    { name: "Accepted", value: "ACCEPTED" },
+  ];
 
   const table_head = [
     {
@@ -71,10 +81,16 @@ export default function Applications() {
       name,
       job_title,
       submission_date,
-      status,
+      status: statusEnum
+        .filter((item) => item.value === status)
+        .map((item) => item.name),
     })
   );
-  console.log(id);
+
+  if (error) {
+    return <div>Something went wrong</div>;
+  }
+
   return (
     <Layout>
       <div className="bg-white rounded-lg h-full flex flex-col p-4 justify-between">
@@ -101,6 +117,7 @@ export default function Applications() {
             handleOpenDelete={handleOpenDelete}
             handleOpenEdit={handleOpenEdit}
             handleOpenView={"applications"}
+            selectedOrders={["submission_date"]}
           />
         </div>
 

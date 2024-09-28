@@ -42,6 +42,7 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
       validationSchema: applicationSchema,
       onSubmit: async (values) => {
         setLoading(true);
+
         const formData = new FormData();
         for (const key in values) {
           if (key === "contacted_employees") {
@@ -70,7 +71,7 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
             setLoading(false);
             setError(error);
             toast.error(
-              error.response.data.name.map((error) => error) ||
+              error.response?.data?.name?.map((error) => error) ||
                 "An error occurred. Please try again"
             );
           });
@@ -151,8 +152,12 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
   const setEmployeeId = (id) => {
     if (id === "add-employee") {
       setAddEmployee(true);
+      return;
     }
-    setFieldValue("contacted_employees", [...values.contacted_employees, id]);
+
+    if (!values.contacted_employees.includes(id)) {
+      setFieldValue("contacted_employees", [...values.contacted_employees, id]);
+    }
   };
 
   return (
@@ -188,7 +193,6 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
                 name: "Add Company",
                 value: "add-company",
               }}
-              // id={values.company_id}
               options={companies?.results}
               query={companySearch}
               setQuery={setCompanySearch}
@@ -334,15 +338,21 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
               {Array.isArray(values?.contacted_employees) &&
                 values?.contacted_employees.length !== 0 &&
                 values.contacted_employees.map((employeeId) => {
-                  const employee = employees?.results?.find((emp) => {
-                    return emp.id === Number(employeeId);
-                  });
+                  const employee = employees?.results?.find(
+                    (emp) => emp.id === Number(employeeId)
+                  );
+
                   return (
                     <div
                       key={employeeId}
                       className="flex bg-primary text-white px-2 py-1 rounded-full text-xs items-center gap-2"
                     >
-                      <p>{employee?.name || "Loading..."}</p>
+                      {/* Only show name if the employee exists in fetched data */}
+                      {employee ? (
+                        <p>{employee.name}</p>
+                      ) : (
+                        <p>Invalid Employee</p>
+                      )}
                       <button
                         onClick={() =>
                           setFieldValue(

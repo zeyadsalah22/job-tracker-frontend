@@ -9,14 +9,14 @@ export default function Modal({ open, setOpen, children, width }) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[9999] flex min-h-screen items-center justify-center overflow-y-hidden"
+          className="fixed inset-0 z-[9999] flex h-screen items-center justify-center overflow-y-hidden"
         >
           <div
             onClick={() => setOpen(!open)}
             className="fixed inset-0 z-[1] bg-black/70 backdrop-blur-[4px]"
           />
           <div
-            className="desktop:mx-0 w-[600px relative z-[2] mx-4 rounded-md bg-white p-4 text-black"
+            className="relative z-[2] mx-0 max-h-[85vh] h-fit overflow-auto rounded-md bg-white p-4 text-black"
             style={{ width: width }}
           >
             <button

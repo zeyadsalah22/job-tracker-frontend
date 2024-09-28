@@ -98,6 +98,7 @@ export default function Employees() {
             handleOpenEdit={handleOpenEdit}
             handleOpenView={"employees"}
             setOrder={setOrder}
+            selectedOrders={["name", "job_title"]}
           />
         </div>
 

@@ -18,6 +18,7 @@ export default function Profile() {
   const [deleteModal, setDeleteModal] = useState(false);
   const userLogout = useUserStore((state) => state.logout);
   const navigate = useNavigate();
+  const [disabled, setDisabled] = useState(true);
 
   const { values, errors, handleSubmit, handleChange, touched, setFieldValue } =
     useFormik({
@@ -117,7 +118,7 @@ export default function Profile() {
               onChange={handleChange}
               error={errors?.password || error?.response?.data?.password}
               touched={touched.password}
-              disabled
+              disabled={disabled}
             />
             <FormInput
               type="password"
@@ -128,7 +129,7 @@ export default function Profile() {
               onChange={handleChange}
               error={errors.re_password}
               touched={touched.re_password}
-              disabled
+              disabled={disabled}
             />
 
             {loading ? (
@@ -153,6 +154,7 @@ export default function Profile() {
                 </button>
 
                 <button
+                  type="button"
                   onClick={() => {
                     setDeleteModal(true);
                   }}

@@ -84,6 +84,7 @@ export default function Companies() {
             search={search}
             setSearch={setSearch}
             table_head={table_head}
+            selectedOrders={["name"]}
             table_rows={companies?.results.map(
               ({ id, name, careers_link, location }) => {
                 return {

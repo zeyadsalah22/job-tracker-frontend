@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import Layout from "../components/Layout";
 import { Book, CheckCheck, X, LoaderCircle, Trash2 } from "lucide-react";
-import { TEChart } from "tw-elements-react";
+import { TEChart, TEInput } from "tw-elements-react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useQuery } from "react-query";
@@ -90,6 +90,7 @@ function Todo() {
 export default function Dashboard() {
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
+  const [interval, setInterval] = useState("week");
 
   const fetchStatistics = async () => {
     const { data } = await axios.get(`http://127.0.0.1:8000/api/statistics`, {
@@ -123,7 +124,7 @@ export default function Dashboard() {
 
   const fetchTimeseries = async () => {
     const { data } = await axios.get(
-      `http://127.0.0.1:8000/api/timeseries?start_date=2024-09-26&points=6&interval=week`,
+      `http://127.0.0.1:8000/api/timeseries?start_date=2024-09-26&points=4&interval=${interval}`,
       {
         headers: {
           Authorization: `Token  ${localStorage.getItem("token")}`,
@@ -137,7 +138,15 @@ export default function Dashboard() {
     data: timeseries,
     isLoading: timeseriesLoading,
     refetch: refetchTimeseries,
-  } = useQuery(["timeseries"], fetchTimeseries);
+  } = useQuery(["timeseries", { interval }], fetchTimeseries);
+
+  // const timeSeriesTable = timeseries?.results?.map((time) => ({
+  //   date: time.date,
+  //   total_applications: time.total_applications,
+  //   acceptences: time.acceptances,
+  //   rejections: time.rejections,
+  //   pendings: time.total_applications - (time.acceptences + time.rejections),
+  // }));
 
   const cards = [
     {
@@ -176,11 +185,77 @@ export default function Dashboard() {
     }
   }, [navigate, token]);
 
-  console.log(percents);
+  const weeks = timeseries?.results?.map((result) =>
+    result.date.split("-").pop()
+  );
+
+  const totalApplications = timeseries?.results?.map(
+    (result) => result.total_applications
+  );
+  const rejections = timeseries?.results?.map((result) => result.rejections);
+  const acceptances = timeseries?.results?.map((result) => result.acceptances);
+
+  const startMonth = timeseries?.start_date?.split("-")[1];
+
+  const months = {
+    "01": "January",
+    "02": "February",
+    "03": "March",
+    "04": "April",
+    "05": "May",
+    "06": "June",
+    "07": "July",
+    "08": "August",
+    "09": "September",
+    10: "October",
+    11: "November",
+    12: "December",
+  };
+
+  const monthName = months[startMonth];
+  const chartData = {
+    labels: weeks,
+    datasets: [
+      {
+        label: "Total Applications",
+        data: totalApplications,
+        borderColor: "rgba(63, 81, 181, 0.5)",
+        pointBackgroundColor: "rgba(63, 81, 181, 0.5)",
+        pointBorderColor: "rgba(63, 81, 181, 0.5)",
+        fill: false,
+      },
+      {
+        label: "Rejections",
+        data: rejections,
+        borderColor: "rgba(77, 182, 172, 0.5)",
+        pointBackgroundColor: "rgba(77, 182, 172, 0.5)",
+        pointBorderColor: "rgba(77, 182, 172, 0.5)",
+        fill: false,
+      },
+      {
+        label: "Acceptances",
+        data: acceptances,
+        borderColor: "rgba(66, 133, 244, 0.5)",
+        pointBackgroundColor: "rgba(66, 133, 244, 0.5)",
+        pointBorderColor: "rgba(66, 133, 244, 0.5)",
+        fill: false,
+      },
+      {
+        label: "Pendings",
+        data: totalApplications.map(
+          (total, index) => total - (rejections[index] + acceptances[index])
+        ),
+        borderColor: "rgba(156, 39, 176, 0.5)",
+        pointBackgroundColor: "rgba(156, 39, 176, 0.5)",
+        pointBorderColor: "rgba(156, 39, 176, 0.5)",
+        fill: false,
+      },
+    ],
+  };
 
   return (
     <Layout>
-      <div className="flex flex-col gap-6 h-full">
+      <div className="flex flex-col gap-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {cards.map((card, index) => (
             <div
@@ -199,37 +274,17 @@ export default function Dashboard() {
         </div>
         <div className="grid grid-cols-4 gap-6 h-full">
           <div className="bg-white col-span-3 rounded-lg p-6 shadow-md">
+            <h2>{monthName} Data</h2>
             <TEChart
               type="line"
-              data={{
-                labels: [
-                  "Monday",
-                  "Tuesday",
-                  "Wednesday",
-                  "Thursday",
-                  "Friday",
-                  "Saturday",
-                  "Sunday",
-                ],
-                datasets: [
-                  {
-                    label: "Applications",
-                    data: [2112, 2343, 2545, 3423, 2365, 1985, 987],
-                  },
-                  {
-                    label: "Acceptences",
-                    data: [2112, 2343, 2545, 3423, 2365, 1985, 987],
-                  },
-                  {
-                    label: "Pendings",
-                    data: [2112, 2343, 2545, 3423, 2365, 1985, 987],
-                  },
-                  {
-                    label: "Rejections",
-                    data: [2112, 2343, 2545, 3423, 2365, 1985, 987],
-                  },
-                ],
-              }}
+              // labels:
+              //   interval === "week"
+              //     ? weeks
+              //     : interval === "month"
+              //     ? months
+              //     : days,
+              // Example: ["W39", "W40", "W41", "W42"]
+              data={chartData}
             />
           </div>
           <Todo />
