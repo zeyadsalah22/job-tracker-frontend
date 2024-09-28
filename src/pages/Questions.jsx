@@ -78,17 +78,19 @@ export default function Questions() {
               Add Question
             </button>
           </div>
-          <Table
-            actions
-            isLoading={isLoading}
-            search={search}
-            setSearch={setSearch}
-            table_head={table_head}
-            table_rows={table_rows}
-            handleOpenDelete={handleOpenDelete}
-            handleOpenEdit={handleOpenEdit}
-            handleOpenView={"questions"}
-          />
+          <div className="mt-2">
+            <Table
+              actions
+              isLoading={isLoading}
+              search={search}
+              setSearch={setSearch}
+              table_head={table_head}
+              table_rows={table_rows}
+              handleOpenDelete={handleOpenDelete}
+              handleOpenEdit={handleOpenEdit}
+              handleOpenView={"questions"}
+            />
+          </div>
         </div>
 
         {questions?.results?.length !== 0 && (
@@ -103,31 +105,21 @@ export default function Questions() {
           </div>
         )}
 
-        {openEdit && (
-          <EditModal
-            id={id}
-            openEdit={openEdit}
-            setOpenEdit={setOpenEdit}
-            refetch={refetch}
-          />
-        )}
+        <EditModal
+          id={id}
+          openEdit={openEdit}
+          setOpenEdit={setOpenEdit}
+          refetch={refetch}
+        />
 
-        {openDelete && (
-          <DeleteModal
-            id={id}
-            openDelete={openDelete}
-            setOpenDelete={setOpenDelete}
-            refetch={refetch}
-          />
-        )}
+        <DeleteModal
+          id={id}
+          openDelete={openDelete}
+          setOpenDelete={setOpenDelete}
+          refetch={refetch}
+        />
 
-        {openAdd && (
-          <AddModal
-            refetch={refetch}
-            openAdd={openAdd}
-            setOpenAdd={setOpenAdd}
-          />
-        )}
+        <AddModal refetch={refetch} openAdd={openAdd} setOpenAdd={setOpenAdd} />
       </div>
     </Layout>
   );

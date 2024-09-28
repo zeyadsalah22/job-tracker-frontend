@@ -86,20 +86,22 @@ export default function Employees() {
               Add Employee
             </button>
           </div>
-          <Table
-            viewSearch
-            actions
-            isLoading={isLoading}
-            search={search}
-            setSearch={setSearch}
-            table_head={table_head}
-            table_rows={table_rows}
-            handleOpenDelete={handleOpenDelete}
-            handleOpenEdit={handleOpenEdit}
-            handleOpenView={"employees"}
-            setOrder={setOrder}
-            selectedOrders={["name", "job_title"]}
-          />
+          <div className="mt-2">
+            <Table
+              viewSearch
+              actions
+              isLoading={isLoading}
+              search={search}
+              setSearch={setSearch}
+              table_head={table_head}
+              table_rows={table_rows}
+              handleOpenDelete={handleOpenDelete}
+              handleOpenEdit={handleOpenEdit}
+              handleOpenView={"employees"}
+              setOrder={setOrder}
+              selectedOrders={["name"]}
+            />
+          </div>
         </div>
 
         {employees?.results?.length !== 0 && (
@@ -114,31 +116,21 @@ export default function Employees() {
           </div>
         )}
 
-        {openEdit && (
-          <EditModal
-            id={id}
-            openEdit={openEdit}
-            setOpenEdit={setOpenEdit}
-            refetch={refetch}
-          />
-        )}
+        <EditModal
+          id={id}
+          openEdit={openEdit}
+          setOpenEdit={setOpenEdit}
+          refetch={refetch}
+        />
 
-        {openDelete && (
-          <DeleteModal
-            id={id}
-            openDelete={openDelete}
-            setOpenDelete={setOpenDelete}
-            refetch={refetch}
-          />
-        )}
+        <DeleteModal
+          id={id}
+          openDelete={openDelete}
+          setOpenDelete={setOpenDelete}
+          refetch={refetch}
+        />
 
-        {openAdd && (
-          <AddModal
-            refetch={refetch}
-            openAdd={openAdd}
-            setOpenAdd={setOpenAdd}
-          />
-        )}
+        <AddModal refetch={refetch} openAdd={openAdd} setOpenAdd={setOpenAdd} />
       </div>
     </Layout>
   );

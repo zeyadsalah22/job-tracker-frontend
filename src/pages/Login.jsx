@@ -53,6 +53,12 @@ export default function Login() {
 
         navigate("/");
         toast.success("Login successful");
+        localStorage.setItem(
+          "start_date",
+          localStorage.getItem("start_date")
+            ? localStorage.getItem("start_date")
+            : new Date().toISOString().split("T")[0]
+        );
       } catch (error) {
         setLoading(false);
         toast.error(

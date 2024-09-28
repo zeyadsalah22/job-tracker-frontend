@@ -1,7 +1,15 @@
 import { useState, useEffect, useRef } from "react";
 import { useDebouncedCallback } from "use-debounce";
 
-const Dropdown = ({ options, setQuery, setValue, isLoading, add, id }) => {
+const Dropdown = ({
+  options,
+  setQuery,
+  setValue,
+  isLoading,
+  add,
+  error,
+  touched,
+}) => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedValue, setSelectedValue] = useState(""); // State to store selected value
   const dropdownRef = useRef(null);
@@ -32,7 +40,9 @@ const Dropdown = ({ options, setQuery, setValue, isLoading, add, id }) => {
       <input
         type="text"
         placeholder="Search..."
-        className="rounded"
+        className={`${
+          touched && error && "border-red-500 ring-red-500"
+        } w-full rounded-md border px-4 py-2`}
         value={selectedValue} // Display selected value
         onChange={(e) => {
           setSelectedValue(e.target.value); // Update input value dynamically
@@ -61,16 +71,18 @@ const Dropdown = ({ options, setQuery, setValue, isLoading, add, id }) => {
               </li>
             ))
           )}
-          <li
-            onClick={() => {
-              setSelectedValue(add.name); // Set the "Add Company" option in the input
-              setValue(add.value);
-              setIsOpen(false);
-            }}
-            className="dropdown-list-item justify-between flex text-gray-600"
-          >
-            <p>{add.name}</p>
-          </li>
+          {add && (
+            <li
+              onClick={() => {
+                setSelectedValue(add.name); // Set the "Add Company" option in the input
+                setValue(add.value);
+                setIsOpen(false);
+              }}
+              className="dropdown-list-item justify-between flex text-gray-600"
+            >
+              <p>{add.name}</p>
+            </li>
+          )}
         </ul>
       )}
     </div>

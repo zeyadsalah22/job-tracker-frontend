@@ -26,13 +26,13 @@ export const comapnySchema = Yup.object().shape({
       /((https?):\/\/)?(www.)?[a-z0-9]+(\.[a-z]{2,}){1,3}(#?\/?[a-zA-Z0-9#]+)*\/?(\?[a-zA-Z0-9-_]+=[a-zA-Z0-9-%]+&?)?$/,
       "Enter correct url!"
     )
-    .required("Please enter a valid URL"),
+    .optional(),
   linkedin_link: Yup.string()
     .matches(
       /((https?):\/\/)?(www.)?[a-z0-9]+(\.[a-z]{2,}){1,3}(#?\/?[a-zA-Z0-9#]+)*\/?(\?[a-zA-Z0-9-_]+=[a-zA-Z0-9-%]+&?)?$/,
       "Enter correct url!"
     )
-    .required("Please enter a valid URL"),
+    .optional(),
 });
 
 export const employeeSchema = Yup.object().shape({
@@ -53,25 +53,25 @@ export const applicationSchema = Yup.object().shape({
   company_id: Yup.string().required("Required"),
   job_title: Yup.string().required("Required"),
   job_type: Yup.string().required("Required"),
-  description: Yup.string().required("Required"),
-  link: Yup.string().required("Required"),
-  // submitted_cv: Yup.object()
-  //   .shape({
-  //     file: Yup.object().shape({
-  //       name: Yup.string().required(),
-  //     }),
-  //   })
-  //   .required("File required"),
+  description: Yup.string().optional(),
+  link: Yup.string().optional(),
+  submitted_cv: Yup.object()
+    .shape({
+      file: Yup.object().shape({
+        name: Yup.string().required(),
+      }),
+    })
+    .required("File required"),
   ats_score: Yup.number().optional(),
-  stage: Yup.string().required("Required"),
-  status: Yup.string().required("Required"),
-  submission_date: Yup.string().required("Required"),
-  contacted_employees: Yup.array().required("Required"),
+  stage: Yup.string().optional(),
+  status: Yup.string().optional(),
+  submission_date: Yup.string().optional(),
+  contacted_employees: Yup.array().optional(),
 });
 
 export const questionSchema = Yup.object().shape({
   user_id: Yup.string().required("Required"),
   question: Yup.string().required("Required"),
-  answer: Yup.string().required("Required"),
+  answer: Yup.string().optional(),
   application_id: Yup.string().required("Required"),
 });

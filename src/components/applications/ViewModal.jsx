@@ -12,6 +12,8 @@ import {
   UserRound,
   Clock8,
   CalendarCheck,
+  ExternalLink,
+  SquareArrowOutUpRight,
 } from "lucide-react";
 import Table from "../Table";
 
@@ -56,10 +58,31 @@ export default function ViewModal() {
     application?.contacted_employees?.includes(employee.id)
   );
 
+  console.log(employeesWithGivenIds);
+
+  const table_head = [
+    {
+      name: "Name",
+      key: "name",
+    },
+    {
+      name: "Linkedin Link",
+      key: "linkedin_link",
+    },
+    {
+      name: "Email",
+      key: "email",
+    },
+    {
+      name: "Job Title",
+      key: "job_title",
+    },
+  ];
+
   return (
     <Layout>
       <div className="bg-white rounded-lg h-full flex flex-col p-4 justify-between">
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-2">
           <div className="flex items-center gap-2 pb-4 border-b-2">
             <Link
               to={`/applications`}
@@ -72,122 +95,120 @@ export default function ViewModal() {
           {isLoading ? (
             <p>Loading...</p>
           ) : (
-            <div>
-              <div className="flex flex-col gap-9">
-                <div className="flex border rounded-md w-[500px] p-4 bg-[#fcfcfd] mt-4">
-                  <div className="flex items-center justify-center gap-5">
-                    <div className="border rounded-md w-fit p-2 self-start text-primary">
+            <div className="flex flex-col gap-4">
+              <div className="flex gap-4">
+                <div className="flex shadow rounded-md p-4 gap-8 w-fit">
+                  <div className="flex gap-4">
+                    <div className="border rounded-md p-2 h-fit text-primary">
                       <NotebookPen size={40} />
                     </div>
-
                     <div className="flex flex-col gap-2">
-                      <p className="flex items-center gap-1">
-                        {application.job_title === "" ? (
-                          "No provided Information."
-                        ) : (
-                          <>
-                            <UserRound size={16} />
-                            {application.job_title}
-                          </>
-                        )}
-                      </p>
+                      {application.job_title === "" ? (
+                        "No provided Information."
+                      ) : (
+                        <div className="gap-1 flex">
+                          <span className="text-gray-600">Job title:</span>
+                          {application.job_title}
+                        </div>
+                      )}
 
-                      <p className="flex items-center gap-1">
-                        {application.job_type === "" ? (
-                          "No provided Information."
-                        ) : (
-                          <>
-                            <Clock8 size={16} />
-                            {application.job_type}
-                          </>
-                        )}
-                      </p>
+                      {application.job_type === "" ? (
+                        "No provided Information."
+                      ) : (
+                        <div className="gap-1 flex">
+                          <span className="text-gray-600">Job type:</span>
+                          {application.job_type.toLowerCase()}
+                        </div>
+                      )}
 
-                      <div className="flex items-center gap-2">
-                        <p>Stage:</p>
-                        <p>
-                          {application.stage === ""
-                            ? "No provided Information."
-                            : application.stage.toLowerCase()}
-                        </p>
-                      </div>
+                      {application.stage === "" ? (
+                        "No provided Information."
+                      ) : (
+                        <div className="gap-1 flex">
+                          <span className="text-gray-600">Stage:</span>
+                          {application.stage.toLowerCase()}
+                        </div>
+                      )}
 
-                      <div className="flex items-center gap-2">
-                        <p>Status:</p>
-                        <p>
-                          {application.status === ""
-                            ? "No provided Information."
-                            : application.status.toLowerCase()}
-                        </p>
-                      </div>
+                      {application.status === "" ? (
+                        "No provided Information."
+                      ) : (
+                        <div className="gap-1 flex">
+                          <span className="text-gray-600">Status:</span>
+                          {application.status.toLowerCase()}
+                        </div>
+                      )}
 
-                      <p className="flex items-center gap-1">
-                        {application.submission_date === "" ? (
-                          "No provided Information."
-                        ) : (
-                          <>
-                            <CalendarCheck size={16} />
-                            {application.submission_date}
-                          </>
-                        )}
-                      </p>
+                      {application.submission_date === "" ? (
+                        "No provided Information."
+                      ) : (
+                        <div className="gap-1 flex">
+                          <span className="text-gray-600">
+                            Submission date:
+                          </span>
+                          {application.submission_date}
+                        </div>
+                      )}
 
-                      <div className="flex items-center gap-2">
-                        <p>ATS Score:</p>
-                        <p>
-                          {application.ats_score === ""
-                            ? "No provided Information."
-                            : application.ats_score}
-                        </p>
-                      </div>
-                      <div className="flex gap-3">
-                        <p>Description:</p>
-                        <p className="border p-4 rounded-md bg-white ">
-                          {application.description === ""
-                            ? "No provided Information."
-                            : application.description}
-                        </p>
-                      </div>
-                      <p>
-                        {application.link === "" ? (
-                          "No provided Information."
-                        ) : (
-                          <a
-                            className="text-primary hover:text-blue-800 transition-all flex items-center gap-1"
-                            href={application.link}
-                            target="_blank"
-                          >
-                            <Career size={16} />
-                            {"Application Link"}
-                          </a>
-                        )}
-                      </p>
+                      {application.ats_score === "" ? (
+                        "No provided Information."
+                      ) : (
+                        <div className="gap-1 flex">
+                          <span className="text-gray-600">ATS score:</span>
+                          {application.ats_score}
+                        </div>
+                      )}
+
+                      {application.description === "" ? (
+                        "No provided Information."
+                      ) : (
+                        <div className="gap-1 flex">
+                          <span className="text-gray-600">Description:</span>
+                          {application.description}
+                        </div>
+                      )}
                     </div>
                   </div>
+                  <p>
+                    {application.link === "" ? (
+                      "No provided Information."
+                    ) : (
+                      <a
+                        className="text-primary hover:text-blue-800 transition-all flex items-center gap-1"
+                        href={application.link}
+                        target="_blank"
+                      >
+                        <SquareArrowOutUpRight size={20} />
+                      </a>
+                    )}
+                  </p>
                 </div>
-              </div>
 
-              <div className="flex border rounded-md w-[300px] p-4 bg-[#fcfcfd] mt-4">
-                <div className="flex items-center justify-center gap-5">
-                  <div className="border rounded-md w-fit p-2 self-start text-primary">
-                    <Building2 size={32} />
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <p>
-                      {application.company.name === ""
-                        ? "No provided Information."
-                        : application.company.name}
-                    </p>
-                    <p className="flex items-center gap-2">
+                <div className="flex rounded-md p-4 gap-8 shadow w-fit h-fit">
+                  <div className="flex gap-4">
+                    <div className="border rounded-md w-fit p-2 self-start text-primary">
+                      <Building2 size={40} />
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      {application.company.name === "" ? (
+                        "No provided Information."
+                      ) : (
+                        <div className="gap-1 flex">
+                          <span className="text-gray-600">Company:</span>
+                          {application.company.name}
+                        </div>
+                      )}
                       {application.company.location === "" ? (
                         "No provided Information."
                       ) : (
-                        <>
-                          <MapPin size={16} />
+                        <div className="gap-1 flex">
+                          <span className="text-gray-600">Location:</span>
                           {application.company.location}
-                        </>
+                        </div>
                       )}
-                    </p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
                     <p>
                       {application.company.careers_link === "" ? (
                         "No provided Information."
@@ -197,8 +218,7 @@ export default function ViewModal() {
                           href={application.company.careers_link}
                           target="_blank"
                         >
-                          <Career size={16} />
-                          {"Career Link"}
+                          <SquareArrowOutUpRight size={20} />
                         </a>
                       )}
                     </p>
@@ -211,21 +231,22 @@ export default function ViewModal() {
                           href={application.company.linkedin_link}
                           target="_blank"
                         >
-                          <Linkedin size={16} />
-                          {"LinkedIn link"}
+                          <Linkedin size={20} />
                         </a>
                       )}
                     </p>
                   </div>
                 </div>
               </div>
-
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col">
+                <p className="font-semibold text-gray-500">
+                  Contacted Employees
+                </p>
                 {employeesLoading ? (
                   <p>Loading...</p>
                 ) : (
                   <Table
-                    table_head={["Name", "Linkedin Link", "Email", "Job Title"]}
+                    table_head={table_head}
                     table_rows={employeesWithGivenIds?.map((employee) => ({
                       name: employee.name,
                       linkedin_link: employee.linkedin_link

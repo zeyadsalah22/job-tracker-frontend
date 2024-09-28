@@ -59,6 +59,7 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
             onChange={handleChange}
             error={errors.name || error?.response?.data?.name}
             touched={touched.name}
+            required
           />
 
           <FormInput
@@ -69,6 +70,7 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
             onChange={handleChange}
             error={errors.location || error?.response?.data?.location}
             touched={touched.location}
+            required
           />
 
           <FormInput

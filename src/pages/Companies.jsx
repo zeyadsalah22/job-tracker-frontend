@@ -77,29 +77,31 @@ export default function Companies() {
               Add Company
             </button>
           </div>
-          <Table
-            actions
-            viewSearch
-            isLoading={isLoading}
-            search={search}
-            setSearch={setSearch}
-            table_head={table_head}
-            selectedOrders={["name"]}
-            table_rows={companies?.results.map(
-              ({ id, name, careers_link, location }) => {
-                return {
-                  id,
-                  name,
-                  location,
-                  careers_link,
-                };
-              }
-            )}
-            handleOpenDelete={handleOpenDelete}
-            handleOpenEdit={handleOpenEdit}
-            handleOpenView={"companies"}
-            setOrder={setOrder}
-          />
+          <div className="mt-2">
+            <Table
+              actions
+              viewSearch
+              isLoading={isLoading}
+              search={search}
+              setSearch={setSearch}
+              table_head={table_head}
+              selectedOrders={["name"]}
+              table_rows={companies?.results.map(
+                ({ id, name, careers_link, location }) => {
+                  return {
+                    id,
+                    name,
+                    location,
+                    careers_link,
+                  };
+                }
+              )}
+              handleOpenDelete={handleOpenDelete}
+              handleOpenEdit={handleOpenEdit}
+              handleOpenView={"companies"}
+              setOrder={setOrder}
+            />
+          </div>
         </div>
         <div className="self-center">
           <Pagination
@@ -110,30 +112,21 @@ export default function Companies() {
             totalPages={companies?.total_pages}
           />
         </div>
-        {openEdit && (
-          <EditModal
-            id={id}
-            refetch={refetch}
-            openEdit={openEdit}
-            setOpenEdit={setOpenEdit}
-          />
-        )}
+        <EditModal
+          id={id}
+          refetch={refetch}
+          openEdit={openEdit}
+          setOpenEdit={setOpenEdit}
+        />
 
-        {openDelete && (
-          <DeleteModal
-            id={id}
-            openDelete={openDelete}
-            setOpenDelete={setOpenDelete}
-            refetch={refetch}
-          />
-        )}
-        {openAdd && (
-          <AddModal
-            refetch={refetch}
-            openAdd={openAdd}
-            setOpenAdd={setOpenAdd}
-          />
-        )}
+        <DeleteModal
+          id={id}
+          openDelete={openDelete}
+          setOpenDelete={setOpenDelete}
+          refetch={refetch}
+        />
+
+        <AddModal refetch={refetch} openAdd={openAdd} setOpenAdd={setOpenAdd} />
       </div>
     </Layout>
   );

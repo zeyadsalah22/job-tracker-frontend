@@ -133,6 +133,7 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
             onChange={handleChange}
             error={errors.name || error?.response?.data?.name}
             touched={touched.name}
+            required
           />
 
           <FormInput
@@ -163,6 +164,7 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
             onChange={handleChange}
             error={errors.job_title || error?.response?.data?.job_title}
             touched={touched.job_title}
+            required
           />
 
           <div className="flex gap-6 w-full">
@@ -189,7 +191,7 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
               </select>
               {errors.contacted && touched.contacted && (
                 <span className="mt-1 text-xs text-red-500">
-                  {errors.contacted}
+                  {errors.contacted || error?.response?.data?.contacted}
                 </span>
               )}
             </div>
@@ -209,7 +211,14 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
                 setQuery={setCompanySearch}
                 setValue={setCompanyId}
                 isLoading={companyies_Loading}
+                error={errors.company_id || error?.response?.data?.company_id}
+                touched={touched.company_id}
               />
+              {errors.company_id && touched.company_id && (
+                <span className="mt-1 text-xs text-red-500">
+                  {errors.company_id || error?.response?.data?.company_id}
+                </span>
+              )}
             </div>
           </div>
 

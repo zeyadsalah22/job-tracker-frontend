@@ -12,26 +12,24 @@ import { Link } from "react-router-dom";
 
 function Actions({ handleOpenEdit, handleOpenDelete, handleOpenView }) {
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex flex-col  top-6 -left-5 bg-white shadow rounded absolute z-[50]">
       <span
         onClick={handleOpenEdit}
-        className="font-normal cursor-pointer hover:text-primary transition-all"
+        className="font-normal cursor-pointer p-2 hover:text-primary transition-all "
       >
-        <PencilLine size={18} />
+        edit
       </span>
+      <Link
+        to={handleOpenView}
+        className="font-normal cursor-pointer hover:text-primary transition-all p-2 border-t"
+      >
+        view
+      </Link>
       <span
         onClick={handleOpenDelete}
-        className="font-normal cursor-pointer hover:text-primary transition-all"
+        className="font-normal cursor-pointer hover:text-red-600 transition-all text-red-500 border-t p-2"
       >
-        <Trash2 size={18} />
-      </span>
-      <span
-        onClick={handleOpenView}
-        className="font-normal cursor-pointer hover:text-primary transition-all"
-      >
-        <Link to={handleOpenView}>
-          <Rows3 size={18} />
-        </Link>
+        delete
       </span>
     </div>
   );
@@ -75,9 +73,8 @@ export default function Table({
   }, []);
 
   return (
-    <div className="flex flex-col gap-2 mt-2">
-      <div className="flex justify-between items-center">
-        <p className="font-semibold">Data Table</p>
+    <div className="flex flex-col gap-2">
+      <div className="flex self-end">
         {viewSearch && <Search setSearch={setSearch} />}
       </div>
       <div className="w-full flex flex-col">
@@ -125,7 +122,9 @@ export default function Table({
                 {Object.entries(object)
                   .filter(([key]) => key !== "id")
                   .map(([key, value], valueIndex) =>
-                    key === "careers_link" || key === "linkedin_link" ? (
+                    key === "careers_link" ||
+                    (key === "linkedin_link" &&
+                      value !== "No provided Information.") ? (
                       <span key={valueIndex} className="w-full h-fit pl-4">
                         <a
                           className="text-blue-500 hover:underline hover:text-blue-800 transition-all"
@@ -150,19 +149,19 @@ export default function Table({
                     ref={(el) => (dropdownRefs.current[rowIndex] = el)}
                     className="w-[15%] h-fit flex justify-center items-center"
                   >
-                    {openDropdownIndex === rowIndex ? (
-                      <Actions
-                        handleOpenEdit={() => handleOpenEdit(object.id)}
-                        handleOpenDelete={() => handleOpenDelete(object.id)}
-                        handleOpenView={`/${handleOpenView}/${object.id}`}
-                      />
-                    ) : (
-                      <EllipsisVertical
-                        onClick={() => handleOpen(rowIndex)}
-                        size={18}
-                        className="cursor-pointer"
-                      />
-                    )}
+                    <span
+                      onClick={() => handleOpen(rowIndex)}
+                      className="cursor-pointer relative"
+                    >
+                      <EllipsisVertical size={18} />
+                      {openDropdownIndex === rowIndex && (
+                        <Actions
+                          handleOpenEdit={() => handleOpenEdit(object.id)}
+                          handleOpenDelete={() => handleOpenDelete(object.id)}
+                          handleOpenView={`/${handleOpenView}/${object.id}`}
+                        />
+                      )}
+                    </span>
                   </div>
                 )}
               </div>

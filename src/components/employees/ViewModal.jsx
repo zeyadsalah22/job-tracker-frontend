@@ -77,125 +77,109 @@ export default function ViewModal() {
           {isLoading ? (
             <p>Loading...</p>
           ) : (
-            <div className="flex flex-col gap-2">
-              <div className="flex border rounded-md w-[350px] p-4 bg-[#fcfcfd] mt-4">
-                <div className="flex items-center justify-center gap-5">
+            <div className="flex gap-4">
+              <div className="flex shadow rounded-md p-4 gap-8 w-fit">
+                <div className="flex gap-4">
                   <div className="border rounded-md w-fit p-2 self-start text-primary">
                     <User size={32} />
                   </div>
                   <div className="flex flex-col gap-2">
-                    <p className="flex items-center">
-                      {employee.name === ""
-                        ? "No provided Information."
-                        : employee.name}
-                    </p>
-                    <p>
-                      {employee.email === "" ? (
-                        "No provided Information."
-                      ) : (
-                        <a
-                          className="text-primary hover:text-blue-800 transition-all flex items-center gap-1"
-                          href={employee.email}
-                          target="_blank"
-                        >
-                          <MailPlus size={16} />
-                          {employee.name}
-                        </a>
-                      )}
-                    </p>
-                    <p>
-                      {employee.linkedin_link === "" ? (
-                        "No provided Information."
-                      ) : (
-                        <a
-                          className="text-primary hover:text-blue-800 transition-all flex items-center gap-1"
-                          href={employee.linkedin_link}
-                          target="_blank"
-                        >
-                          <Linkedin size={16} />
-                          {"LinkedIn link"}
-                        </a>
-                      )}
-                    </p>
-                    <p className="flex items-center gap-1">
+                    <div className="gap-1 flex">
+                      <span className="text-gray-600">Name:</span>
+                      {employee.name}
+                    </div>
+
+                    <div className="flex items-center gap-1">
+                      <div className="gap-1 flex">
+                        <span className="text-gray-600">Email:</span>
+                        {employee.email === ""
+                          ? "No provided Information."
+                          : employee.email}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-1">
+                      <div className="gap-1 flex">
+                        <span className="text-gray-600">Linked in:</span>
+                        {employee.linkedin_link === ""
+                          ? "No provided Information."
+                          : employee.linkedin_link}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-1">
                       {employee.job_title === "" ? (
                         "No provided Information."
                       ) : (
-                        <>
-                          <UserRound size={16} />
+                        <div className="gap-1 flex">
+                          <span className="text-gray-600">Job Title:</span>
                           {employee.job_title}
-                        </>
+                        </div>
                       )}
-                    </p>
+                    </div>
 
                     <p className="flex items-center gap-1">
                       {employee.contacted === "" ? (
                         "No provided Information."
                       ) : (
-                        <>
-                          <Mails size={16} />
+                        <div className="gap-1 flex">
+                          <span className="text-gray-600">Contacted:</span>
                           {
                             contacted.find(
-                              (c) => c.value === employee.contacted
+                              (contact) => contact.value === employee.contacted
                             ).name
                           }
-                        </>
+                        </div>
                       )}
                     </p>
                   </div>
                 </div>
               </div>
 
-              <div className="flex border rounded-md w-[300px] p-4 bg-[#fcfcfd] mt-4">
-                <div className="flex items-center justify-center gap-5">
+              <div className="flex shadow rounded-md p-4 gap-8 w-fit h-fit">
+                <div className="flex gap-4">
                   <div className="border rounded-md w-fit p-2 self-start text-primary">
                     <Building2 size={32} />
                   </div>
                   <div className="flex flex-col gap-2">
-                    <p>
-                      {employee.company.name === ""
-                        ? "No provided Information."
-                        : employee.company.name}
-                    </p>
-                    <p className="flex items-center gap-2">
-                      {employee.company.location === "" ? (
-                        "No provided Information."
-                      ) : (
-                        <>
-                          <MapPin size={16} />
-                          {employee.company.location}
-                        </>
-                      )}
-                    </p>
-                    <p>
-                      {employee.company.careers_link === "" ? (
-                        "No provided Information."
-                      ) : (
-                        <a
-                          className="text-primary hover:text-blue-800 transition-all flex items-center gap-1"
-                          href={employee.company.careers_link}
-                          target="_blank"
-                        >
-                          <Career size={16} />
-                          {"Career Link"}
-                        </a>
-                      )}
-                    </p>
-                    <p>
-                      {employee.company.linkedin_link === "" ? (
-                        "No provided Information."
-                      ) : (
-                        <a
-                          className="text-primary hover:text-blue-800 transition-all flex items-center gap-1"
-                          href={employee.company.linkedin_link}
-                          target="_blank"
-                        >
-                          <Linkedin size={16} />
-                          {"LinkedIn link"}
-                        </a>
-                      )}
-                    </p>
+                    <div className="gap-1 flex">
+                      <span className="text-gray-600">Company:</span>
+                      {employee.company.name}
+                    </div>
+
+                    <div className="gap-1 flex">
+                      <span className="text-gray-600">Location:</span>
+                      {employee.company.location}
+                    </div>
                   </div>
+                </div>
+                <div className="flex gap-2">
+                  <p>
+                    {employee.company.linkedin_link === "" ? (
+                      "No provided Information."
+                    ) : (
+                      <a
+                        className="text-primary hover:text-blue-800 transition-all flex items-center gap-1"
+                        href={employee.company.linkedin_link}
+                        target="_blank"
+                      >
+                        <Linkedin size={20} />
+                      </a>
+                    )}
+                  </p>
+                  <p>
+                    {employee.company.careers_link === "" ? (
+                      "No provided Information."
+                    ) : (
+                      <a
+                        className="text-primary hover:text-blue-800 transition-all flex items-center gap-1"
+                        href={employee.company.careers_link}
+                        target="_blank"
+                      >
+                        <Career size={20} />
+                      </a>
+                    )}
+                  </p>
                 </div>
               </div>
             </div>

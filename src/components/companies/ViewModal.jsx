@@ -8,6 +8,7 @@ import {
   MapPin,
   Link as Career,
   Linkedin,
+  SquareArrowOutUpRight,
 } from "lucide-react";
 import Table from "../Table";
 import React from "react";
@@ -73,7 +74,16 @@ export default function ViewModal() {
     }
   );
 
-  const table_head = ["Employee Name", "Job Title"];
+  const table_head = [
+    {
+      name: "Name",
+      key: "name",
+    },
+    {
+      name: "Job Title",
+      key: "job_title",
+    },
+  ];
 
   return (
     <Layout>
@@ -91,91 +101,95 @@ export default function ViewModal() {
           {isLoading ? (
             <p>Loading...</p>
           ) : (
-            <div className="flex flex-col gap-9">
-              <div className="flex border rounded-md w-[300px] p-4 bg-[#fcfcfd] mt-4">
-                <div className="flex items-center justify-center gap-5">
-                  <div className="border rounded-md w-fit p-2 self-start text-primary">
-                    <Building2 size={32} />
+            <div className="flex flex-col gap-4">
+              <div className="flex shadow rounded-md p-4 gap-8 w-fit">
+                <div className="flex gap-4">
+                  <div className="border rounded-md w-fit p-2 text-primary">
+                    <Building2 size={40} />
                   </div>
                   <div className="flex flex-col gap-2">
-                    <p>
-                      {company.name === ""
-                        ? "No provided Information."
-                        : company.name}
-                    </p>
-                    <p className="flex items-center gap-2">
-                      {company.location === "" ? (
-                        "No provided Information."
-                      ) : (
-                        <>
-                          <MapPin size={16} />
-                          {company.location}
-                        </>
-                      )}
-                    </p>
-                    <p>
-                      {company.careers_link === "" ? (
-                        "No provided Information."
-                      ) : (
-                        <a
-                          className="text-primary hover:text-blue-800 transition-all flex items-center gap-1"
-                          href={company.careers_link}
-                          target="_blank"
-                        >
-                          <Career size={16} />
-                          {"Career Link"}
-                        </a>
-                      )}
-                    </p>
-                    <p>
-                      {company.linkedin_link === "" ? (
-                        "No provided Information."
-                      ) : (
-                        <a
-                          className="text-primary hover:text-blue-800 transition-all flex items-center gap-1"
-                          href={company.linkedin_link}
-                          target="_blank"
-                        >
-                          <Linkedin size={16} />
-                          {"LinkedIn link"}
-                        </a>
-                      )}
-                    </p>
+                    {company.name === "" ? (
+                      "No provided Information."
+                    ) : (
+                      <div className="gap-1 flex">
+                        <span className="text-gray-600">Company:</span>
+                        {company.name}
+                      </div>
+                    )}
+                    {company.location === "" ? (
+                      "No provided Information."
+                    ) : (
+                      <div className="gap-1 flex">
+                        <span className="text-gray-600">Location:</span>
+                        {company.location}
+                      </div>
+                    )}
                   </div>
+                </div>
+                <div className="flex gap-2">
+                  <p>
+                    {company.careers_link === "" ? (
+                      "No provided Information."
+                    ) : (
+                      <a
+                        className="text-primary hover:text-blue-800 transition-all flex items-center gap-1"
+                        href={company.careers_link}
+                        target="_blank"
+                      >
+                        <SquareArrowOutUpRight size={20} />
+                      </a>
+                    )}
+                  </p>
+                  <p>
+                    {company.linkedin_link === "" ? (
+                      "No provided Information."
+                    ) : (
+                      <a
+                        className="text-primary hover:text-blue-800 transition-all flex items-center gap-1"
+                        href={company.linkedin_link}
+                        target="_blank"
+                      >
+                        <Linkedin size={20} />
+                      </a>
+                    )}
+                  </p>
                 </div>
               </div>
 
-              <Table
-                actions
-                isLoading={isLoading}
-                search={search}
-                setSearch={setSearch}
-                table_head={table_head}
-                table_rows={employees?.results?.map(
-                  ({ id, name, job_title }) => {
-                    return {
-                      id,
-                      name,
-                      job_title,
-                    };
-                  }
+              <div className="flex flex-col gap-2">
+                <p className="font-semibold text-gray-500">Employees</p>
+                <Table
+                  actions
+                  isLoading={isLoading}
+                  search={search}
+                  viewSearch
+                  setSearch={setSearch}
+                  table_head={table_head}
+                  table_rows={employees?.results?.map(
+                    ({ id, name, job_title }) => {
+                      return {
+                        id,
+                        name,
+                        job_title,
+                      };
+                    }
+                  )}
+                  handleOpenDelete={handleOpenDelete}
+                  handleOpenEdit={handleOpenEdit}
+                  handleOpenView={"employees"}
+                />
+                {employees?.results?.length !== 0 && (
+                  <div className="self-center">
+                    <Pagination
+                      nextPage={employees?.next}
+                      prevPage={employees?.previous}
+                      page={page}
+                      setPage={setPage}
+                      totalPages={employees?.total_pages}
+                    />
+                  </div>
                 )}
-                handleOpenDelete={handleOpenDelete}
-                handleOpenEdit={handleOpenEdit}
-                handleOpenView={"employees"}
-              />
-
-              {employees?.results?.length !== 0 && (
-                <div className="self-center">
-                  <Pagination
-                    nextPage={employees?.next}
-                    prevPage={employees?.previous}
-                    page={page}
-                    setPage={setPage}
-                    totalPages={employees?.total_pages}
-                  />
-                </div>
-              )}
+              </div>
 
               {console.log(employees)}
 

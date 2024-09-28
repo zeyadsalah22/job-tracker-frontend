@@ -9,6 +9,52 @@ import ReactLoading from "react-loading";
 import DeleteModal from "../components/user/DeleteModal";
 import { useNavigate } from "react-router-dom";
 import { LogOut, Trash2 } from "lucide-react";
+import ChangePass from "../components/user/ChangePass";
+
+// function ChangePass({
+//   values,
+//   errors,
+//   touched,
+//   handleChange,
+//   error,
+//   setOpen,
+//   open,
+// }) {
+//   return (
+//     <Modal open={open} setOpen={setOpen}>
+//       <FormInput
+//         type="password"
+//         name="old_password"
+//         placeHolder="old_password"
+//         label="old_password"
+//         value={values?.old_password}
+//         onChange={handleChange}
+//         error={errors?.old_password || error?.response?.data?.old_password}
+//         touched={touched.old_password}
+//       />
+//       <FormInput
+//         type="password"
+//         name="password"
+//         placeHolder="Password"
+//         label="Password"
+//         value={values?.password}
+//         onChange={handleChange}
+//         error={errors?.password || error?.response?.data?.password}
+//         touched={touched.password}
+//       />
+//       <FormInput
+//         type="password"
+//         name="re_password"
+//         placeHolder="Confirm password"
+//         label="Confirm Password"
+//         value={values?.re_password}
+//         onChange={handleChange}
+//         error={errors.re_password}
+//         touched={touched.re_password}
+//       />
+//     </Modal>
+//   );
+// }
 
 export default function Profile() {
   const user = useUserStore((state) => state.user);
@@ -18,13 +64,14 @@ export default function Profile() {
   const [deleteModal, setDeleteModal] = useState(false);
   const userLogout = useUserStore((state) => state.logout);
   const navigate = useNavigate();
-  const [disabled, setDisabled] = useState(true);
+  const [changePassword, setChangePassword] = useState(false);
 
   const { values, errors, handleSubmit, handleChange, touched, setFieldValue } =
     useFormik({
       initialValues: {
         username: "",
         email: "",
+        old_password: "",
         password: "",
         re_password: "",
       },
@@ -109,28 +156,6 @@ export default function Profile() {
               error={errors?.email || error?.response?.data?.email}
               touched={touched.email}
             />
-            <FormInput
-              type="password"
-              name="password"
-              placeHolder="Password"
-              label="Password"
-              value={values?.password}
-              onChange={handleChange}
-              error={errors?.password || error?.response?.data?.password}
-              touched={touched.password}
-              disabled={disabled}
-            />
-            <FormInput
-              type="password"
-              name="re_password"
-              placeHolder="Confirm password"
-              label="Confirm Password"
-              value={values?.re_password}
-              onChange={handleChange}
-              error={errors.re_password}
-              touched={touched.re_password}
-              disabled={disabled}
-            />
 
             {loading ? (
               <button
@@ -166,13 +191,18 @@ export default function Profile() {
               </div>
             )}
           </form>
+          <div className="flex gap-1">
+            <p className="text-sm">{"Do you want to change your password?"}</p>
+            <button
+              onClick={() => setChangePassword(true)}
+              className="text-sm underline text-primary"
+            >
+              Change password
+            </button>
+          </div>
         </div>
-        {deleteModal && (
-          <DeleteModal
-            openDelete={deleteModal}
-            setOpenDelete={setDeleteModal}
-          />
-        )}
+        <DeleteModal openDelete={deleteModal} setOpenDelete={setDeleteModal} />
+        <ChangePass open={changePassword} setOpen={setChangePassword} />
       </div>
     </Layout>
   );

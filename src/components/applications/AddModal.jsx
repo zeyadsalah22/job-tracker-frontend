@@ -198,7 +198,14 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
               setQuery={setCompanySearch}
               setValue={setCompanyId}
               isLoading={companyies_Loading}
+              error={errors.company_id || error?.response?.data?.company_id}
+              touched={touched.company_id}
             />
+            {errors.company_id && touched.company_id && (
+              <span className="mt-1 text-xs text-red-500">
+                {errors.company_id}
+              </span>
+            )}
           </div>
 
           <div className="flex gap-6 w-full">
@@ -210,8 +217,9 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
                 type="text"
                 onChange={handleChange}
                 value={values.job_title}
-                error={errors.job_title}
+                error={errors.job_title || error?.response?.data?.job_title}
                 touched={touched.job_title}
+                required
               />
             </div>
             <div className="w-full">
@@ -222,8 +230,9 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
                 type="text"
                 onChange={handleChange}
                 value={values.job_type}
-                error={errors.job_type}
+                error={errors.job_type || error?.response?.data?.job_type}
                 touched={touched.job_type}
+                required
               />
             </div>
           </div>
@@ -234,7 +243,7 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
             type="text"
             onChange={handleChange}
             value={values.link}
-            error={errors.link}
+            error={errors.link || error?.response?.data?.link}
             touched={touched.link}
           />
           <div className="flex gap-6">
@@ -246,8 +255,9 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
               onChange={(e) =>
                 setFieldValue("submitted_cv", e.currentTarget.files[0])
               }
-              error={errors.submitted_cv}
+              error={errors.submitted_cv || error?.response?.data?.submitted_cv}
               touched={touched.submitted_cv}
+              required
             />
             <FormInput
               label="ATS Score"
@@ -256,15 +266,13 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
               type="number"
               onChange={handleChange}
               value={values.ats_score}
-              error={errors.ats_score}
+              error={errors.ats_score || error?.response?.data?.ats_score}
               touched={touched.ats_score}
             />
           </div>
           <div className="flex gap-6 w-full">
             <div className="flex flex-col gap-2 w-full">
-              <p className="text-sm text-gray-600">
-                Choose Stage<span className="text-red-500">*</span>
-              </p>
+              <p className="text-sm text-gray-600">Choose Stage</p>
               <select
                 name="stage"
                 value={values.stage}
@@ -284,14 +292,12 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
               </select>
               {errors.stage && touched.stage && (
                 <span className="mt-1 text-xs text-red-500">
-                  {errors.stage}
+                  {errors.stage || error?.response?.data?.stage}
                 </span>
               )}
             </div>
             <div className="flex flex-col gap-2 w-full">
-              <p className="text-sm text-gray-600">
-                Choose Status<span className="text-red-500">*</span>
-              </p>
+              <p className="text-sm text-gray-600">Choose Status</p>
               <select
                 name="status"
                 value={values.status}
@@ -311,16 +317,14 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
               </select>
               {errors.status && touched.status && (
                 <span className="mt-1 text-xs text-red-500">
-                  {errors.status}
+                  {errors.status || error?.response?.data?.status}
                 </span>
               )}
             </div>
           </div>
           <div className="flex flex-col gap-2">
             <div className="flex flex-col gap-2 w-full">
-              <p className="text-sm text-gray-600">
-                Choose Employee<span className="text-red-500">*</span>
-              </p>
+              <p className="text-sm text-gray-600">Choose Employee</p>
               <Dropdown
                 add={{
                   name: "Add Employee",
@@ -333,7 +337,6 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
                 isLoading={employees_loading}
               />
             </div>
-
             <div className="flex flex-wrap">
               {Array.isArray(values?.contacted_employees) &&
                 values?.contacted_employees.length !== 0 &&
@@ -341,7 +344,6 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
                   const employee = employees?.results?.find(
                     (emp) => emp.id === Number(employeeId)
                   );
-
                   return (
                     <div
                       key={employeeId}
@@ -377,7 +379,9 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
             type="date"
             onChange={handleChange}
             value={values.submission_date}
-            error={errors.submission_date}
+            error={
+              errors.submission_date || error?.response?.data?.submission_date
+            }
             touched={touched.submission_date}
           />
           <FormInput
@@ -387,7 +391,7 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
             textArea
             onChange={handleChange}
             value={values.description}
-            error={errors.description}
+            error={errors.description || error?.response?.data?.description}
             touched={touched.description}
           />
 
