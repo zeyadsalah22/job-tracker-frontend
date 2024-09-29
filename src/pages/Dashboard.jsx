@@ -331,7 +331,7 @@ export default function Dashboard() {
             </div>
           ))}
         </div>
-        <div className="bg-white col-span-2 rounded-lg p-6 shadow-md gap-2 flex flex-col ">
+        <div className="bg-white col-span-2 rounded-lg p-6 shadow-md gap-2 flex flex-col">
           <h2 className="font-semibold">{monthName} Data</h2>
           <div className="flex gap-2">
             <div className="flex flex-col gap-2 w-[200px]">
@@ -383,7 +383,7 @@ export default function Dashboard() {
             //     : days,
             // Example: ["W39", "W40", "W41", "W42"]
             data={chartData}
-            height={500}
+            height={350}
           />
         </div>
         <div className="flex gap-6 w-full">
