@@ -433,6 +433,7 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
             value={values.description}
             error={errors.description}
             touched={touched.description}
+            textArea
           />
 
           {loading ? (

@@ -84,6 +84,8 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
     };
   });
 
+  console.log(errors);
+
   return (
     <Modal open={openAdd} setOpen={setOpenAdd} width="600px">
       <div className="flex flex-col gap-4">

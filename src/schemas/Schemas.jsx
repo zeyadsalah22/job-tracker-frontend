@@ -55,13 +55,6 @@ export const applicationSchema = Yup.object().shape({
   job_type: Yup.string().required("Required"),
   description: Yup.string().optional(),
   link: Yup.string().optional(),
-  // submitted_cv: Yup.object()
-  //   .shape({
-  //     file: Yup.object().shape({
-  //       name: Yup.string().required(),
-  //     }),
-  //   })
-  //   .required("File required"),
   ats_score: Yup.number().optional(),
   stage: Yup.string().optional(),
   status: Yup.string().optional(),

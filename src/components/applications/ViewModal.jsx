@@ -162,7 +162,7 @@ export default function ViewModal() {
                       ) : (
                         <div className="gap-1 flex">
                           <span className="text-gray-600">Description:</span>
-                          {application.description}
+                          <div className="w-96">{application.description}</div>
                         </div>
                       )}
                     </div>
@@ -236,7 +236,7 @@ export default function ViewModal() {
                   </div>
                 </div>
               </div>
-              <div className="flex flex-col">
+              <div className="flex flex-col mt-4">
                 <p className="font-semibold text-gray-500">
                   Contacted Employees
                 </p>

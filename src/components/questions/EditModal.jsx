@@ -28,7 +28,9 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
     return data;
   };
 
-  const { data: question } = useQuery(["question", id], fetchQeustion);
+  const { data: question } = useQuery(["question", id], fetchQeustion, {
+    enabled: !!id,
+  });
 
   const fetchApplications = async () => {
     const { data } = await axios.get(`http://127.0.0.1:8000/api/applications`, {
@@ -40,7 +42,7 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
   };
 
   const { data: applications, isLoading } = useQuery(
-    ["applications", id],
+    ["applications"],
     fetchApplications
   );
 
@@ -57,7 +59,7 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
       onSubmit: async (values) => {
         setLoading(true);
         await axios
-          .post("http://127.0.0.1:8000/api/questions", values, {
+          .patch(`http://127.0.0.1:8000/api/questions/${id}`, values, {
             headers: {
               Authorization: `Token ${token}`,
             },

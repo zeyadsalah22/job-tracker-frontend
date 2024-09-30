@@ -256,7 +256,6 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
               }
               error={errors.submitted_cv || error?.response?.data?.submitted_cv}
               touched={touched.submitted_cv}
-              required
             />
             <FormInput
               label="ATS Score"

@@ -42,7 +42,7 @@ export default function SideNav() {
   ];
 
   return (
-    <div className="w-[300px] flex flex-col justify-between">
+    <div className="h-screen sticky top-0 left-0 w-[300px] flex flex-col justify-between">
       <div className="flex flex-col">
         <div className="bg-primary py-7 px-8 text-xl font-semibold text-white">
           Company

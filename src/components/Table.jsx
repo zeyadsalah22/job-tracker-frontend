@@ -139,7 +139,12 @@ export default function Table({
                         </a>
                       </span>
                     ) : (
-                      <span key={valueIndex} className="w-full h-fit pl-4">
+                      <span
+                        key={valueIndex}
+                        className={`w-full h-fit pl-4 ${
+                          (key === "answer" || "question") && "line-clamp-3"
+                        }`}
+                      >
                         {value}
                       </span>
                     )

@@ -114,7 +114,7 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
   return (
     <Modal open={openAdd} setOpen={setOpenAdd} width="600px">
       <div className="flex flex-col gap-4">
-        <h1 className="font-semibold text-lg">Add Employee</h1>
+        <h1 className="font-semibold text-lg">Add Question</h1>
         <div className="z-[100]">
           {addCompany && (
             <AddModalCompanies
