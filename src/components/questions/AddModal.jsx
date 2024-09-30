@@ -67,15 +67,15 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
       },
     });
 
+  const setAppId = (id) => {
+    setFieldValue("application_id", id);
+  };
+
   useEffect(() => {
     if (user) {
       setFieldValue("user_id", user.id);
     }
   }, [user, setFieldValue]);
-
-  const setAppId = (id) => {
-    setFieldValue("application_id", id);
-  };
 
   const application_names = applications?.results?.map(({ id, job_title }) => {
     return {

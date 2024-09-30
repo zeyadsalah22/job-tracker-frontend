@@ -191,8 +191,6 @@ export default function ViewModal() {
                 )}
               </div>
 
-              {console.log(employees)}
-
               {openEdit && (
                 <EditModal
                   id={employeeId}

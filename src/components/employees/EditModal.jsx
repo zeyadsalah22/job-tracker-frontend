@@ -157,7 +157,7 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
             error={errors.email || error?.response?.data?.email}
             touched={touched.email}
           />
-          {console.log(errors.email, values)}
+
           <FormInput
             name="job_title"
             type="text"
@@ -193,7 +193,6 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
                 </span>
               )}
             </div>
-            {console.log(errors)}
 
             <div className="w-full">
               <select

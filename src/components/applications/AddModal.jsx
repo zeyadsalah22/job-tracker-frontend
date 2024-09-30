@@ -180,7 +180,6 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
           />
         )}
       </div>
-      {console.log(values)}
       <div className="flex flex-col gap-4">
         <h1 className="font-semibold text-lg">Add Employee</h1>
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">

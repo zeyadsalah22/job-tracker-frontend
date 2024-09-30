@@ -58,8 +58,6 @@ export default function ViewModal() {
     application?.contacted_employees?.includes(employee.id)
   );
 
-  console.log(employeesWithGivenIds);
-
   const table_head = [
     {
       name: "Name",

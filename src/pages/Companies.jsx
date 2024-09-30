@@ -46,8 +46,6 @@ export default function Companies() {
     refetch,
   } = useQuery(["companies", { search, page, order }], fetchCompanies);
 
-  console.log(order);
-
   const table_head = [
     {
       name: "Name",

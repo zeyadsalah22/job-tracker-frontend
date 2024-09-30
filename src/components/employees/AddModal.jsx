@@ -195,7 +195,7 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
                 </span>
               )}
             </div>
-            {console.log(errors)}
+
             <div className="flex flex-col gap-2 w-full">
               <p className="text-sm text-gray-600">
                 Choose Company<span className="text-red-500">*</span>
