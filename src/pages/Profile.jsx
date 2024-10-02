@@ -160,7 +160,7 @@ export default function Profile() {
             {loading ? (
               <button
                 disabled
-                className="rounded cursor-not-allowed flex items-center justify-center bg-primary px-8 py-2 text-white transition h-12"
+                className="rounded cursor-not-allowed flex items-center justify-center bg-primary w-[122px] px-8 py-2 text-white transition h-10"
               >
                 <ReactLoading
                   type="bubbles"
@@ -173,7 +173,7 @@ export default function Profile() {
               <div className="flex items-center justify-between">
                 <button
                   type="submit"
-                  className="rounded-lg bg-primary px-4 py-2 text-white transition hover:bg-primary/80 w-fit text-sm font-semibold"
+                  className="rounded-lg bg-primary px-4 py-2 text-white transition hover:bg-primary/80 w-fit text-sm font-semibold  h-10"
                 >
                   Save changes
                 </button>

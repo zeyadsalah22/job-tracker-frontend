@@ -3,7 +3,7 @@ import { useQuery } from "react-query";
 import { useParams } from "react-router-dom";
 import Layout from "../Layout";
 import { Link } from "react-router-dom";
-import { ChevronDown, ChevronUp, MoveLeft } from "lucide-react";
+import { ArrowLeft, ChevronDown, ChevronUp, MoveLeft } from "lucide-react";
 import React from "react";
 import { AnimatePresence, motion } from "framer-motion";
 
@@ -39,11 +39,11 @@ export default function ViewModal() {
           <div className="flex items-center gap-2 pb-4 border-b-2">
             <Link
               to={`/questions`}
-              className="py-2 px-4 bg-[#f7f7f7] hover:bg-[#f1f1f1] transition-all w-fit rounded-lg flex items-center gap-2"
+              className="py-2 px-4 hover:bg-[#f1f1f1] transition-all w-fit rounded-lg flex items-center gap-2"
             >
-              <MoveLeft /> Back
+              <ArrowLeft size={19} />
             </Link>
-            <h1 className="text-2xl font-bold">question Details</h1>
+            <h1 className="text-lg font-semibold">Question Details</h1>
           </div>
           {isLoading ? (
             <p>Loading...</p>
