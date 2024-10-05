@@ -93,7 +93,7 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
   return (
     <Modal open={openEdit} setOpen={setOpenEdit} width="600px">
       <div className="flex flex-col gap-4">
-        <h1 className="font-semibold text-lg">Add Employee</h1>
+        <h1 className="font-semibold text-lg">Edit Question</h1>
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
           <FormInput
             label="Question"
@@ -104,6 +104,7 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
             onChange={handleChange}
             error={errors.question}
             touched={touched.question}
+            textArea
           />
           <FormInput
             label="Answer"
@@ -114,6 +115,7 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
             onChange={handleChange}
             error={errors.answer}
             touched={touched.answer}
+            textArea
           />
 
           <div className="w-full">
