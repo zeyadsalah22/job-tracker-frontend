@@ -116,7 +116,7 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
     ["employees", { id: values.company_id, employeeSearch }],
     fetchEmployees,
     {
-      enabled: !!values.company_id,
+      enabled: !!values.company_id && !values.company_id === "add-company",
     }
   );
 

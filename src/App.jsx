@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, useNavigate } from "react-router-dom";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Table from "./components/Table";
@@ -14,8 +14,17 @@ import Companies from "./pages/Companies";
 import Employees from "./pages/Employees";
 import Questions from "./pages/Questions";
 import Question from "./components/questions/ViewModal";
+import { useEffect } from "react";
 
 export default function App() {
+  const token = localStorage.getItem("token");
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!token) {
+      navigate("/login");
+    }
+  }, [token, navigate]);
   return (
     <>
       <Routes>

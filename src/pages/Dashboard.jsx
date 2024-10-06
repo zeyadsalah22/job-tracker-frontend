@@ -103,10 +103,10 @@ function Todo() {
                 width={25}
               />{" "}
             </div>
-          ) : todos.results.length === 0 ? (
+          ) : todos?.results?.length === 0 ? (
             <p className="text-gray-500">No tasks. Add a task!</p>
           ) : (
-            todos.results.map((todo) => (
+            todos?.results?.map((todo) => (
               <div
                 key={todo.id}
                 className="flex justify-between items-center py-2"
@@ -373,18 +373,7 @@ export default function Dashboard() {
               </select>
             </div>
           </div>
-          <TEChart
-            type="line"
-            // labels:
-            //   interval === "week"
-            //     ? weeks
-            //     : interval === "month"
-            //     ? months
-            //     : days,
-            // Example: ["W39", "W40", "W41", "W42"]
-            data={chartData}
-            height={350}
-          />
+          <TEChart type="line" data={chartData} height={350} />
         </div>
         <div className="flex gap-6 w-full">
           <div className="bg-white col-span-1 rounded-lg p-6 shadow-md w-[75%]">

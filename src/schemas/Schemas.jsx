@@ -21,18 +21,18 @@ export const registerSchema = Yup.object().shape({
 export const comapnySchema = Yup.object().shape({
   name: Yup.string().required("Required"),
   location: Yup.string().required("Required"),
-  careers_link: Yup.string()
-    .matches(
-      /((https?):\/\/)?(www.)?[a-z0-9]+(\.[a-z]{2,}){1,3}(#?\/?[a-zA-Z0-9#]+)*\/?(\?[a-zA-Z0-9-_]+=[a-zA-Z0-9-%]+&?)?$/,
-      "Enter correct url!"
-    )
-    .optional(),
-  linkedin_link: Yup.string()
-    .matches(
-      /((https?):\/\/)?(www.)?[a-z0-9]+(\.[a-z]{2,}){1,3}(#?\/?[a-zA-Z0-9#]+)*\/?(\?[a-zA-Z0-9-_]+=[a-zA-Z0-9-%]+&?)?$/,
-      "Enter correct url!"
-    )
-    .optional(),
+  // careers_link: Yup.string()
+  //   .matches(
+  //     /((https?):\/\/)?(www.)?[a-z0-9]+(\.[a-z]{2,}){1,3}(#?\/?[a-zA-Z0-9#]+)*\/?(\?[a-zA-Z0-9-_]+=[a-zA-Z0-9-%]+&?)?$/,
+  //     "Enter correct url!"
+  //   )
+  //   .optional(),
+  // linkedin_link: Yup.string()
+  //   .matches(
+  //     /((https?):\/\/)?(www.)?[a-z0-9]+(\.[a-z]{2,}){1,3}(#?\/?[a-zA-Z0-9#]+)*\/?(\?[a-zA-Z0-9-_]+=[a-zA-Z0-9-%]+&?)?$/,
+  //     "Enter correct url!"
+  //   )
+  //   .optional(),
 });
 
 export const employeeSchema = Yup.object().shape({
