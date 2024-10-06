@@ -68,3 +68,10 @@ export const questionSchema = Yup.object().shape({
   answer: Yup.string().optional(),
   application_id: Yup.string().required("Required"),
 });
+
+export const todoSchema = Yup.object().shape({
+  user_id: Yup.string().required("Required"),
+  application_title: Yup.string().required("Required"),
+  link: Yup.string().optional(),
+  completed: Yup.boolean().optional(),
+});

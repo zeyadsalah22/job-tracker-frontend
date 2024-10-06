@@ -1,17 +1,16 @@
 import { useEffect, useState } from "react";
 import Layout from "../components/Layout";
-import { Book, CheckCheck, X, LoaderCircle, Trash2 } from "lucide-react";
+import { Book, CheckCheck, X, LoaderCircle, Trash2, Plus } from "lucide-react";
 import { TEChart } from "tw-elements-react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useQuery } from "react-query";
-import useUserStore from "../store/user.store";
-import { toast } from "react-toastify";
 import ReactLoading from "react-loading";
+import AddTodoModal from "../components/AddTodoModal";
 
 function Todo() {
-  const user = useUserStore((state) => state.user);
   const [loading, setLoading] = useState(false);
+  const [openAdd, setOpenAdd] = useState(false);
 
   const fetchTodos = async () => {
     const { data } = await axios.get(`http://127.0.0.1:8000/api/todos`, {
@@ -23,37 +22,6 @@ function Todo() {
   };
 
   const { data: todos, isLoading, refetch } = useQuery(["todos"], fetchTodos);
-
-  const addTodo = async (e) => {
-    if (e.key === "Enter" && !e.target.value) {
-      return alert("Please enter a task");
-    } else if (e.key === "Enter") {
-      setLoading(true);
-      await axios
-        .post(
-          "http://127.0.0.1:8000/api/todos",
-          {
-            user_id: user.id,
-            application_title: e.target.value,
-          },
-          {
-            headers: {
-              Authorization: `Token  ${localStorage.getItem("token")}`,
-            },
-          }
-        )
-        .then(() => {
-          refetch();
-          setLoading(false);
-          return (e.target.value = "");
-        })
-        .catch((error) => {
-          setLoading(false);
-          toast.error(error.response.data.non_field_errors[0]);
-        });
-    }
-  };
-
   const deleteTodo = async (id) => {
     setLoading(true);
     await axios
@@ -90,7 +58,7 @@ function Todo() {
   };
 
   return (
-    <div className="bg-white col-span-1 rounded-lg p-6 shadow-md flex flex-col justify-between w-[25%]">
+    <div className="bg-white col-span-1 rounded-lg p-6 shadow-md flex flex-col justify-between w-[30%]">
       <div className="flex flex-col gap-4">
         <p className="text-lg font-medium">Todo List</p>
         <div className="flex flex-col">
@@ -118,14 +86,23 @@ function Todo() {
                     onChange={() => toggleCompletion(todo.id)}
                     className="cursor-pointer"
                   />
-
-                  <p
-                    className={`${
-                      todo.completed ? "line-through text-gray-400" : ""
-                    }`}
-                  >
-                    {todo.application_title}
-                  </p>
+                  {todo.application_link && !todo.completed ? (
+                    <a
+                      href={todo.application_link}
+                      target="_blank"
+                      className="hover:underline text-blue-600 cursor-pointer"
+                    >
+                      {todo.application_title}
+                    </a>
+                  ) : (
+                    <p
+                      className={`${
+                        todo.completed ? "line-through text-gray-400" : ""
+                      }`}
+                    >
+                      {todo.application_title}
+                    </p>
+                  )}
                 </div>
                 <span
                   onClick={() => deleteTodo(todo.id)}
@@ -139,12 +116,19 @@ function Todo() {
         </div>
       </div>
 
-      <input
-        type="text"
-        onKeyDown={addTodo}
-        placeholder="Add a task"
-        className="border-2 border-gray-200 px-2 py-1 rounded-lg w-full focus:border-primary focus:ring-primary"
+      <AddTodoModal
+        openAdd={openAdd}
+        setOpenAdd={setOpenAdd}
+        refetch={refetch}
       />
+
+      <button
+        onClick={() => setOpenAdd(true)}
+        className="bg-primary hover:bg-primary/85 transition-all text-white py-2 px-4 rounded-lg flex items-center justify-center gap-2"
+      >
+        <Plus size={18} />
+        Add Task
+      </button>
     </div>
   );
 }
@@ -154,7 +138,9 @@ export default function Dashboard() {
   const token = localStorage.getItem("token");
   const [interval, setInterval] = useState("week");
   const [points, setPoints] = useState(12);
-  const [start_date, setStartDate] = useState("2024-09-26");
+  const [start_date, setStartDate] = useState(
+    localStorage.getItem("start_date")
+  );
 
   const fetchStatistics = async () => {
     const { data } = await axios.get(`http://127.0.0.1:8000/api/statistics`, {
@@ -315,11 +301,11 @@ export default function Dashboard() {
   return (
     <Layout>
       <div className="flex flex-col gap-6">
-        <div className="grid grid-cols-4 gap-6">
+        <div className="grid lg:grid-cols-4 md:grid-cols-2 gap-6">
           {cards.map((card, index) => (
             <div
               key={index}
-              className={`rounded-lg p-8 shadow-md flex justify-between text-white`}
+              className={`rounded-lg p-4 shadow-md flex justify-between text-white`}
               style={{ backgroundColor: card.color }}
             >
               <div className="flex flex-col gap-2">
@@ -376,7 +362,7 @@ export default function Dashboard() {
           <TEChart type="line" data={chartData} height={350} />
         </div>
         <div className="flex gap-6 w-full">
-          <div className="bg-white col-span-1 rounded-lg p-6 shadow-md w-[75%]">
+          <div className="bg-white col-span-1 rounded-lg p-6 shadow-md w-[70%]">
             <TEChart
               type="pie"
               data={{

@@ -40,7 +40,7 @@ export default function FormInput({
         />
       )}
       {touched && error && (
-        <span className="mt-1 text-xs text-red-500">{error}</span>
+        <span className="text-xs text-red-500">{error}</span>
       )}
     </div>
   );
