@@ -110,7 +110,9 @@ export default function SideNav() {
             />
             <div className="flex flex-col">
               <p className="text-sm">{user?.username}</p>
-              <p className="text-xs text-gray-600">{user?.email}</p>
+              <p className="text-xs w-36 truncate text-gray-600">
+                {user?.email}
+              </p>
             </div>
           </div>
           <span className="hover:text-primary transition-all group-hover:text-primary group-hover:scale-125">
