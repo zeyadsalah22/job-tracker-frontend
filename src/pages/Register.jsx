@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import useUserStore from "../store/user.store";
 import { toast } from "react-toastify";
 import FormInput from "../components/FormInput";
 import { useFormik } from "formik";
@@ -12,7 +11,6 @@ import { Link } from "react-router-dom";
 export default function Register() {
   const token = localStorage.getItem("token");
   const navigate = useNavigate();
-  const setUser = useUserStore((state) => state.setUser);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 

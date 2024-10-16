@@ -16,13 +16,6 @@ export default function Login() {
 
   const [loading, setLoading] = useState(false);
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    setUser(null);
-    navigate("/login");
-    toast.info("Session expired. Please log in again.");
-  };
-
   const { values, errors, handleSubmit, handleChange, touched } = useFormik({
     initialValues: {
       username: "",
