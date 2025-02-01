@@ -25,6 +25,11 @@ export default function App() {
       navigate("/login");
     }
   }, [token, navigate]);
+
+  if (!token) {
+    return null;
+  }
+
   return (
     <>
       <Routes>
