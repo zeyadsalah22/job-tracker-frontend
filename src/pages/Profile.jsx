@@ -114,7 +114,7 @@ export default function Profile() {
     });
     userLogout();
     localStorage.removeItem("token");
-    navigate("/login");
+    navigate("/");
     toast.success("Logout successful");
   };
 

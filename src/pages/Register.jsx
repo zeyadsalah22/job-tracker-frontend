@@ -27,7 +27,7 @@ export default function Register() {
       await axios
         .post("http://127.0.0.1:8000/api/users/", values)
         .then(() => {
-          navigate("/login");
+          navigate("/");
           toast.success("Registration successful. Please login to continue.");
         })
         .catch((error) => {
@@ -118,7 +118,7 @@ export default function Register() {
         )}
         <div className="flex gap-1">
           <p className="text-sm">Already a member?</p>
-          <Link className="text-sm underline text-primary" to={"/login"}>
+          <Link className="text-sm underline text-primary" to={"/"}>
             Login
           </Link>
         </div>

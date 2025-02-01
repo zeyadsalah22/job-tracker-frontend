@@ -9,7 +9,7 @@ export default function ProtectedRoute({ children }) {
   useEffect(() => {
     if (!token) {
       setTimeout(() => {
-        navigate("/login");
+        navigate("/");
       }, 3000);
     }
   }, [token, navigate]);

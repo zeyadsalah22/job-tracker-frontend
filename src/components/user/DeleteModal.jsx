@@ -33,7 +33,7 @@ export default function DeleteModal({ openDelete, setOpenDelete }) {
         setOpenDelete(false);
         setLoading(false);
         toast.success("User deleted successfully");
-        navigate("/login");
+        navigate("/");
         localStorage.removeItem("token");
       } catch (error) {
         setLoading(false);

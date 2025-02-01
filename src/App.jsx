@@ -22,21 +22,17 @@ export default function App() {
 
   useEffect(() => {
     if (!token && window.location.pathname !== "/register") {
-      navigate("/login");
+      navigate("/");
     }
   }, [token, navigate]);
-
-  if (!token) {
-    return null;
-  }
 
   return (
     <>
       <Routes>
         <Route path="/profile" element={<Profile />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/" element={<Dashboard />} />
+        <Route path="/" element={<Login />} />
+        <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/applications" element={<Applications />} />
         <Route path="/applications/:id" element={<Apllication />} />
 

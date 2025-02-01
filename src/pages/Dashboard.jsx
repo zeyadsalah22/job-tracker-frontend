@@ -226,7 +226,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (!token) {
-      navigate("/login");
+      navigate("/");
     }
   }, [navigate, token]);
 
