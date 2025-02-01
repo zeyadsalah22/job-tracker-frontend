@@ -49,8 +49,8 @@ export default function AddTodoModal({ refetch, openAdd, setOpenAdd }) {
     });
 
   useEffect(() => {
-    setFieldValue("user_id", user.id);
-  }, [user.id, setFieldValue]);
+    setFieldValue("user_id", user?.id);
+  }, [user?.id, setFieldValue]);
 
   return (
     <Modal open={openAdd} setOpen={setOpenAdd} width="600px">
