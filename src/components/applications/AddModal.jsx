@@ -55,12 +55,16 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
         }
 
         await axios
-          .post("http://127.0.0.1:8000/api/applications", formData, {
-            headers: {
-              Authorization: `Token ${token}`,
-              "Content-Type": "multipart/form-data",
-            },
-          })
+          .post(
+            "https://job-lander-backend.fly.dev/api/applications",
+            formData,
+            {
+              headers: {
+                Authorization: `Token ${token}`,
+                "Content-Type": "multipart/form-data",
+              },
+            }
+          )
           .then(() => {
             setOpenAdd(false);
             setLoading(false);
@@ -80,7 +84,7 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
 
   const fetchCompanies = async () => {
     const { data } = await axios.get(
-      `http://127.0.0.1:8000/api/companies?search=${companySearch}`,
+      `https://job-lander-backend.fly.dev/api/companies?search=${companySearch}`,
       {
         headers: {
           Authorization: `Token ${localStorage.getItem("token")}`,
@@ -98,7 +102,7 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
 
   const fetchEmployees = async () => {
     const { data } = await axios.get(
-      `http://127.0.0.1:8000/api/employees?company__id=${values.company_id}&search=${employeeSearch}`,
+      `https://job-lander-backend.fly.dev/api/employees?company__id=${values.company_id}&search=${employeeSearch}`,
       {
         headers: {
           Authorization: `Token ${localStorage.getItem("token")}`,

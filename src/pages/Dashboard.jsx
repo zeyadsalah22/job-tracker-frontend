@@ -13,11 +13,14 @@ function Todo() {
   const [openAdd, setOpenAdd] = useState(false);
 
   const fetchTodos = async () => {
-    const { data } = await axios.get(`http://127.0.0.1:8000/api/todos`, {
-      headers: {
-        Authorization: `Token  ${localStorage.getItem("token")}`,
-      },
-    });
+    const { data } = await axios.get(
+      `https://job-lander-backend.fly.dev/api/todos`,
+      {
+        headers: {
+          Authorization: `Token  ${localStorage.getItem("token")}`,
+        },
+      }
+    );
     return data;
   };
 
@@ -25,7 +28,7 @@ function Todo() {
   const deleteTodo = async (id) => {
     setLoading(true);
     await axios
-      .delete(`http://127.0.0.1:8000/api/todos/${id}`, {
+      .delete(`https://job-lander-backend.fly.dev/api/todos/${id}`, {
         headers: {
           Authorization: `Token  ${localStorage.getItem("token")}`,
         },
@@ -41,7 +44,7 @@ function Todo() {
     const todo = todos.results.find((todo) => todo.id === id);
     await axios
       .patch(
-        `http://127.0.0.1:8000/api/todos/${id}`,
+        `https://job-lander-backend.fly.dev/api/todos/${id}`,
         {
           completed: !todo.completed,
         },
@@ -143,11 +146,14 @@ export default function Dashboard() {
   );
 
   const fetchStatistics = async () => {
-    const { data } = await axios.get(`http://127.0.0.1:8000/api/statistics`, {
-      headers: {
-        Authorization: `Token  ${localStorage.getItem("token")}`,
-      },
-    });
+    const { data } = await axios.get(
+      `https://job-lander-backend.fly.dev/api/statistics`,
+      {
+        headers: {
+          Authorization: `Token  ${localStorage.getItem("token")}`,
+        },
+      }
+    );
     return data;
   };
 
@@ -158,11 +164,14 @@ export default function Dashboard() {
   } = useQuery(["statistics"], fetchStatistics);
 
   const fetchPercents = async () => {
-    const { data } = await axios.get(`http://127.0.0.1:8000/api/percents`, {
-      headers: {
-        Authorization: `Token  ${localStorage.getItem("token")}`,
-      },
-    });
+    const { data } = await axios.get(
+      `https://job-lander-backend.fly.dev/api/percents`,
+      {
+        headers: {
+          Authorization: `Token  ${localStorage.getItem("token")}`,
+        },
+      }
+    );
     return data;
   };
 
@@ -174,7 +183,7 @@ export default function Dashboard() {
 
   const fetchTimeseries = async () => {
     const { data } = await axios.get(
-      `http://127.0.0.1:8000/api/timeseries?start_date=${start_date}&points=${points}&interval=${interval}`,
+      `https://job-lander-backend.fly.dev/api/timeseries?start_date=${start_date}&points=${points}&interval=${interval}`,
       {
         headers: {
           Authorization: `Token  ${localStorage.getItem("token")}`,

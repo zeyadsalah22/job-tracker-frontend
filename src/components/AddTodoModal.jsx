@@ -27,7 +27,7 @@ export default function AddTodoModal({ refetch, openAdd, setOpenAdd }) {
       onSubmit: async (values) => {
         setLoading(true);
         await axios
-          .post("http://127.0.0.1:8000/api/todos", values, {
+          .post("https://job-lander-backend.fly.dev/api/todos", values, {
             headers: {
               Authorization: `Token ${token}`,
             },

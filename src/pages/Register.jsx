@@ -25,7 +25,7 @@ export default function Register() {
     onSubmit: async (values) => {
       setLoading(true);
       await axios
-        .post("http://127.0.0.1:8000/api/users/", values)
+        .post("https://job-lander-backend.fly.dev/api/users/", values)
         .then(() => {
           navigate("/");
           toast.success("Registration successful. Please login to continue.");

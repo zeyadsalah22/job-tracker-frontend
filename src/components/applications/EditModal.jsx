@@ -21,7 +21,7 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
 
   const fetchApplication = async () => {
     const { data } = await axios.get(
-      `http://127.0.0.1:8000/api/applications/${id}`,
+      `https://job-lander-backend.fly.dev/api/applications/${id}`,
       {
         headers: {
           Authorization: `Token ${localStorage.getItem("token")}`,
@@ -70,12 +70,16 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
           }
         }
         await axios
-          .patch(`http://127.0.0.1:8000/api/applications/${id}`, values, {
-            headers: {
-              Authorization: `Token ${token}`,
-              "Content-Type": "multipart/form-data",
-            },
-          })
+          .patch(
+            `https://job-lander-backend.fly.dev/api/applications/${id}`,
+            values,
+            {
+              headers: {
+                Authorization: `Token ${token}`,
+                "Content-Type": "multipart/form-data",
+              },
+            }
+          )
           .then(() => {
             setOpenEdit(false);
             setLoading(false);
@@ -94,11 +98,14 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
     });
 
   const fetchCompanies = async () => {
-    const { data } = await axios.get(`http://127.0.0.1:8000/api/companies`, {
-      headers: {
-        Authorization: `Token ${localStorage.getItem("token")}`,
-      },
-    });
+    const { data } = await axios.get(
+      `https://job-lander-backend.fly.dev/api/companies`,
+      {
+        headers: {
+          Authorization: `Token ${localStorage.getItem("token")}`,
+        },
+      }
+    );
     return data.results;
   };
 
@@ -109,7 +116,7 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
 
   const fetchEmployees = async () => {
     const { data } = await axios.get(
-      `http://127.0.0.1:8000/api/employees?company__id=${values.company_id}`,
+      `https://job-lander-backend.fly.dev/api/employees?company__id=${values.company_id}`,
       {
         headers: {
           Authorization: `Token ${localStorage.getItem("token")}`,

@@ -36,7 +36,7 @@ export default function ViewModal() {
 
   const fetchCompany = async () => {
     const { data } = await axios.get(
-      `http://127.0.0.1:8000/api/companies/${id}`,
+      `https://job-lander-backend.fly.dev/api/companies/${id}`,
       {
         headers: {
           Authorization: `Token ${localStorage.getItem("token")}`,
@@ -56,7 +56,7 @@ export default function ViewModal() {
 
   const fetchEmployees = async () => {
     const { data } = await axios.get(
-      `http://127.0.0.1:8000/api/employees?company__id=${id}&page=${page}&search=${search}`,
+      `https://job-lander-backend.fly.dev/api/employees?company__id=${id}&page=${page}&search=${search}`,
       {
         headers: {
           Authorization: `Token ${localStorage.getItem("token")}`,

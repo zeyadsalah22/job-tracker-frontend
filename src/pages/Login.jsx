@@ -26,7 +26,7 @@ export default function Login() {
       setLoading(true);
       try {
         const response = await axios.post(
-          "http://127.0.0.1:8000/api/token/login",
+          "https://job-lander-backend.fly.dev/api/token/login",
           values
         );
         const authToken = response.data.auth_token;
@@ -34,7 +34,7 @@ export default function Login() {
 
         if (authToken) {
           const userResponse = await axios.get(
-            "http://127.0.0.1:8000/api/users/me",
+            "https://job-lander-backend.fly.dev/api/users/me",
             {
               headers: {
                 Authorization: `Token ${authToken}`,
@@ -64,7 +64,7 @@ export default function Login() {
 
   useEffect(() => {
     if (token) {
-      navigate("/");
+      navigate("/dashboard");
     }
   }, [token, navigate]);
 

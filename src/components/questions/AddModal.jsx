@@ -19,11 +19,14 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
   const user = useUserStore((state) => state.user);
 
   const fetchApplications = async () => {
-    const { data } = await axios.get(`http://127.0.0.1:8000/api/applications`, {
-      headers: {
-        Authorization: `Token  ${localStorage.getItem("token")}`,
-      },
-    });
+    const { data } = await axios.get(
+      `https://job-lander-backend.fly.dev/api/applications`,
+      {
+        headers: {
+          Authorization: `Token  ${localStorage.getItem("token")}`,
+        },
+      }
+    );
     return data;
   };
 
@@ -45,7 +48,7 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
       onSubmit: async (values) => {
         setLoading(true);
         await axios
-          .post("http://127.0.0.1:8000/api/questions", values, {
+          .post("https://job-lander-backend.fly.dev/api/questions", values, {
             headers: {
               Authorization: `Token ${token}`,
             },

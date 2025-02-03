@@ -44,7 +44,7 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
 
   const fetchCompanies = async () => {
     const { data } = await axios.get(
-      `http://127.0.0.1:8000/api/companies?search=${companySearch}`,
+      `https://job-lander-backend.fly.dev/api/companies?search=${companySearch}`,
       {
         headers: {
           Authorization: `Token ${localStorage.getItem("token")}`,
@@ -76,7 +76,7 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
       onSubmit: async (values) => {
         setLoading(true);
         await axios
-          .post("http://127.0.0.1:8000/api/employees", values, {
+          .post("https://job-lander-backend.fly.dev/api/employees", values, {
             headers: {
               Authorization: `Token ${token}`,
             },

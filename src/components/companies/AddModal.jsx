@@ -24,7 +24,7 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
     onSubmit: async (values) => {
       setLoading(true);
       await axios
-        .post("http://127.0.0.1:8000/api/companies", values, {
+        .post("https://job-lander-backend.fly.dev/api/companies", values, {
           headers: {
             Authorization: `Token ${token}`,
           },

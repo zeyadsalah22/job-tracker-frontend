@@ -14,7 +14,7 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
 
   const fetchCompany = async () => {
     const { data } = await axios.get(
-      `http://127.0.0.1:8000/api/companies/${id}`,
+      `https://job-lander-backend.fly.dev/api/companies/${id}`,
       {
         headers: {
           Authorization: `Token ${localStorage.getItem("token")}`,
@@ -45,11 +45,15 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
       onSubmit: async (values) => {
         setLoading(true);
         await axios
-          .patch(`http://127.0.0.1:8000/api/companies/${id}`, values, {
-            headers: {
-              Authorization: `Token ${token}`,
-            },
-          })
+          .patch(
+            `https://job-lander-backend.fly.dev/api/companies/${id}`,
+            values,
+            {
+              headers: {
+                Authorization: `Token ${token}`,
+              },
+            }
+          )
           .then(() => {
             setOpenEdit(false);
             setLoading(false);

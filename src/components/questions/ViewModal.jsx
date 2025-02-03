@@ -12,7 +12,7 @@ export default function ViewModal() {
 
   const fetchquestion = async () => {
     const { data } = await axios.get(
-      `http://127.0.0.1:8000/api/questions/${id}`,
+      `https://job-lander-backend.fly.dev/api/questions/${id}`,
       {
         headers: {
           Authorization: `Token ${localStorage.getItem("token")}`,

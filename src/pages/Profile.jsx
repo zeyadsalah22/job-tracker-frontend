@@ -78,7 +78,7 @@ export default function Profile() {
       onSubmit: async (values) => {
         setLoading(true);
         await axios
-          .patch("http://127.0.0.1:8000/api/users/me/", values, {
+          .patch("https://job-lander-backend.fly.dev/api/users/me/", values, {
             headers: {
               Authorization: `Token ${localStorage.getItem("token")}`,
             },
@@ -107,11 +107,15 @@ export default function Profile() {
   }, [user, setFieldValue]);
 
   const handleLogout = async () => {
-    await axios.post("http://127.0.0.1:8000/api/token/logout", null, {
-      headers: {
-        Authorization: `Token ${localStorage.getItem("token")}`,
-      },
-    });
+    await axios.post(
+      "https://job-lander-backend.fly.dev/api/token/logout",
+      null,
+      {
+        headers: {
+          Authorization: `Token ${localStorage.getItem("token")}`,
+        },
+      }
+    );
     userLogout();
     localStorage.removeItem("token");
     navigate("/");

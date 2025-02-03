@@ -20,7 +20,7 @@ export default function ViewModal() {
 
   const fetchEmployee = async () => {
     const { data } = await axios.get(
-      `http://127.0.0.1:8000/api/employees/${id}`,
+      `https://job-lander-backend.fly.dev/api/employees/${id}`,
       {
         headers: {
           Authorization: `Token ${localStorage.getItem("token")}`,
