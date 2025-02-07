@@ -3,7 +3,7 @@ import { useQuery } from "react-query";
 import { useParams } from "react-router-dom";
 import Layout from "../Layout";
 import { Link } from "react-router-dom";
-import { ArrowLeft, ChevronDown, ChevronUp, MoveLeft } from "lucide-react";
+import { ArrowLeft, ChevronDown, ChevronUp } from "lucide-react";
 import React from "react";
 import { AnimatePresence, motion } from "framer-motion";
 
@@ -12,10 +12,10 @@ export default function ViewModal() {
 
   const fetchquestion = async () => {
     const { data } = await axios.get(
-      `https://job-lander-backend.fly.dev/api/questions/${id}`,
+      `http://127.0.0.1:8000/api/questions/${id}`,
       {
         headers: {
-          Authorization: `Token ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${localStorage.getItem("access")}`,
         },
       }
     );

@@ -3,14 +3,14 @@ import { useNavigate } from "react-router-dom";
 import ReactLoading from "react-loading";
 
 export default function ProtectedRoute({ children }) {
-  const token = localStorage.getItem("token");
+  const token = localStorage.getItem("access");
   const navigate = useNavigate();
 
   useEffect(() => {
     if (!token) {
       setTimeout(() => {
         navigate("/");
-      }, 3000);
+      }, 1000);
     }
   }, [token, navigate]);
 

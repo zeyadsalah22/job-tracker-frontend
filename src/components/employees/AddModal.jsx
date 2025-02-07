@@ -12,7 +12,7 @@ import Dropdown from "../Dropdown";
 import AddModalCompanies from "../companies/AddModal";
 
 export default function AddModal({ refetch, openAdd, setOpenAdd }) {
-  const token = localStorage.getItem("token");
+  const token = localStorage.getItem("access");
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const user = useUserStore((state) => state.user);
@@ -44,10 +44,10 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
 
   const fetchCompanies = async () => {
     const { data } = await axios.get(
-      `https://job-lander-backend.fly.dev/api/companies?search=${companySearch}`,
+      `http://127.0.0.1:8000/api/companies?search=${companySearch}`,
       {
         headers: {
-          Authorization: `Token ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${token}`,
         },
       }
     );
@@ -76,9 +76,9 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
       onSubmit: async (values) => {
         setLoading(true);
         await axios
-          .post("https://job-lander-backend.fly.dev/api/employees", values, {
+          .post("http://127.0.0.1:8000/api/employees", values, {
             headers: {
-              Authorization: `Token ${token}`,
+              Authorization: `Bearer ${token}`,
             },
           })
           .then(() => {
@@ -114,7 +114,7 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
   return (
     <Modal open={openAdd} setOpen={setOpenAdd} width="600px">
       <div className="flex flex-col gap-4">
-        <h1 className="font-semibold text-lg">Add Question</h1>
+        <h1 className="font-semibold text-lg">Add Employee</h1>
         <div className="z-[100]">
           {addCompany && (
             <AddModalCompanies

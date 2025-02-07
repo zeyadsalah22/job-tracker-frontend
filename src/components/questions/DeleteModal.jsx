@@ -15,9 +15,9 @@ export default function DeleteModal({
 
   const handleDelete = () => {
     axios
-      .delete(`https://job-lander-backend.fly.dev/api/questions/${id}`, {
+      .delete(`http://127.0.0.1:8000/api/questions/${id}`, {
         headers: {
-          Authorization: `Token ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${localStorage.getItem("access")}`,
         },
       })
       .then(() => {

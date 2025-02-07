@@ -10,7 +10,7 @@ import { useQuery } from "react-query";
 import useUserStore from "../../store/user.store";
 
 export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
-  const token = localStorage.getItem("token");
+  const token = localStorage.getItem("access");
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -18,10 +18,10 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
 
   const fetchQeustion = async () => {
     const { data } = await axios.get(
-      `https://job-lander-backend.fly.dev/api/questions/${id}`,
+      `http://127.0.0.1:8000/api/questions/${id}`,
       {
         headers: {
-          Authorization: `Token  ${localStorage.getItem("token")}`,
+          Authorization: `Bearer  ${token}`,
         },
       }
     );
@@ -33,14 +33,11 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
   });
 
   const fetchApplications = async () => {
-    const { data } = await axios.get(
-      `https://job-lander-backend.fly.dev/api/applications`,
-      {
-        headers: {
-          Authorization: `Token  ${localStorage.getItem("token")}`,
-        },
-      }
-    );
+    const { data } = await axios.get(`http://127.0.0.1:8000/api/applications`, {
+      headers: {
+        Authorization: `Bearer  ${token}`,
+      },
+    });
     return data;
   };
 
@@ -62,15 +59,11 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
       onSubmit: async (values) => {
         setLoading(true);
         await axios
-          .patch(
-            `https://job-lander-backend.fly.dev/api/questions/${id}`,
-            values,
-            {
-              headers: {
-                Authorization: `Token ${token}`,
-              },
-            }
-          )
+          .patch(`http://127.0.0.1:8000/api/questions/${id}`, values, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          })
           .then(() => {
             setOpenEdit(false);
             setLoading(false);

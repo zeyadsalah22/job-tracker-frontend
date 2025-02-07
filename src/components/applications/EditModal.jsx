@@ -12,7 +12,7 @@ import AddModalEmployees from "../employees/AddModal";
 import AddModalCompanies from "../companies/AddModal";
 
 export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
-  const token = localStorage.getItem("token");
+  const token = localStorage.getItem("access");
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const user = useUserStore((state) => state.user);
@@ -21,10 +21,10 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
 
   const fetchApplication = async () => {
     const { data } = await axios.get(
-      `https://job-lander-backend.fly.dev/api/applications/${id}`,
+      `http://127.0.0.1:8000/api/applications/${id}`,
       {
         headers: {
-          Authorization: `Token ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${token}`,
         },
       }
     );
@@ -48,7 +48,6 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
         job_type: "",
         description: "",
         link: "",
-        submitted_cv: null,
         ats_score: "",
         stage: "",
         status: "",
@@ -70,16 +69,12 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
           }
         }
         await axios
-          .patch(
-            `https://job-lander-backend.fly.dev/api/applications/${id}`,
-            values,
-            {
-              headers: {
-                Authorization: `Token ${token}`,
-                "Content-Type": "multipart/form-data",
-              },
-            }
-          )
+          .patch(`http://127.0.0.1:8000/api/applications/${id}`, values, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "multipart/form-data",
+            },
+          })
           .then(() => {
             setOpenEdit(false);
             setLoading(false);
@@ -98,14 +93,11 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
     });
 
   const fetchCompanies = async () => {
-    const { data } = await axios.get(
-      `https://job-lander-backend.fly.dev/api/companies`,
-      {
-        headers: {
-          Authorization: `Token ${localStorage.getItem("token")}`,
-        },
-      }
-    );
+    const { data } = await axios.get(`http://127.0.0.1:8000/api/companies`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
     return data.results;
   };
 
@@ -116,10 +108,10 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
 
   const fetchEmployees = async () => {
     const { data } = await axios.get(
-      `https://job-lander-backend.fly.dev/api/employees?company__id=${values.company_id}`,
+      `http://127.0.0.1:8000/api/employees?company__id=${values.company_id}`,
       {
         headers: {
-          Authorization: `Token ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${token}`,
         },
       }
     );
@@ -173,14 +165,13 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
       setFieldValue("job_type", application.job_type);
       setFieldValue("description", application.description);
       setFieldValue("link", application.link);
-      setFieldValue("submitted_cv", application.submitted_cv);
       setFieldValue("ats_score", application.ats_score);
       setFieldValue("stage", application.stage);
       setFieldValue("status", application.status);
       setFieldValue("submission_date", application.submission_date);
       setFieldValue("contacted_employees", application.contacted_employees);
     }
-  }, [setFieldValue, application, isLoading]);
+  }, [setFieldValue, application, isLoading, user.id]);
 
   if (isLoading) {
     return <p>Loading...</p>;
@@ -274,17 +265,6 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
             touched={touched.link}
           />
           <div className="flex gap-6">
-            <FormInput
-              label="Submitted CV"
-              name="submitted_cv"
-              placeHolder="Submitted CV"
-              type="file"
-              onChange={(e) =>
-                setFieldValue("submitted_cv", e.currentTarget.files[0])
-              }
-              error={errors.submitted_cv}
-              touched={touched.submitted_cv}
-            />
             <FormInput
               label="ATS Score"
               name="ats_score"

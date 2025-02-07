@@ -21,18 +21,6 @@ export const registerSchema = Yup.object().shape({
 export const comapnySchema = Yup.object().shape({
   name: Yup.string().required("Required"),
   location: Yup.string().required("Required"),
-  // careers_link: Yup.string()
-  //   .matches(
-  //     /((https?):\/\/)?(www.)?[a-z0-9]+(\.[a-z]{2,}){1,3}(#?\/?[a-zA-Z0-9#]+)*\/?(\?[a-zA-Z0-9-_]+=[a-zA-Z0-9-%]+&?)?$/,
-  //     "Enter correct url!"
-  //   )
-  //   .optional(),
-  // linkedin_link: Yup.string()
-  //   .matches(
-  //     /((https?):\/\/)?(www.)?[a-z0-9]+(\.[a-z]{2,}){1,3}(#?\/?[a-zA-Z0-9#]+)*\/?(\?[a-zA-Z0-9-_]+=[a-zA-Z0-9-%]+&?)?$/,
-  //     "Enter correct url!"
-  //   )
-  //   .optional(),
 });
 
 export const employeeSchema = Yup.object().shape({
@@ -57,9 +45,9 @@ export const applicationSchema = Yup.object().shape({
   link: Yup.string().optional(),
   ats_score: Yup.number().optional(),
   stage: Yup.string().optional(),
-  status: Yup.string().optional(),
+  status: Yup.string().required("Required"),
   submission_date: Yup.string().optional(),
-  contacted_employees: Yup.array().optional(),
+  contacted_employees: Yup.array().required("Required"),
 });
 
 export const questionSchema = Yup.object().shape({

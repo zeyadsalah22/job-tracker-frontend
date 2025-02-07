@@ -9,7 +9,7 @@ import { todoSchema } from "../schemas/Schemas";
 import useUserStore from "../store/user.store";
 
 export default function AddTodoModal({ refetch, openAdd, setOpenAdd }) {
-  const token = localStorage.getItem("token");
+  const token = localStorage.getItem("access");
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const user = useUserStore((state) => state.user);
@@ -27,9 +27,9 @@ export default function AddTodoModal({ refetch, openAdd, setOpenAdd }) {
       onSubmit: async (values) => {
         setLoading(true);
         await axios
-          .post("https://job-lander-backend.fly.dev/api/todos", values, {
+          .post("http://127.0.0.1:8000/api/todos", values, {
             headers: {
-              Authorization: `Token ${token}`,
+              Authorization: `Bearer ${token}`,
             },
           })
           .then(() => {

@@ -8,16 +8,16 @@ import ReactLoading from "react-loading";
 import { useQuery } from "react-query";
 
 export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
-  const token = localStorage.getItem("token");
+  const token = localStorage.getItem("access");
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
 
   const fetchCompany = async () => {
     const { data } = await axios.get(
-      `https://job-lander-backend.fly.dev/api/companies/${id}`,
+      `http://127.0.0.1:8000/api/companies/${id}`,
       {
         headers: {
-          Authorization: `Token ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${token}`,
         },
       }
     );
@@ -45,15 +45,11 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
       onSubmit: async (values) => {
         setLoading(true);
         await axios
-          .patch(
-            `https://job-lander-backend.fly.dev/api/companies/${id}`,
-            values,
-            {
-              headers: {
-                Authorization: `Token ${token}`,
-              },
-            }
-          )
+          .patch(`http://127.0.0.1:8000/api/companies/${id}`, values, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          })
           .then(() => {
             setOpenEdit(false);
             setLoading(false);

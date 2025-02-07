@@ -30,10 +30,10 @@ export default function Employees() {
 
   const fetchEmployees = async () => {
     const { data } = await axios.get(
-      `https://job-lander-backend.fly.dev/api/employees?page_size=8&page=${page}&search=${search}&ordering=${order}`,
+      `http://127.0.0.1:8000/api/employees?page_size=8&page=${page}&search=${search}&ordering=${order}`,
       {
         headers: {
-          Authorization: `Token ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${localStorage.getItem("access")}`,
         },
       }
     );

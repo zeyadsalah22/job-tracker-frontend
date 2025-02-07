@@ -30,16 +30,16 @@ export default function Companies() {
 
   const fetchCompanies = async () => {
     const { data } = await axios.get(
-      `https://job-lander-backend.fly.dev/api/companies?page_size=8&page=${page}&search=${search}&ordering=${order}`,
+      `http://127.0.0.1:8000/api/companies?page_size=8&page=${page}&search=${search}&ordering=${order}`,
       {
         headers: {
-          Authorization: `Token ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${localStorage.getItem("access")}`,
         },
       }
     );
     return data;
   };
-
+  console.log(localStorage.getItem("access"));
   const {
     data: companies,
     isLoading,

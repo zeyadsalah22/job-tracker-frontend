@@ -24,11 +24,11 @@ export default function DeleteModal({ openDelete, setOpenDelete }) {
       setLoading(true);
 
       try {
-        await axios.delete(`https://job-lander-backend.fly.dev/api/users/me/`, {
+        await axios.delete(`http://127.0.0.1:8000/api/users/me/`, {
           headers: {
-            Authorization: `Token ${localStorage.getItem("token")}`, // Add authorization token in the header
+            Authorization: `Bearer ${localStorage.getItem("access")}`,
           },
-          data: values, // Pass the body data here
+          data: values,
         });
         setOpenDelete(false);
         setLoading(false);

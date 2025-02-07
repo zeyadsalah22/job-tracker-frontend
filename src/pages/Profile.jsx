@@ -10,51 +10,7 @@ import DeleteModal from "../components/user/DeleteModal";
 import { useNavigate } from "react-router-dom";
 import { LogOut, Trash2 } from "lucide-react";
 import ChangePass from "../components/user/ChangePass";
-
-// function ChangePass({
-//   values,
-//   errors,
-//   touched,
-//   handleChange,
-//   error,
-//   setOpen,
-//   open,
-// }) {
-//   return (
-//     <Modal open={open} setOpen={setOpen}>
-//       <FormInput
-//         type="password"
-//         name="old_password"
-//         placeHolder="old_password"
-//         label="old_password"
-//         value={values?.old_password}
-//         onChange={handleChange}
-//         error={errors?.old_password || error?.response?.data?.old_password}
-//         touched={touched.old_password}
-//       />
-//       <FormInput
-//         type="password"
-//         name="password"
-//         placeHolder="Password"
-//         label="Password"
-//         value={values?.password}
-//         onChange={handleChange}
-//         error={errors?.password || error?.response?.data?.password}
-//         touched={touched.password}
-//       />
-//       <FormInput
-//         type="password"
-//         name="re_password"
-//         placeHolder="Confirm password"
-//         label="Confirm Password"
-//         value={values?.re_password}
-//         onChange={handleChange}
-//         error={errors.re_password}
-//         touched={touched.re_password}
-//       />
-//     </Modal>
-//   );
-// }
+import ManageCv from "../components/user/ManageCv";
 
 export default function Profile() {
   const user = useUserStore((state) => state.user);
@@ -78,9 +34,9 @@ export default function Profile() {
       onSubmit: async (values) => {
         setLoading(true);
         await axios
-          .patch("https://job-lander-backend.fly.dev/api/users/me/", values, {
+          .patch("http://127.0.0.1:8000/api/users/me/", values, {
             headers: {
-              Authorization: `Token ${localStorage.getItem("token")}`,
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
             },
           })
           .then(() => {
@@ -108,16 +64,17 @@ export default function Profile() {
 
   const handleLogout = async () => {
     await axios.post(
-      "https://job-lander-backend.fly.dev/api/token/logout",
-      null,
+      "http://127.0.0.1:8000/api/token/logout/",
+      { refresh: localStorage.getItem("refresh") },
       {
         headers: {
-          Authorization: `Token ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${localStorage.getItem("access")}`,
         },
       }
     );
     userLogout();
-    localStorage.removeItem("token");
+    localStorage.removeItem("access");
+    localStorage.removeItem("refresh");
     navigate("/");
     toast.success("Logout successful");
   };
@@ -136,65 +93,68 @@ export default function Profile() {
               Logout
             </button>
           </div>
-          <form
-            onSubmit={handleSubmit}
-            className="flex flex-col w-[500px] gap-5 my-8"
-          >
-            <FormInput
-              type="text"
-              name="username"
-              placeHolder="Username"
-              label="Username"
-              value={values?.username}
-              onChange={handleChange}
-              error={errors?.username || error?.response?.data?.username}
-              touched={touched.username}
-            />
-            <FormInput
-              type="email"
-              name="email"
-              placeHolder="Email"
-              label="Email"
-              value={values?.email}
-              onChange={handleChange}
-              error={errors?.email || error?.response?.data?.email}
-              touched={touched.email}
-            />
+          <div className="flex gap-10">
+            <form
+              onSubmit={handleSubmit}
+              className="flex flex-col w-[50%] gap-5 my-8"
+            >
+              <FormInput
+                type="text"
+                name="username"
+                placeHolder="Username"
+                label="Username"
+                value={values?.username}
+                onChange={handleChange}
+                error={errors?.username || error?.response?.data?.username}
+                touched={touched.username}
+              />
+              <FormInput
+                type="email"
+                name="email"
+                placeHolder="Email"
+                label="Email"
+                value={values?.email}
+                onChange={handleChange}
+                error={errors?.email || error?.response?.data?.email}
+                touched={touched.email}
+              />
 
-            {loading ? (
-              <button
-                disabled
-                className="rounded cursor-not-allowed flex items-center justify-center bg-primary w-[122px] px-8 py-2 text-white transition h-10"
-              >
-                <ReactLoading
-                  type="bubbles"
-                  color="#ffffff"
-                  height={25}
-                  width={25}
-                />
-              </button>
-            ) : (
-              <div className="flex items-center justify-between">
+              {loading ? (
                 <button
-                  type="submit"
-                  className="rounded-lg bg-primary px-4 py-2 text-white transition hover:bg-primary/80 w-fit text-sm font-semibold  h-10"
+                  disabled
+                  className="rounded cursor-not-allowed flex items-center justify-center bg-primary w-[122px] px-8 py-2 text-white transition h-10"
                 >
-                  Save changes
+                  <ReactLoading
+                    type="bubbles"
+                    color="#ffffff"
+                    height={25}
+                    width={25}
+                  />
                 </button>
+              ) : (
+                <div className="flex items-center justify-between">
+                  <button
+                    type="submit"
+                    className="rounded-lg bg-primary px-4 py-2 text-white transition hover:bg-primary/80 w-fit text-sm font-semibold  h-10"
+                  >
+                    Save changes
+                  </button>
 
-                <button
-                  type="button"
-                  onClick={() => {
-                    setDeleteModal(true);
-                  }}
-                  className="text-red-700 font-semibold flex items-center gap-1 text-sm bg-red-50 w-fit rounded-lg px-4 py-2 transition hover:bg-red-100/65"
-                >
-                  <Trash2 size={18} />
-                  Delete user
-                </button>
-              </div>
-            )}
-          </form>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDeleteModal(true);
+                    }}
+                    className="text-red-700 font-semibold flex items-center gap-1 text-sm bg-red-50 w-fit rounded-lg px-4 py-2 transition hover:bg-red-100/65"
+                  >
+                    <Trash2 size={18} />
+                    Delete user
+                  </button>
+                </div>
+              )}
+            </form>
+            <ManageCv />
+          </div>
           <div className="flex gap-1">
             <p className="text-sm">{"Do you want to change your password?"}</p>
             <button

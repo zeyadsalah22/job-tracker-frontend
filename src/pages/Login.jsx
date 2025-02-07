@@ -6,11 +6,11 @@ import FormInput from "../components/FormInput";
 import { loginSchema } from "../schemas/Schemas";
 import ReactLoading from "react-loading";
 import { toast } from "react-toastify";
-import useUserStore from "../store/user.store";
 import { Link } from "react-router-dom";
+import useUserStore from "../store/user.store";
 
 export default function Login() {
-  const token = localStorage.getItem("token");
+  const token = localStorage.getItem("access");
   const navigate = useNavigate();
   const setUser = useUserStore((state) => state.setUser);
 
@@ -26,25 +26,23 @@ export default function Login() {
       setLoading(true);
       try {
         const response = await axios.post(
-          "https://job-lander-backend.fly.dev/api/token/login",
+          "http://127.0.0.1:8000/api/token/",
           values
         );
-        const authToken = response.data.auth_token;
-        localStorage.setItem("token", authToken);
+        const authTokens = response.data;
+        localStorage.setItem("access", authTokens.access);
+        localStorage.setItem("refresh", authTokens.refresh);
+        const userResponse = await axios.get(
+          "http://127.0.0.1:8000/api/users/me/",
+          {
+            headers: {
+              Authorization: `Bearer ${authTokens.access}`,
+            },
+          }
+        );
+        setUser(userResponse.data);
+        navigate("/dashboard");
 
-        if (authToken) {
-          const userResponse = await axios.get(
-            "https://job-lander-backend.fly.dev/api/users/me",
-            {
-              headers: {
-                Authorization: `Token ${authToken}`,
-              },
-            }
-          );
-          setUser(userResponse.data);
-        }
-
-        navigate("/");
         toast.success("Login successful");
         localStorage.setItem(
           "start_date",

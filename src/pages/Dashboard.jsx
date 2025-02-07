@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Layout from "../components/Layout";
 import { Book, CheckCheck, X, LoaderCircle, Trash2, Plus } from "lucide-react";
 import { TEChart } from "tw-elements-react";
@@ -13,14 +13,11 @@ function Todo() {
   const [openAdd, setOpenAdd] = useState(false);
 
   const fetchTodos = async () => {
-    const { data } = await axios.get(
-      `https://job-lander-backend.fly.dev/api/todos`,
-      {
-        headers: {
-          Authorization: `Token  ${localStorage.getItem("token")}`,
-        },
-      }
-    );
+    const { data } = await axios.get(`http://127.0.0.1:8000/api/todos`, {
+      headers: {
+        Authorization: `Bearer  ${localStorage.getItem("access")}`,
+      },
+    });
     return data;
   };
 
@@ -28,9 +25,9 @@ function Todo() {
   const deleteTodo = async (id) => {
     setLoading(true);
     await axios
-      .delete(`https://job-lander-backend.fly.dev/api/todos/${id}`, {
+      .delete(`http://127.0.0.1:8000/api/todos/${id}`, {
         headers: {
-          Authorization: `Token  ${localStorage.getItem("token")}`,
+          Authorization: `Bearer  ${localStorage.getItem("access")}`,
         },
       })
       .then(() => {
@@ -44,13 +41,13 @@ function Todo() {
     const todo = todos.results.find((todo) => todo.id === id);
     await axios
       .patch(
-        `https://job-lander-backend.fly.dev/api/todos/${id}`,
+        `http://127.0.0.1:8000/api/todos/${id}`,
         {
           completed: !todo.completed,
         },
         {
           headers: {
-            Authorization: `Token  ${localStorage.getItem("token")}`,
+            Authorization: `Bearer  ${localStorage.getItem("access")}`,
           },
         }
       )
@@ -146,14 +143,11 @@ export default function Dashboard() {
   );
 
   const fetchStatistics = async () => {
-    const { data } = await axios.get(
-      `https://job-lander-backend.fly.dev/api/statistics`,
-      {
-        headers: {
-          Authorization: `Token  ${localStorage.getItem("token")}`,
-        },
-      }
-    );
+    const { data } = await axios.get(`http://127.0.0.1:8000/api/statistics`, {
+      headers: {
+        Authorization: `Bearer  ${localStorage.getItem("access")}`,
+      },
+    });
     return data;
   };
 
@@ -164,14 +158,11 @@ export default function Dashboard() {
   } = useQuery(["statistics"], fetchStatistics);
 
   const fetchPercents = async () => {
-    const { data } = await axios.get(
-      `https://job-lander-backend.fly.dev/api/percents`,
-      {
-        headers: {
-          Authorization: `Token  ${localStorage.getItem("token")}`,
-        },
-      }
-    );
+    const { data } = await axios.get(`http://127.0.0.1:8000/api/percents`, {
+      headers: {
+        Authorization: `Bearer  ${localStorage.getItem("access")}`,
+      },
+    });
     return data;
   };
 
@@ -183,10 +174,10 @@ export default function Dashboard() {
 
   const fetchTimeseries = async () => {
     const { data } = await axios.get(
-      `https://job-lander-backend.fly.dev/api/timeseries?start_date=${start_date}&points=${points}&interval=${interval}`,
+      `http://127.0.0.1:8000/api/timeseries?start_date=${start_date}&points=${points}&interval=${interval}`,
       {
         headers: {
-          Authorization: `Token  ${localStorage.getItem("token")}`,
+          Authorization: `Bearer  ${localStorage.getItem("access")}`,
         },
       }
     );
@@ -232,12 +223,6 @@ export default function Dashboard() {
       color: "#2059FD",
     },
   ];
-
-  useEffect(() => {
-    if (!token) {
-      navigate("/");
-    }
-  }, [navigate, token]);
 
   const weeks = timeseries?.results?.map((result) =>
     result.date.split("-").pop()

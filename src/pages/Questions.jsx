@@ -29,10 +29,10 @@ export default function Questions() {
 
   const fetchquestions = async () => {
     const { data } = await axios.get(
-      `https://job-lander-backend.fly.dev/api/questions?page=${page}&page_size=8&search=${search}`,
+      `http://127.0.0.1:8000/api/questions?page=${page}&page_size=8&search=${search}`,
       {
         headers: {
-          Authorization: `Token ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${localStorage.getItem("access")}`,
         },
       }
     );

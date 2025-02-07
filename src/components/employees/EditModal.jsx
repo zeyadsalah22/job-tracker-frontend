@@ -10,7 +10,7 @@ import { useQuery } from "react-query";
 import useUserStore from "../../store/user.store";
 
 export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
-  const token = localStorage.getItem("token");
+  const token = localStorage.getItem("access");
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const user = useUserStore((state) => state.user);
@@ -40,10 +40,10 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
 
   const fetchEmployee = async () => {
     const { data } = await axios.get(
-      `https://job-lander-backend.fly.dev/api/employees/${id}`,
+      `http://127.0.0.1:8000/api/employees/${id}`,
       {
         headers: {
-          Authorization: `Token ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${token}`,
         },
       }
     );
@@ -59,14 +59,11 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
   );
 
   const fetchCompanies = async () => {
-    const { data } = await axios.get(
-      `https://job-lander-backend.fly.dev/api/companies`,
-      {
-        headers: {
-          Authorization: `Token ${localStorage.getItem("token")}`,
-        },
-      }
-    );
+    const { data } = await axios.get(`http://127.0.0.1:8000/api/companies`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
     return data.results;
   };
 
@@ -88,15 +85,11 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
       onSubmit: async (values) => {
         setLoading(true);
         await axios
-          .patch(
-            `https://job-lander-backend.fly.dev/api/employees/${id}`,
-            values,
-            {
-              headers: {
-                Authorization: `Token ${token}`,
-              },
-            }
-          )
+          .patch(`http://127.0.0.1:8000/api/employees/${id}`, values, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          })
           .then(() => {
             setOpenEdit(false);
             setLoading(false);
@@ -124,7 +117,7 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
       setFieldValue("company_id", employee.company.id);
       setFieldValue("user_id", user.id);
     }
-  }, [setFieldValue, employee, isLoading]);
+  }, [setFieldValue, employee, isLoading, user]);
 
   if (isLoading) {
     return <p>Loading...</p>;

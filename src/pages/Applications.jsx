@@ -8,7 +8,6 @@ import axios from "axios";
 import { useQuery } from "react-query";
 import Pagination from "../components/Pagination";
 import AddModal from "../components/applications/AddModal";
-import ReactLoading from "react-loading";
 
 export default function Applications() {
   const [openEdit, setOpenEdit] = React.useState(false);
@@ -31,10 +30,10 @@ export default function Applications() {
 
   const fetchApplications = async () => {
     const { data } = await axios.get(
-      `https://job-lander-backend.fly.dev/api/applications?page_size=8&page=${page}&search=${search}&ordering=${order}`,
+      `http://127.0.0.1:8000/api/applications?page_size=8&page=${page}&search=${search}&ordering=${order}`,
       {
         headers: {
-          Authorization: `Token  ${localStorage.getItem("token")}`,
+          Authorization: `Bearer  ${localStorage.getItem("access")}`,
         },
       }
     );

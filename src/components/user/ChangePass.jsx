@@ -28,15 +28,11 @@ export default function ChangePass({ open, setOpen }) {
     onSubmit: async (values) => {
       setLoading(true);
       await axios
-        .post(
-          "https://job-lander-backend.fly.dev/api/users/set_password/",
-          values,
-          {
-            headers: {
-              Authorization: `Token ${localStorage.getItem("token")}`,
-            },
-          }
-        )
+        .post("http://127.0.0.1:8000/api/users/set_password/", values, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("access")}`,
+          },
+        })
         .then(() => {
           toast.success("Password updated successfully");
           setLoading(false);

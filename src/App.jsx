@@ -1,4 +1,5 @@
-import { Routes, Route, useNavigate } from "react-router-dom";
+import { useEffect } from "react";
+import { Routes, Route } from "react-router-dom";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Table from "./components/Table";
@@ -14,37 +15,148 @@ import Companies from "./pages/Companies";
 import Employees from "./pages/Employees";
 import Questions from "./pages/Questions";
 import Question from "./components/questions/ViewModal";
-import { useEffect } from "react";
+import ProtectedRoute from "./utils/ProtectedRoute";
+import axios from "axios";
 
 export default function App() {
-  const token = localStorage.getItem("token");
-  const navigate = useNavigate();
-
   useEffect(() => {
-    if (!token && window.location.pathname !== "/register") {
-      navigate("/");
-    }
-  }, [token, navigate]);
+    // Skip if no access token exists
+    if (!localStorage.getItem("access")) return;
+
+    const refreshToken = async () => {
+      try {
+        const refresh = localStorage.getItem("refresh");
+        if (!refresh) {
+          console.error("No refresh token found");
+          return;
+        }
+
+        const response = await axios.post(
+          "http://127.0.0.1:8000/api/token/refresh",
+          {
+            refresh: refresh,
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error("Refresh failed");
+        }
+
+        const data = await response.json();
+        localStorage.setItem("access", data.access);
+      } catch (error) {
+        console.error("Token refresh failed:", error);
+        // Clear tokens on refresh failure
+        localStorage.removeItem("access");
+        localStorage.removeItem("refresh");
+        // Optionally redirect to login page
+        window.location.href = "/";
+      }
+    };
+    
+    // Initial token refresh
+    refreshToken();
+
+    // Set interval for 13 minutes (13 * 60 * 1000 milliseconds)
+    const intervalId = setInterval(refreshToken, 1 * 60 * 1000);
+
+    // Cleanup interval on component unmount
+    return () => clearInterval(intervalId);
+  }, []);
 
   return (
     <>
       <Routes>
-        <Route path="/profile" element={<Profile />} />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          }
+        />
         <Route path="/register" element={<Register />} />
         <Route path="/" element={<Login />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/applications" element={<Applications />} />
-        <Route path="/applications/:id" element={<Apllication />} />
-
-        <Route path="/companies" element={<Companies />} />
-        <Route path="/companies/:id" element={<Company />} />
-
-        <Route path="/employees" element={<Employees />} />
-        <Route path="/employees/:id" element={<Employee />} />
-
-        <Route path="/questions" element={<Questions />} />
-        <Route path="/questions/:id" element={<Question />} />
-        <Route path="/table" element={<Table />} />
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/applications"
+          element={
+            <ProtectedRoute>
+              <Applications />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/applications/:id"
+          element={
+            <ProtectedRoute>
+              <Apllication />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/companies"
+          element={
+            <ProtectedRoute>
+              <Companies />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/companies/:id"
+          element={
+            <ProtectedRoute>
+              <Company />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/employees"
+          element={
+            <ProtectedRoute>
+              <Employees />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/employees/:id"
+          element={
+            <ProtectedRoute>
+              <Employee />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/questions"
+          element={
+            <ProtectedRoute>
+              <Questions />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/questions/:id"
+          element={
+            <ProtectedRoute>
+              <Question />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/table"
+          element={
+            <ProtectedRoute>
+              <Table />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="*"
           element={

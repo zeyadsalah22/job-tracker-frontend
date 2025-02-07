@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
@@ -9,10 +9,10 @@ import { registerSchema } from "../schemas/Schemas";
 import { Link } from "react-router-dom";
 
 export default function Register() {
-  const token = localStorage.getItem("token");
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const token = localStorage.getItem("access");
 
   const { values, errors, handleSubmit, handleChange, touched } = useFormik({
     initialValues: {
@@ -25,7 +25,7 @@ export default function Register() {
     onSubmit: async (values) => {
       setLoading(true);
       await axios
-        .post("https://job-lander-backend.fly.dev/api/users/", values)
+        .post("http://127.0.0.1:8000/api/users", values)
         .then(() => {
           navigate("/");
           toast.success("Registration successful. Please login to continue.");
@@ -43,7 +43,7 @@ export default function Register() {
 
   useEffect(() => {
     if (token) {
-      navigate("/");
+      navigate("/dashboard");
     }
   }, [token, navigate]);
 

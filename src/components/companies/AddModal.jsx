@@ -6,14 +6,17 @@ import { toast } from "react-toastify";
 import { comapnySchema } from "../../schemas/Schemas";
 import FormInput from "../FormInput";
 import ReactLoading from "react-loading";
+import useUserStore from "../../store/user.store";
 
 export default function AddModal({ refetch, openAdd, setOpenAdd }) {
-  const token = localStorage.getItem("token");
+  const token = localStorage.getItem("access");
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+  const user = useUserStore((state) => state.user);
 
   const { values, errors, handleSubmit, handleChange, touched } = useFormik({
     initialValues: {
+      user_id: user.id,
       name: "",
       location: "",
       careers_link: "",
@@ -24,9 +27,9 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
     onSubmit: async (values) => {
       setLoading(true);
       await axios
-        .post("https://job-lander-backend.fly.dev/api/companies", values, {
+        .post("http://127.0.0.1:8000/api/companies", values, {
           headers: {
-            Authorization: `Token ${token}`,
+            Authorization: `Bearer ${token}`,
           },
         })
         .then(() => {

@@ -13,7 +13,7 @@ import AddModalCompanies from "../companies/AddModal";
 import Dropdown from "../Dropdown";
 
 export default function AddModal({ refetch, openAdd, setOpenAdd }) {
-  const token = localStorage.getItem("token");
+  const token = localStorage.getItem("access");
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const user = useUserStore((state) => state.user);
@@ -31,7 +31,6 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
         job_type: "",
         description: "",
         link: "",
-        submitted_cv: null,
         ats_score: "",
         stage: "",
         status: "",
@@ -55,16 +54,12 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
         }
 
         await axios
-          .post(
-            "https://job-lander-backend.fly.dev/api/applications",
-            formData,
-            {
-              headers: {
-                Authorization: `Token ${token}`,
-                "Content-Type": "multipart/form-data",
-              },
-            }
-          )
+          .post("http://127.0.0.1:8000/api/applications", formData, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "multipart/form-data",
+            },
+          })
           .then(() => {
             setOpenAdd(false);
             setLoading(false);
@@ -84,10 +79,10 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
 
   const fetchCompanies = async () => {
     const { data } = await axios.get(
-      `https://job-lander-backend.fly.dev/api/companies?search=${companySearch}`,
+      `http://127.0.0.1:8000/api/companies?search=${companySearch}`,
       {
         headers: {
-          Authorization: `Token ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${token}`,
         },
       }
     );
@@ -102,10 +97,10 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
 
   const fetchEmployees = async () => {
     const { data } = await axios.get(
-      `https://job-lander-backend.fly.dev/api/employees?company__id=${values.company_id}&search=${employeeSearch}`,
+      `http://127.0.0.1:8000/api/employees?company__id=${values.company_id}&search=${employeeSearch}`,
       {
         headers: {
-          Authorization: `Token ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${token}`,
         },
       }
     );
@@ -120,7 +115,7 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
     ["employees", { id: values.company_id, employeeSearch }],
     fetchEmployees,
     {
-      enabled: !!values.company_id && !values.company_id === "add-company",
+      enabled: !!values.company_id,
     }
   );
 
@@ -185,7 +180,7 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
         )}
       </div>
       <div className="flex flex-col gap-4">
-        <h1 className="font-semibold text-lg">Add Employee</h1>
+        <h1 className="font-semibold text-lg">Add Application</h1>
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
           <div className="flex flex-col gap-2 w-full">
             <p className="text-sm text-gray-600">
@@ -251,17 +246,6 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
           />
           <div className="flex gap-6">
             <FormInput
-              label="Submitted CV"
-              name="submitted_cv"
-              placeHolder="Submitted CV"
-              type="file"
-              onChange={(e) =>
-                setFieldValue("submitted_cv", e.currentTarget.files[0])
-              }
-              error={errors.submitted_cv || error?.response?.data?.submitted_cv}
-              touched={touched.submitted_cv}
-            />
-            <FormInput
               label="ATS Score"
               name="ats_score"
               placeHolder="ATS Score"
@@ -299,7 +283,9 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
               )}
             </div>
             <div className="flex flex-col gap-2 w-full">
-              <p className="text-sm text-gray-600">Choose Status</p>
+              <div className="text-sm text-gray-600">
+                Choose Status<span className="text-red-500">*</span>
+              </div>
               <select
                 name="status"
                 value={values.status}
@@ -326,7 +312,9 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
           </div>
           <div className="flex flex-col gap-2">
             <div className="flex flex-col gap-2 w-full">
-              <p className="text-sm text-gray-600">Choose Employee</p>
+              <div className="text-sm text-gray-600">
+                Choose Employee<span className="text-red-500">*</span>
+              </div>
               <Dropdown
                 add={{
                   name: "Add Employee",
