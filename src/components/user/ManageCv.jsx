@@ -1,19 +1,16 @@
-import axios from "axios";
 import useUserStore from "../../store/user.store";
 import { useQuery } from "react-query";
 import { toast } from "react-toastify";
 import { Trash2 } from "lucide-react";
 import ReactLoading from "react-loading";
+import { useAxiosPrivate } from "../../utils/axios";
 
 export default function ManageCv() {
   const user = useUserStore((state) => state.user);
+  const axiosPrivate = useAxiosPrivate();
 
   const fetchCvs = async () => {
-    const { data } = await axios.get(`http://127.0.0.1:8000/api/cvs`, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("access")}`,
-      },
-    });
+    const { data } = await axiosPrivate.get(`/cvs`);
     return data.results;
   };
 
@@ -30,12 +27,8 @@ export default function ManageCv() {
     const formData = new FormData();
     formData.append("cv", file);
     formData.append("user_id", user.id);
-    await axios
-      .post("http://127.0.0.1:8000/api/cvs", formData, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("access")}`,
-        },
-      })
+    await axiosPrivate
+      .post("/cvs", formData)
       .then(() => {
         refetch();
         toast.success("CV uploaded successfully");
@@ -46,12 +39,8 @@ export default function ManageCv() {
   };
 
   const handleDelete = async (id) => {
-    await axios
-      .delete(`http://127.0.0.1:8000/api/cvs/${id}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("access")}`,
-        },
-      })
+    await axiosPrivate
+      .delete(`/cvs/${id}`)
       .then(() => {
         refetch();
         toast.success("CV deleted successfully");

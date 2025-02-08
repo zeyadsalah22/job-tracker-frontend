@@ -1,4 +1,3 @@
-import axios from "axios";
 import { useQuery } from "react-query";
 import { useParams } from "react-router-dom";
 import Layout from "../Layout";
@@ -6,19 +5,14 @@ import { Link } from "react-router-dom";
 import { ArrowLeft, ChevronDown, ChevronUp } from "lucide-react";
 import React from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { useAxiosPrivate } from "../../utils/axios";
 
 export default function ViewModal() {
   const { id } = useParams();
+  const axiosPrivate = useAxiosPrivate();
 
   const fetchquestion = async () => {
-    const { data } = await axios.get(
-      `http://127.0.0.1:8000/api/questions/${id}`,
-      {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("access")}`,
-        },
-      }
-    );
+    const { data } = await axiosPrivate.get(`/questions/${id}`);
     return data;
   };
 

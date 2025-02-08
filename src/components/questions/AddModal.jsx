@@ -9,21 +9,19 @@ import ReactLoading from "react-loading";
 import { useQuery } from "react-query";
 import useUserStore from "../../store/user.store";
 import Dropdown from "../Dropdown";
+import { useAxiosPrivate } from "../../utils/axios";
 
 export default function AddModal({ refetch, openAdd, setOpenAdd }) {
   const token = localStorage.getItem("access");
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
+  const axiosPrivate = useAxiosPrivate();
 
   const user = useUserStore((state) => state.user);
 
   const fetchApplications = async () => {
-    const { data } = await axios.get(`http://127.0.0.1:8000/api/applications`, {
-      headers: {
-        Authorization: `Bearer  ${token}`,
-      },
-    });
+    const { data } = await axiosPrivate.get(`/applications`);
     return data;
   };
 
@@ -44,12 +42,8 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
       validationSchema: questionSchema,
       onSubmit: async (values) => {
         setLoading(true);
-        await axios
-          .post("http://127.0.0.1:8000/api/questions", values, {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          })
+        await axiosPrivate
+          .post("/questions", values)
           .then(() => {
             setOpenAdd(false);
             setLoading(false);

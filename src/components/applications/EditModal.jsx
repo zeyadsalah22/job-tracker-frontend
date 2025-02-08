@@ -1,5 +1,4 @@
 import Modal from "../Modal";
-import axios from "axios";
 import { useFormik } from "formik";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
@@ -10,24 +9,18 @@ import { useQuery } from "react-query";
 import useUserStore from "../../store/user.store";
 import AddModalEmployees from "../employees/AddModal";
 import AddModalCompanies from "../companies/AddModal";
+import { useAxiosPrivate } from "../../utils/axios";
 
 export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
-  const token = localStorage.getItem("access");
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const user = useUserStore((state) => state.user);
   const [addEmployee, setAddEmployee] = useState(false);
   const [addCompany, setAddCompany] = useState(false);
+  const axiosPrivate = useAxiosPrivate();
 
   const fetchApplication = async () => {
-    const { data } = await axios.get(
-      `http://127.0.0.1:8000/api/applications/${id}`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
+    const { data } = await axiosPrivate.get(`/applications/${id}`);
     return data;
   };
 
@@ -68,13 +61,8 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
             formData.append(key, values[key]);
           }
         }
-        await axios
-          .patch(`http://127.0.0.1:8000/api/applications/${id}`, values, {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "multipart/form-data",
-            },
-          })
+        await axiosPrivate
+          .patch(`/applications/${id}`, values)
           .then(() => {
             setOpenEdit(false);
             setLoading(false);
@@ -93,11 +81,7 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
     });
 
   const fetchCompanies = async () => {
-    const { data } = await axios.get(`http://127.0.0.1:8000/api/companies`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const { data } = await axiosPrivate.get(`/companies`);
     return data.results;
   };
 
@@ -107,13 +91,8 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
   );
 
   const fetchEmployees = async () => {
-    const { data } = await axios.get(
-      `http://127.0.0.1:8000/api/employees?company__id=${values.company_id}`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
+    const { data } = await axiosPrivate.get(
+      `/employees?company__id=${values.company_id}`
     );
     return data.results;
   };

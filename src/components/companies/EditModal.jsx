@@ -6,21 +6,16 @@ import { toast } from "react-toastify";
 import FormInput from "../FormInput";
 import ReactLoading from "react-loading";
 import { useQuery } from "react-query";
+import { useAxiosPrivate } from "../../utils/axios";
 
 export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
   const token = localStorage.getItem("access");
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+  const axiosPrivate = useAxiosPrivate();
 
   const fetchCompany = async () => {
-    const { data } = await axios.get(
-      `http://127.0.0.1:8000/api/companies/${id}`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
+    const { data } = await axiosPrivate.get(`/companies/${id}`);
     return data;
   };
 
@@ -41,15 +36,10 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
         linkedin_link: "",
       },
 
-      // validationSchema: companySchema,
       onSubmit: async (values) => {
         setLoading(true);
-        await axios
-          .patch(`http://127.0.0.1:8000/api/companies/${id}`, values, {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          })
+        await axiosPrivate
+          .patch(`/companies/${id}`, values)
           .then(() => {
             setOpenEdit(false);
             setLoading(false);

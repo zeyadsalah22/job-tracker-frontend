@@ -4,10 +4,10 @@ import Table from "../components/Table";
 import React from "react";
 import EditModal from "../components/applications/EditModal";
 import DeleteModal from "../components/applications/DeleteModal";
-import axios from "axios";
 import { useQuery } from "react-query";
 import Pagination from "../components/Pagination";
 import AddModal from "../components/applications/AddModal";
+import { useAxiosPrivate } from "../utils/axios";
 
 export default function Applications() {
   const [openEdit, setOpenEdit] = React.useState(false);
@@ -17,6 +17,7 @@ export default function Applications() {
   const [search, setSearch] = React.useState("");
   const [openAdd, setOpenAdd] = React.useState(false);
   const [order, setOrder] = React.useState("");
+  const axiosPrivate = useAxiosPrivate();
 
   const handleOpenEdit = (id) => {
     setOpenEdit(true);
@@ -29,13 +30,8 @@ export default function Applications() {
   };
 
   const fetchApplications = async () => {
-    const { data } = await axios.get(
-      `http://127.0.0.1:8000/api/applications?page_size=8&page=${page}&search=${search}&ordering=${order}`,
-      {
-        headers: {
-          Authorization: `Bearer  ${localStorage.getItem("access")}`,
-        },
-      }
+    const { data } = await axiosPrivate.get(
+      `/applications?page_size=8&page=${page}&search=${search}&ordering=${order}`
     );
     return data;
   };

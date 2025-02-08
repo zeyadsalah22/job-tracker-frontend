@@ -1,15 +1,16 @@
 import Modal from "../Modal";
-import axios from "axios";
 import { toast } from "react-toastify";
 import { useState } from "react";
 import ReactLoading from "react-loading";
 import { useFormik } from "formik";
 import FormInput from "../FormInput";
 import * as Yup from "yup";
+import { useAxiosPrivate } from "../../utils/axios";
 
 export default function ChangePass({ open, setOpen }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const axiosPrivate = useAxiosPrivate();
 
   const { values, errors, handleSubmit, handleChange, touched } = useFormik({
     initialValues: {
@@ -27,12 +28,8 @@ export default function ChangePass({ open, setOpen }) {
     }),
     onSubmit: async (values) => {
       setLoading(true);
-      await axios
-        .post("http://127.0.0.1:8000/api/users/set_password/", values, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("access")}`,
-          },
-        })
+      await axiosPrivate
+        .post("/users/set_password/", values)
         .then(() => {
           toast.success("Password updated successfully");
           setLoading(false);

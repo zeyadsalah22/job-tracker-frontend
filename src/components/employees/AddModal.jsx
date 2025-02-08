@@ -10,6 +10,7 @@ import { useQuery } from "react-query";
 import useUserStore from "../../store/user.store";
 import Dropdown from "../Dropdown";
 import AddModalCompanies from "../companies/AddModal";
+import { useAxiosPrivate } from "../../utils/axios";
 
 export default function AddModal({ refetch, openAdd, setOpenAdd }) {
   const token = localStorage.getItem("access");
@@ -18,6 +19,7 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
   const user = useUserStore((state) => state.user);
   const [companySearch, setCompanySearch] = useState("");
   const [addCompany, setAddCompany] = useState(false);
+  const axiosPrivate = useAxiosPrivate();
 
   const contacted = [
     {
@@ -43,8 +45,8 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
   ];
 
   const fetchCompanies = async () => {
-    const { data } = await axios.get(
-      `http://127.0.0.1:8000/api/companies?search=${companySearch}`,
+    const { data } = await axiosPrivate.get(
+      `/companies?search=${companySearch}`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -75,8 +77,8 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
       validationSchema: employeeSchema,
       onSubmit: async (values) => {
         setLoading(true);
-        await axios
-          .post("http://127.0.0.1:8000/api/employees", values, {
+        await axiosPrivate
+          .post("/employees", values, {
             headers: {
               Authorization: `Bearer ${token}`,
             },

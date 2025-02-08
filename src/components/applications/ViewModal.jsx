@@ -1,4 +1,3 @@
-import axios from "axios";
 import { useQuery } from "react-query";
 import { Link, useParams } from "react-router-dom";
 import Layout from "../Layout";
@@ -16,19 +15,14 @@ import {
   SquareArrowOutUpRight,
 } from "lucide-react";
 import Table from "../Table";
+import { useAxiosPrivate } from "../../utils/axios";
 
 export default function ViewModal() {
   const { id } = useParams();
+  const axiosPrivate = useAxiosPrivate();
 
   const fetchApplication = async () => {
-    const { data } = await axios.get(
-      `http://127.0.0.1:8000/api/applications/${id}`,
-      {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("access")}`,
-        },
-      }
-    );
+    const { data } = await axiosPrivate.get(`/applications/${id}`);
     return data;
   };
 
@@ -41,11 +35,7 @@ export default function ViewModal() {
   );
 
   const fetchEmployees = async () => {
-    const { data } = await axios.get(`http://127.0.0.1:8000/api/employees/`, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("access")}`,
-      },
-    });
+    const { data } = await axiosPrivate.get(`/employees/`);
     return data;
   };
 

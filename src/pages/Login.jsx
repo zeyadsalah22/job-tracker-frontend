@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 import { useFormik } from "formik";
 import FormInput from "../components/FormInput";
 import { loginSchema } from "../schemas/Schemas";
@@ -8,13 +7,14 @@ import ReactLoading from "react-loading";
 import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
 import useUserStore from "../store/user.store";
+import { useAxiosPrivate } from "../utils/axios";
 
 export default function Login() {
   const token = localStorage.getItem("access");
   const navigate = useNavigate();
   const setUser = useUserStore((state) => state.setUser);
-
   const [loading, setLoading] = useState(false);
+  const axiosPrivate = useAxiosPrivate();
 
   const { values, errors, handleSubmit, handleChange, touched } = useFormik({
     initialValues: {
@@ -25,21 +25,11 @@ export default function Login() {
     onSubmit: async (values) => {
       setLoading(true);
       try {
-        const response = await axios.post(
-          "http://127.0.0.1:8000/api/token/",
-          values
-        );
+        const response = await axiosPrivate.post("/token/", values);
         const authTokens = response.data;
         localStorage.setItem("access", authTokens.access);
         localStorage.setItem("refresh", authTokens.refresh);
-        const userResponse = await axios.get(
-          "http://127.0.0.1:8000/api/users/me/",
-          {
-            headers: {
-              Authorization: `Bearer ${authTokens.access}`,
-            },
-          }
-        );
+        const userResponse = await axiosPrivate.get("/users/me/");
         setUser(userResponse.data);
         navigate("/dashboard");
 

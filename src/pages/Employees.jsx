@@ -4,10 +4,10 @@ import Table from "../components/Table";
 import React from "react";
 import EditModal from "../components/employees/EditModal";
 import DeleteModal from "../components/employees/DeleteModal";
-import axios from "axios";
 import { useQuery } from "react-query";
 import Pagination from "../components/Pagination";
 import AddModal from "../components/employees/AddModal";
+import { useAxiosPrivate } from "../utils/axios";
 
 export default function Employees() {
   const [openEdit, setOpenEdit] = React.useState(false);
@@ -17,6 +17,7 @@ export default function Employees() {
   const [openAdd, setOpenAdd] = React.useState(false);
   const [search, setSearch] = React.useState("");
   const [order, setOrder] = React.useState("");
+  const axiosPrivate = useAxiosPrivate();
 
   const handleOpenEdit = (id) => {
     setOpenEdit(true);
@@ -29,13 +30,8 @@ export default function Employees() {
   };
 
   const fetchEmployees = async () => {
-    const { data } = await axios.get(
-      `http://127.0.0.1:8000/api/employees?page_size=8&page=${page}&search=${search}&ordering=${order}`,
-      {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("access")}`,
-        },
-      }
+    const { data } = await axiosPrivate.get(
+      `/employees?page_size=8&page=${page}&search=${search}&ordering=${order}`
     );
     return data;
   };

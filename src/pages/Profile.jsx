@@ -3,7 +3,6 @@ import Layout from "../components/Layout";
 import useUserStore from "../store/user.store";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import axios from "axios";
 import FormInput from "../components/FormInput";
 import ReactLoading from "react-loading";
 import DeleteModal from "../components/user/DeleteModal";
@@ -11,6 +10,7 @@ import { useNavigate } from "react-router-dom";
 import { LogOut, Trash2 } from "lucide-react";
 import ChangePass from "../components/user/ChangePass";
 import ManageCv from "../components/user/ManageCv";
+import { useAxiosPrivate } from "../utils/axios";
 
 export default function Profile() {
   const user = useUserStore((state) => state.user);
@@ -21,6 +21,7 @@ export default function Profile() {
   const userLogout = useUserStore((state) => state.logout);
   const navigate = useNavigate();
   const [changePassword, setChangePassword] = useState(false);
+  const axiosPrivate = useAxiosPrivate();
 
   const { values, errors, handleSubmit, handleChange, touched, setFieldValue } =
     useFormik({
@@ -33,12 +34,8 @@ export default function Profile() {
       },
       onSubmit: async (values) => {
         setLoading(true);
-        await axios
-          .patch("http://127.0.0.1:8000/api/users/me/", values, {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          })
+        await axiosPrivate
+          .patch("/users/me/", values)
           .then(() => {
             setUser(values);
             toast.success("Profile updated successfully");
@@ -63,15 +60,9 @@ export default function Profile() {
   }, [user, setFieldValue]);
 
   const handleLogout = async () => {
-    await axios.post(
-      "http://127.0.0.1:8000/api/token/logout/",
-      { refresh: localStorage.getItem("refresh") },
-      {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("access")}`,
-        },
-      }
-    );
+    await axiosPrivate.post("/token/logout/", {
+      refresh: localStorage.getItem("refresh"),
+    });
     userLogout();
     localStorage.removeItem("access");
     localStorage.removeItem("refresh");

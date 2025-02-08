@@ -1,4 +1,3 @@
-import axios from "axios";
 import { useQuery } from "react-query";
 import { Link, useParams } from "react-router-dom";
 import Layout from "../Layout";
@@ -15,6 +14,7 @@ import React from "react";
 import EditModal from "../employees/EditModal";
 import DeleteModal from "../employees/DeleteModal";
 import Pagination from "../Pagination";
+import { useAxiosPrivate } from "../../utils/axios";
 
 export default function ViewModal() {
   const { id } = useParams();
@@ -23,6 +23,7 @@ export default function ViewModal() {
   const [page, setPage] = React.useState(1);
   const [search, setSearch] = React.useState("");
   const [employeeId, setEmployeeId] = React.useState(null);
+  const axiosPrivate = useAxiosPrivate();
 
   const handleOpenEdit = (id) => {
     setOpenEdit(true);
@@ -35,14 +36,7 @@ export default function ViewModal() {
   };
 
   const fetchCompany = async () => {
-    const { data } = await axios.get(
-      `http://127.0.0.1:8000/api/companies/${id}`,
-      {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("access")}`,
-        },
-      }
-    );
+    const { data } = await axiosPrivate.get(`/companies/${id}`);
     return data;
   };
 
@@ -55,13 +49,8 @@ export default function ViewModal() {
   });
 
   const fetchEmployees = async () => {
-    const { data } = await axios.get(
-      `http://127.0.0.1:8000/api/employees?company__id=${id}&page=${page}&search=${search}`,
-      {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("access")}`,
-        },
-      }
+    const { data } = await axiosPrivate.get(
+      `/employees?company__id=${id}&page=${page}&search=${search}`
     );
     return data;
   };

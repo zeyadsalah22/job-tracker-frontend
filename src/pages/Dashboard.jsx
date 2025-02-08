@@ -2,55 +2,37 @@ import { useState } from "react";
 import Layout from "../components/Layout";
 import { Book, CheckCheck, X, LoaderCircle, Trash2, Plus } from "lucide-react";
 import { TEChart } from "tw-elements-react";
-import { useNavigate } from "react-router-dom";
-import axios from "axios";
 import { useQuery } from "react-query";
 import ReactLoading from "react-loading";
 import AddTodoModal from "../components/AddTodoModal";
+import { useAxiosPrivate } from "../utils/axios";
 
 function Todo() {
   const [loading, setLoading] = useState(false);
   const [openAdd, setOpenAdd] = useState(false);
+  const axiosPrivate = useAxiosPrivate();
 
   const fetchTodos = async () => {
-    const { data } = await axios.get(`http://127.0.0.1:8000/api/todos`, {
-      headers: {
-        Authorization: `Bearer  ${localStorage.getItem("access")}`,
-      },
-    });
+    const { data } = await axiosPrivate.get(`/todos`);
     return data;
   };
 
   const { data: todos, isLoading, refetch } = useQuery(["todos"], fetchTodos);
   const deleteTodo = async (id) => {
     setLoading(true);
-    await axios
-      .delete(`http://127.0.0.1:8000/api/todos/${id}`, {
-        headers: {
-          Authorization: `Bearer  ${localStorage.getItem("access")}`,
-        },
-      })
-      .then(() => {
-        setLoading(false);
-        refetch();
-      });
+    await axiosPrivate.delete(`/todos/${id}`).then(() => {
+      setLoading(false);
+      refetch();
+    });
   };
 
   const toggleCompletion = async (id) => {
     setLoading(true);
     const todo = todos.results.find((todo) => todo.id === id);
-    await axios
-      .patch(
-        `http://127.0.0.1:8000/api/todos/${id}`,
-        {
-          completed: !todo.completed,
-        },
-        {
-          headers: {
-            Authorization: `Bearer  ${localStorage.getItem("access")}`,
-          },
-        }
-      )
+    await axiosPrivate
+      .patch(`/todos/${id}`, {
+        completed: !todo.completed,
+      })
       .then(() => {
         setLoading(false);
         refetch();
@@ -134,20 +116,15 @@ function Todo() {
 }
 
 export default function Dashboard() {
-  const navigate = useNavigate();
-  const token = localStorage.getItem("token");
   const [interval, setInterval] = useState("week");
   const [points, setPoints] = useState(12);
   const [start_date, setStartDate] = useState(
     localStorage.getItem("start_date")
   );
+  const axiosPrivate = useAxiosPrivate();
 
   const fetchStatistics = async () => {
-    const { data } = await axios.get(`http://127.0.0.1:8000/api/statistics`, {
-      headers: {
-        Authorization: `Bearer  ${localStorage.getItem("access")}`,
-      },
-    });
+    const { data } = await axiosPrivate.get(`/statistics`);
     return data;
   };
 
@@ -158,11 +135,7 @@ export default function Dashboard() {
   } = useQuery(["statistics"], fetchStatistics);
 
   const fetchPercents = async () => {
-    const { data } = await axios.get(`http://127.0.0.1:8000/api/percents`, {
-      headers: {
-        Authorization: `Bearer  ${localStorage.getItem("access")}`,
-      },
-    });
+    const { data } = await axiosPrivate.get(`/percents`);
     return data;
   };
 
@@ -173,8 +146,8 @@ export default function Dashboard() {
   } = useQuery(["percents"], fetchPercents);
 
   const fetchTimeseries = async () => {
-    const { data } = await axios.get(
-      `http://127.0.0.1:8000/api/timeseries?start_date=${start_date}&points=${points}&interval=${interval}`,
+    const { data } = await axiosPrivate.get(
+      `/timeseries?start_date=${start_date}&points=${points}&interval=${interval}`,
       {
         headers: {
           Authorization: `Bearer  ${localStorage.getItem("access")}`,

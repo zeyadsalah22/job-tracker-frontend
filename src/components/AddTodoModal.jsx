@@ -1,5 +1,4 @@
 import Modal from "./Modal";
-import axios from "axios";
 import { useFormik } from "formik";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
@@ -7,12 +6,13 @@ import FormInput from "./FormInput";
 import ReactLoading from "react-loading";
 import { todoSchema } from "../schemas/Schemas";
 import useUserStore from "../store/user.store";
+import { useAxiosPrivate } from "../utils/axios";
 
 export default function AddTodoModal({ refetch, openAdd, setOpenAdd }) {
-  const token = localStorage.getItem("access");
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const user = useUserStore((state) => state.user);
+  const axiosPrivate = useAxiosPrivate();
 
   const { values, errors, handleSubmit, handleChange, touched, setFieldValue } =
     useFormik({
@@ -26,12 +26,8 @@ export default function AddTodoModal({ refetch, openAdd, setOpenAdd }) {
       validationSchema: todoSchema,
       onSubmit: async (values) => {
         setLoading(true);
-        await axios
-          .post("http://127.0.0.1:8000/api/todos", values, {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          })
+        await axiosPrivate
+          .post("/todos", values)
           .then(() => {
             setOpenAdd(false);
             setLoading(false);

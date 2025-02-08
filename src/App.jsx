@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { Routes, Route } from "react-router-dom";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
@@ -16,54 +15,8 @@ import Employees from "./pages/Employees";
 import Questions from "./pages/Questions";
 import Question from "./components/questions/ViewModal";
 import ProtectedRoute from "./utils/ProtectedRoute";
-import axios from "axios";
 
 export default function App() {
-  useEffect(() => {
-    // Skip if no access token exists
-    if (!localStorage.getItem("access")) return;
-
-    const refreshToken = async () => {
-      try {
-        const refresh = localStorage.getItem("refresh");
-        if (!refresh) {
-          console.error("No refresh token found");
-          return;
-        }
-
-        const response = await axios.post(
-          "http://127.0.0.1:8000/api/token/refresh",
-          {
-            refresh: refresh,
-          }
-        );
-
-        if (!response.ok) {
-          throw new Error("Refresh failed");
-        }
-
-        const data = await response.json();
-        localStorage.setItem("access", data.access);
-      } catch (error) {
-        console.error("Token refresh failed:", error);
-        // Clear tokens on refresh failure
-        localStorage.removeItem("access");
-        localStorage.removeItem("refresh");
-        // Optionally redirect to login page
-        window.location.href = "/";
-      }
-    };
-    
-    // Initial token refresh
-    refreshToken();
-
-    // Set interval for 13 minutes (13 * 60 * 1000 milliseconds)
-    const intervalId = setInterval(refreshToken, 1 * 60 * 1000);
-
-    // Cleanup interval on component unmount
-    return () => clearInterval(intervalId);
-  }, []);
-
   return (
     <>
       <Routes>

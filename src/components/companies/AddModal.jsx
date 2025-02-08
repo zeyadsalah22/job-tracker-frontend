@@ -7,12 +7,14 @@ import { comapnySchema } from "../../schemas/Schemas";
 import FormInput from "../FormInput";
 import ReactLoading from "react-loading";
 import useUserStore from "../../store/user.store";
+import { useAxiosPrivate } from "../../utils/axios";
 
 export default function AddModal({ refetch, openAdd, setOpenAdd }) {
   const token = localStorage.getItem("access");
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const user = useUserStore((state) => state.user);
+  const axiosPrivate = useAxiosPrivate();
 
   const { values, errors, handleSubmit, handleChange, touched } = useFormik({
     initialValues: {
@@ -26,12 +28,8 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
     validationSchema: comapnySchema,
     onSubmit: async (values) => {
       setLoading(true);
-      await axios
-        .post("http://127.0.0.1:8000/api/companies", values, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
+      await axiosPrivate
+        .post("/companies", values)
         .then(() => {
           setOpenAdd(false);
           setLoading(false);

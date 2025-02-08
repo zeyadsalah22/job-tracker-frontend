@@ -4,10 +4,10 @@ import Table from "../components/Table";
 import React from "react";
 import EditModal from "../components/questions/EditModal";
 import DeleteModal from "../components/questions/DeleteModal";
-import axios from "axios";
 import { useQuery } from "react-query";
 import Pagination from "../components/Pagination";
 import AddModal from "../components/questions/AddModal";
+import { useAxiosPrivate } from "../utils/axios";
 
 export default function Questions() {
   const [openEdit, setOpenEdit] = React.useState(false);
@@ -16,6 +16,7 @@ export default function Questions() {
   const [page, setPage] = React.useState(1);
   const [openAdd, setOpenAdd] = React.useState(false);
   const [search, setSearch] = React.useState("");
+  const axiosPrivate = useAxiosPrivate();
 
   const handleOpenEdit = (id) => {
     setOpenEdit(true);
@@ -28,13 +29,8 @@ export default function Questions() {
   };
 
   const fetchquestions = async () => {
-    const { data } = await axios.get(
-      `http://127.0.0.1:8000/api/questions?page=${page}&page_size=8&search=${search}`,
-      {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("access")}`,
-        },
-      }
+    const { data } = await axiosPrivate.get(
+      `/questions?page=${page}&page_size=8&search=${search}`
     );
     return data;
   };

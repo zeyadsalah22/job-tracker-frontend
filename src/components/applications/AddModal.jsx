@@ -1,5 +1,4 @@
 import Modal from "../Modal";
-import axios from "axios";
 import { useFormik } from "formik";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
@@ -11,9 +10,9 @@ import useUserStore from "../../store/user.store";
 import AddModalEmployees from "../employees/AddModal";
 import AddModalCompanies from "../companies/AddModal";
 import Dropdown from "../Dropdown";
+import { useAxiosPrivate } from "../../utils/axios";
 
 export default function AddModal({ refetch, openAdd, setOpenAdd }) {
-  const token = localStorage.getItem("access");
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const user = useUserStore((state) => state.user);
@@ -21,6 +20,7 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
   const [addCompany, setAddCompany] = useState(false);
   const [companySearch, setCompanySearch] = useState("");
   const [employeeSearch, setEmployeeSearch] = useState("");
+  const axiosPrivate = useAxiosPrivate();
 
   const { values, errors, handleSubmit, handleChange, touched, setFieldValue } =
     useFormik({
@@ -53,13 +53,8 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
           }
         }
 
-        await axios
-          .post("http://127.0.0.1:8000/api/applications", formData, {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "multipart/form-data",
-            },
-          })
+        await axiosPrivate
+          .post("/applications", formData)
           .then(() => {
             setOpenAdd(false);
             setLoading(false);
@@ -78,13 +73,8 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
     });
 
   const fetchCompanies = async () => {
-    const { data } = await axios.get(
-      `http://127.0.0.1:8000/api/companies?search=${companySearch}`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
+    const { data } = await axiosPrivate.get(
+      `/companies?search=${companySearch}`
     );
     return data;
   };
@@ -96,13 +86,8 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
   } = useQuery(["companies", companySearch], fetchCompanies);
 
   const fetchEmployees = async () => {
-    const { data } = await axios.get(
-      `http://127.0.0.1:8000/api/employees?company__id=${values.company_id}&search=${employeeSearch}`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
+    const { data } = await axiosPrivate.get(
+      `/employees?company__id=${values.company_id}&search=${employeeSearch}`
     );
     return data;
   };

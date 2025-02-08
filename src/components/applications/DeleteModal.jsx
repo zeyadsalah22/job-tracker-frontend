@@ -1,8 +1,8 @@
 import Modal from "../Modal";
-import axios from "axios";
 import { toast } from "react-toastify";
 import { useState } from "react";
 import ReactLoading from "react-loading";
+import { useAxiosPrivate } from "../../utils/axios";
 
 export default function DeleteModal({
   id,
@@ -12,14 +12,11 @@ export default function DeleteModal({
 }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const axiosPrivate = useAxiosPrivate();
 
   const handleDelete = () => {
-    axios
-      .delete(`http://127.0.0.1:8000/api/applications/${id}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("access")}`,
-        },
-      })
+    axiosPrivate
+      .delete(`/applications/${id}`)
       .then(() => {
         setOpenDelete(false);
         setLoading(false);

@@ -1,5 +1,4 @@
 import Modal from "../Modal";
-import axios from "axios";
 import { useFormik } from "formik";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
@@ -8,12 +7,13 @@ import FormInput from "../FormInput";
 import ReactLoading from "react-loading";
 import { useQuery } from "react-query";
 import useUserStore from "../../store/user.store";
+import { useAxiosPrivate } from "../../utils/axios";
 
 export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
-  const token = localStorage.getItem("access");
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const user = useUserStore((state) => state.user);
+  const axiosPrivate = useAxiosPrivate();
 
   const contacted = [
     {
@@ -39,14 +39,7 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
   ];
 
   const fetchEmployee = async () => {
-    const { data } = await axios.get(
-      `http://127.0.0.1:8000/api/employees/${id}`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
+    const { data } = await axiosPrivate.get(`/employees/${id}`);
     return data;
   };
 
@@ -59,11 +52,7 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
   );
 
   const fetchCompanies = async () => {
-    const { data } = await axios.get(`http://127.0.0.1:8000/api/companies`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const { data } = await axiosPrivate.get(`/companies`);
     return data.results;
   };
 
@@ -84,12 +73,8 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
       validationSchema: employeeSchema,
       onSubmit: async (values) => {
         setLoading(true);
-        await axios
-          .patch(`http://127.0.0.1:8000/api/employees/${id}`, values, {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          })
+        await axiosPrivate
+          .patch(`/employees/${id}`, values)
           .then(() => {
             setOpenEdit(false);
             setLoading(false);

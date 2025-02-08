@@ -1,5 +1,4 @@
 import Modal from "../Modal";
-import axios from "axios";
 import { toast } from "react-toastify";
 import { useState } from "react";
 import ReactLoading from "react-loading";
@@ -7,11 +6,13 @@ import { useFormik } from "formik";
 import { useNavigate } from "react-router-dom";
 import FormInput from "../FormInput";
 import * as Yup from "yup";
+import { useAxiosPrivate } from "../../utils/axios";
 
 export default function DeleteModal({ openDelete, setOpenDelete }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+  const axiosPrivate = useAxiosPrivate();
 
   const { values, errors, handleSubmit, handleChange, touched } = useFormik({
     initialValues: {
@@ -24,12 +25,7 @@ export default function DeleteModal({ openDelete, setOpenDelete }) {
       setLoading(true);
 
       try {
-        await axios.delete(`http://127.0.0.1:8000/api/users/me/`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("access")}`,
-          },
-          data: values,
-        });
+        await axiosPrivate.delete(`/users/me/`);
         setOpenDelete(false);
         setLoading(false);
         toast.success("User deleted successfully");

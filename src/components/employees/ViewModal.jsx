@@ -1,4 +1,3 @@
-import axios from "axios";
 import { useQuery } from "react-query";
 import { useParams } from "react-router-dom";
 import Layout from "../Layout";
@@ -14,19 +13,14 @@ import {
   Mails,
   UserRound,
 } from "lucide-react";
+import { useAxiosPrivate } from "../../utils/axios";
 
 export default function ViewModal() {
   const { id } = useParams();
+  const axiosPrivate = useAxiosPrivate();
 
   const fetchEmployee = async () => {
-    const { data } = await axios.get(
-      `http://127.0.0.1:8000/api/employees/${id}`,
-      {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("access")}`,
-        },
-      }
-    );
+    const { data } = await axiosPrivate.get(`/employees/${id}`);
     return data;
   };
 
