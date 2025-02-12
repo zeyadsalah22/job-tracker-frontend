@@ -7,7 +7,7 @@ import ReactLoading from "react-loading";
 import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
 import useUserStore from "../store/user.store";
-import { useAxiosPrivate } from "../utils/axios";
+import axios, { useAxiosPrivate } from "../utils/axios";
 
 export default function Login() {
   const token = localStorage.getItem("access");
@@ -25,7 +25,7 @@ export default function Login() {
     onSubmit: async (values) => {
       setLoading(true);
       try {
-        const response = await axiosPrivate.post("/token/", values);
+        const response = await axios.post("/token/", values);
         const authTokens = response.data;
         localStorage.setItem("access", authTokens.access);
         localStorage.setItem("refresh", authTokens.refresh);
@@ -42,10 +42,7 @@ export default function Login() {
         );
       } catch (error) {
         setLoading(false);
-        toast.error(
-          error.response?.data?.non_field_errors?.[0] ||
-            "An error occurred. Please try again"
-        );
+        toast.error(error.response.data.detail);
       }
     },
   });

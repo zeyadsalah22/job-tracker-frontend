@@ -6,14 +6,13 @@ import { useFormik } from "formik";
 import ReactLoading from "react-loading";
 import { registerSchema } from "../schemas/Schemas";
 import { Link } from "react-router-dom";
-import { useAxiosPrivate } from "../utils/axios";
+import axios from "../utils/axios";
 
 export default function Register() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const token = localStorage.getItem("access");
-  const axiosPrivate = useAxiosPrivate();
 
   const { values, errors, handleSubmit, handleChange, touched } = useFormik({
     initialValues: {
@@ -25,8 +24,8 @@ export default function Register() {
     validationSchema: registerSchema,
     onSubmit: async (values) => {
       setLoading(true);
-      await axiosPrivate
-        .post("/users", values)
+      await axios
+        .post("/users/", values)
         .then(() => {
           navigate("/");
           toast.success("Registration successful. Please login to continue.");

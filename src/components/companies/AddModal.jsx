@@ -23,6 +23,7 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
       location: "",
       careers_link: "",
       linkedin_link: "",
+      description: "",
     },
 
     validationSchema: comapnySchema,
@@ -92,6 +93,17 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
             onChange={handleChange}
             error={errors.linkedin_link || error?.response?.data?.linkedin_link}
             touched={touched.linkedin_link}
+          />
+
+          <FormInput
+            label="Description"
+            name="description"
+            placeHolder="Description"
+            textArea
+            onChange={handleChange}
+            value={values.description}
+            error={errors.description || error?.response?.data?.description}
+            touched={touched.description}
           />
 
           {loading ? (

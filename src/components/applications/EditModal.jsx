@@ -41,6 +41,7 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
         job_type: "",
         description: "",
         link: "",
+        cv: "",
         ats_score: "",
         stage: "",
         status: "",
@@ -105,6 +106,13 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
     }
   );
 
+  const fetchCvs = async () => {
+    const { data } = await axiosPrivate.get(`/cvs`);
+    return data.results;
+  };
+
+  const { data: cvs, isLoading: cvs_loading } = useQuery(["cvs"], fetchCvs);
+
   const stage = [
     {
       name: "Applied",
@@ -149,12 +157,9 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
       setFieldValue("status", application.status);
       setFieldValue("submission_date", application.submission_date);
       setFieldValue("contacted_employees", application.contacted_employees);
+      setFieldValue("cv", application.cv);
     }
   }, [setFieldValue, application, isLoading, user.id]);
-
-  if (isLoading) {
-    return <p>Loading...</p>;
-  }
 
   return (
     <Modal open={openEdit} setOpen={setOpenEdit} width="600px">
@@ -182,9 +187,9 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
           <select
             onChange={(e) => {
               if (e.target.value === "add-company") {
-                setAddCompany(true); // Open the modal or handle the 'Add Company' functionality
+                setAddCompany(true);
               } else {
-                handleChange(e); // This handles regular option selections
+                handleChange(e);
               }
             }}
             name="company_id"
@@ -219,7 +224,7 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
               type="text"
               onChange={handleChange}
               value={values.job_title}
-              error={errors.job_title}
+              error={errors.job_title || error?.response?.data?.job_title}
               touched={touched.job_title}
             />
             <FormInput
@@ -229,7 +234,7 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
               type="text"
               onChange={handleChange}
               value={values.job_type}
-              error={errors.job_type}
+              error={errors.job_type || error?.response?.data?.job_type}
               touched={touched.job_type}
             />
           </div>
@@ -240,9 +245,39 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
             type="text"
             onChange={handleChange}
             value={values.link}
-            error={errors.link}
+            error={errors.link || error?.response?.data?.link}
             touched={touched.link}
           />
+
+          <div className="flex flex-col gap-2 w-full">
+            <div className="text-sm text-gray-600">
+              Choose CV<span className="text-red-500">*</span>
+            </div>
+            <select
+              name="cv"
+              value={parseInt(values.cv, 10)}
+              onChange={handleChange}
+              className={`${
+                touched.cv && errors.cv && "border-red-500"
+              } w-full rounded-md border px-4 py-2 focus:border-primary focus:outline-none focus:ring-primary`}
+            >
+              <option value="" disabled>
+                Select CV
+              </option>
+              {cvs_loading ? (
+                <option value="" disabled>
+                  Loading...
+                </option>
+              ) : (
+                cvs.map((cv) => (
+                  <option key={cv.id} value={parseInt(cv.id, 10)}>
+                    {cv.cv.split("/").pop()}
+                  </option>
+                ))
+              )}
+            </select>
+          </div>
+
           <div className="flex gap-6">
             <FormInput
               label="ATS Score"
@@ -251,7 +286,7 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
               type="number"
               onChange={handleChange}
               value={values.ats_score}
-              error={errors.ats_score}
+              error={errors.ats_score || error?.response?.data?.ats_score}
               touched={touched.ats_score}
             />
           </div>
@@ -387,7 +422,9 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
             type="date"
             onChange={handleChange}
             value={values.submission_date}
-            error={errors.submission_date}
+            error={
+              errors.submission_date || error?.response?.data?.submission_date
+            }
             touched={touched.submission_date}
           />
           <FormInput
@@ -397,7 +434,7 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
             textarea
             onChange={handleChange}
             value={values.description}
-            error={errors.description}
+            error={errors.description || error?.response?.data?.description}
             touched={touched.description}
             textArea
           />

@@ -35,7 +35,6 @@ export default function Companies() {
     );
     return data;
   };
-  console.log(localStorage.getItem("access"));
   const {
     data: companies,
     isLoading,

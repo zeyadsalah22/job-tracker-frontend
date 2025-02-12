@@ -41,13 +41,14 @@ export const applicationSchema = Yup.object().shape({
   company_id: Yup.string().required("Required"),
   job_title: Yup.string().required("Required"),
   job_type: Yup.string().required("Required"),
-  description: Yup.string().optional(),
-  link: Yup.string().optional(),
-  ats_score: Yup.number().optional(),
-  stage: Yup.string().optional(),
+  description: Yup.string().required("Required"),
+  link: Yup.string().required("Required"),
+  ats_score: Yup.number().required("Required"),
+  stage: Yup.string().required("Required"),
   status: Yup.string().required("Required"),
-  submission_date: Yup.string().optional(),
+  submission_date: Yup.string().required("Required"),
   contacted_employees: Yup.array().required("Required"),
+  cv: Yup.number().required("Required"),
 });
 
 export const questionSchema = Yup.object().shape({

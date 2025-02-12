@@ -1,5 +1,4 @@
 import Modal from "../Modal";
-import axios from "axios";
 import { useFormik } from "formik";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
@@ -12,7 +11,6 @@ import Dropdown from "../Dropdown";
 import { useAxiosPrivate } from "../../utils/axios";
 
 export default function AddModal({ refetch, openAdd, setOpenAdd }) {
-  const token = localStorage.getItem("access");
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
@@ -77,8 +75,6 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
       name: job_title,
     };
   });
-
-  console.log(errors);
 
   return (
     <Modal open={openAdd} setOpen={setOpenAdd} width="600px">

@@ -15,12 +15,9 @@ const axiosPrivate = axios.create({
 
 const useRefreshToken = () => {
   const refresh = async () => {
-    const response = await axios.post(
-      "https://better-fiann-zeyadsalah-3825b5df.koyeb.app/api/token/refresh/",
-      {
-        refresh: localStorage.getItem("refresh"),
-      }
-    );
+    const response = await axios.post(BASE_URL + "/token/refresh/", {
+      refresh: localStorage.getItem("refresh"),
+    });
 
     localStorage.setItem("access", response.data.access);
     localStorage.setItem("refresh", response.data.refresh);

@@ -1,5 +1,4 @@
 import Modal from "../Modal";
-import axios from "axios";
 import { useFormik } from "formik";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
@@ -9,7 +8,6 @@ import { useQuery } from "react-query";
 import { useAxiosPrivate } from "../../utils/axios";
 
 export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
-  const token = localStorage.getItem("access");
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const axiosPrivate = useAxiosPrivate();
@@ -63,6 +61,7 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
       setFieldValue("location", company.location);
       setFieldValue("careers_link", company.careers_link);
       setFieldValue("linkedin_link", company.linkedin_link);
+      setFieldValue("description", company.description);
     }
   }, [setFieldValue, company, isLoading]);
 
@@ -113,6 +112,17 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
             onChange={handleChange}
             error={errors.careers_link || error?.response?.data?.careers_link}
             touched={touched.careers_link}
+          />
+
+          <FormInput
+            label="Description"
+            name="description"
+            placeHolder="Description"
+            textArea
+            onChange={handleChange}
+            value={values.description}
+            error={errors.description || error?.response?.data?.description}
+            touched={touched.description}
           />
 
           {loading ? (

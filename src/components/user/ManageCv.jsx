@@ -33,8 +33,8 @@ export default function ManageCv() {
         refetch();
         toast.success("CV uploaded successfully");
       })
-      .catch((error) => {
-        console.log(error);
+      .catch(() => {
+        toast.error("An error occurred. Please try again");
       });
   };
 
@@ -45,8 +45,8 @@ export default function ManageCv() {
         refetch();
         toast.success("CV deleted successfully");
       })
-      .catch((error) => {
-        console.log(error);
+      .catch(() => {
+        toast.error("An error occurred. Please try again");
       });
   };
 

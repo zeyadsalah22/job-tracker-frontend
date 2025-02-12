@@ -31,6 +31,7 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
         job_type: "",
         description: "",
         link: "",
+        cv: "",
         ats_score: "",
         stage: "",
         status: "",
@@ -41,20 +42,8 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
       validationSchema: applicationSchema,
       onSubmit: async (values) => {
         setLoading(true);
-
-        const formData = new FormData();
-        for (const key in values) {
-          if (key === "contacted_employees") {
-            values[key].forEach((employeeId) => {
-              formData.append("contacted_employees", employeeId);
-            });
-          } else {
-            formData.append(key, values[key]);
-          }
-        }
-
         await axiosPrivate
-          .post("/applications", formData)
+          .post("/applications", values)
           .then(() => {
             setOpenAdd(false);
             setLoading(false);
@@ -103,6 +92,13 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
       enabled: !!values.company_id,
     }
   );
+
+  const fetchCvs = async () => {
+    const { data } = await axiosPrivate.get(`/cvs`);
+    return data.results;
+  };
+
+  const { data: cvs, isLoading: cvs_loading } = useQuery(["cvs"], fetchCvs);
 
   const stage = [
     { name: "Applied", value: "APPLIED" },
@@ -224,17 +220,49 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
             name="link"
             placeHolder="Link"
             type="text"
+            required
             onChange={handleChange}
             value={values.link}
             error={errors.link || error?.response?.data?.link}
             touched={touched.link}
           />
+
+          <div className="flex flex-col gap-2 w-full">
+            <div className="text-sm text-gray-600">
+              Choose CV<span className="text-red-500">*</span>
+            </div>
+            <select
+              name="cv"
+              value={parseInt(values.cv, 10)}
+              onChange={handleChange}
+              className={`${
+                touched.cv && errors.cv && "border-red-500"
+              } w-full rounded-md border px-4 py-2 focus:border-primary focus:outline-none focus:ring-primary`}
+            >
+              <option value="" disabled>
+                Select CV
+              </option>
+              {cvs_loading ? (
+                <option value="" disabled>
+                  Loading...
+                </option>
+              ) : (
+                cvs.map((cv) => (
+                  <option key={cv.id} value={parseInt(cv.id, 10)}>
+                    {cv.cv.split("/").pop()}
+                  </option>
+                ))
+              )}
+            </select>
+          </div>
+
           <div className="flex gap-6">
             <FormInput
               label="ATS Score"
               name="ats_score"
               placeHolder="ATS Score"
               type="number"
+              required
               onChange={handleChange}
               value={values.ats_score}
               error={errors.ats_score || error?.response?.data?.ats_score}
@@ -243,7 +271,9 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
           </div>
           <div className="flex gap-6 w-full">
             <div className="flex flex-col gap-2 w-full">
-              <p className="text-sm text-gray-600">Choose Stage</p>
+              <div className="text-sm text-gray-600">
+                Choose Stage<span className="text-red-500">*</span>
+              </div>
               <select
                 name="stage"
                 value={values.stage}
@@ -324,7 +354,6 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
                       key={employeeId}
                       className="flex bg-primary text-white px-2 py-1 rounded-full text-xs items-center gap-2"
                     >
-                      {/* Only show name if the employee exists in fetched data */}
                       {employee ? (
                         <p>{employee.name}</p>
                       ) : (
@@ -352,6 +381,7 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
             name="submission_date"
             placeHolder="Submission Date"
             type="date"
+            required
             onChange={handleChange}
             value={values.submission_date}
             error={
@@ -363,6 +393,7 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
             label="Description"
             name="description"
             placeHolder="Description"
+            required
             textArea
             onChange={handleChange}
             value={values.description}
