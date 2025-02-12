@@ -48,7 +48,7 @@ export const applicationSchema = Yup.object().shape({
   status: Yup.string().required("Required"),
   submission_date: Yup.string().required("Required"),
   contacted_employees: Yup.array().required("Required"),
-  cv: Yup.number().required("Required"),
+  submitted_cv: Yup.number().required("Required"),
 });
 
 export const questionSchema = Yup.object().shape({

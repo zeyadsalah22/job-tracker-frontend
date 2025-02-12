@@ -155,6 +155,23 @@ export default function ViewModal() {
                           <div className="w-96">{application.description}</div>
                         </div>
                       )}
+                      <div className="flex gap-1">
+                        {application.submitted_cv === "" ? (
+                          "No provided Information."
+                        ) : (
+                          <div className="flex gap-1">
+                            <span className="text-gray-600">Submitted cv:</span>
+
+                            <a
+                              className="text-primary hover:text-blue-800 transition-all flex items-center gap-1"
+                              href={application.submitted_cv.cv}
+                              target="_blank"
+                            >
+                              {application.submitted_cv.cv.split("/").pop()}
+                            </a>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                   <p>

@@ -41,7 +41,7 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
         job_type: "",
         description: "",
         link: "",
-        cv: "",
+        submitted_cv: "",
         ats_score: "",
         stage: "",
         status: "",
@@ -52,16 +52,6 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
       validationSchema: applicationSchema,
       onSubmit: async (values) => {
         setLoading(true);
-        const formData = new FormData();
-        for (const key in values) {
-          if (key === "contacted_employees") {
-            values[key].forEach((employeeId) => {
-              formData.append("contacted_employees", employeeId);
-            });
-          } else {
-            formData.append(key, values[key]);
-          }
-        }
         await axiosPrivate
           .patch(`/applications/${id}`, values)
           .then(() => {
@@ -80,7 +70,7 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
           });
       },
     });
-
+  console.log(errors);
   const fetchCompanies = async () => {
     const { data } = await axiosPrivate.get(`/companies`);
     return data.results;
@@ -157,7 +147,7 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
       setFieldValue("status", application.status);
       setFieldValue("submission_date", application.submission_date);
       setFieldValue("contacted_employees", application.contacted_employees);
-      setFieldValue("cv", application.cv);
+      setFieldValue("submitted_cv", application.submitted_cv?.id);
     }
   }, [setFieldValue, application, isLoading, user.id]);
 
@@ -254,11 +244,13 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
               Choose CV<span className="text-red-500">*</span>
             </div>
             <select
-              name="cv"
-              value={parseInt(values.cv, 10)}
-              onChange={handleChange}
+              name="submitted_cv"
+              value={values.submitted_cv}
+              onChange={(e) =>
+                setFieldValue("submitted_cv", Number(e.target.value))
+              }
               className={`${
-                touched.cv && errors.cv && "border-red-500"
+                touched.submitted_cv && errors.submitted_cv && "border-red-500"
               } w-full rounded-md border px-4 py-2 focus:border-primary focus:outline-none focus:ring-primary`}
             >
               <option value="" disabled>
@@ -270,12 +262,17 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
                 </option>
               ) : (
                 cvs.map((cv) => (
-                  <option key={cv.id} value={parseInt(cv.id, 10)}>
+                  <option key={cv.id} value={cv.id}>
                     {cv.cv.split("/").pop()}
                   </option>
                 ))
               )}
             </select>
+            {errors.submitted_cv && touched.submitted_cv && (
+              <span className="mt-1 text-xs text-red-500">
+                {errors.submitted_cv}
+              </span>
+            )}
           </div>
 
           <div className="flex gap-6">

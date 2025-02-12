@@ -31,7 +31,7 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
         job_type: "",
         description: "",
         link: "",
-        cv: "",
+        submitted_cv: "",
         ats_score: "",
         stage: "",
         status: "",
@@ -43,7 +43,10 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
       onSubmit: async (values) => {
         setLoading(true);
         await axiosPrivate
-          .post("/applications", values)
+          .post("/applications", {
+            ...values,
+            submitted_cv: parseInt(values.submitted_cv, 10),
+          })
           .then(() => {
             setOpenAdd(false);
             setLoading(false);
@@ -232,11 +235,11 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
               Choose CV<span className="text-red-500">*</span>
             </div>
             <select
-              name="cv"
-              value={values.cv}
+              name="submitted_cv"
+              value={values.submitted_cv}
               onChange={handleChange}
               className={`${
-                touched.cv && errors.cv && "border-red-500"
+                touched.submitted_cv && errors.submitted_cv && "border-red-500"
               } w-full rounded-md border px-4 py-2 focus:border-primary focus:outline-none focus:ring-primary`}
             >
               <option value="" disabled>
@@ -248,15 +251,15 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
                 </option>
               ) : (
                 cvs.map((cv) => (
-                  <option key={cv.id} value={parseInt(cv.id, 10)}>
+                  <option key={cv.id} value={cv.id}>
                     {cv.cv.split("/").pop()}
                   </option>
                 ))
               )}
             </select>
-            {errors.cv && touched.cv && (
+            {errors.submitted_cv && touched.submitted_cv && (
               <span className="mt-1 text-xs text-red-500">
-                {errors.cv || error?.response?.data?.cv}
+                {errors.submitted_cv || error?.response?.data?.submitted_cv}
               </span>
             )}
           </div>
