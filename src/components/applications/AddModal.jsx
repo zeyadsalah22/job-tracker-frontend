@@ -233,7 +233,7 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
             </div>
             <select
               name="cv"
-              value={parseInt(values.cv, 10)}
+              value={values.cv}
               onChange={handleChange}
               className={`${
                 touched.cv && errors.cv && "border-red-500"
@@ -254,6 +254,11 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
                 ))
               )}
             </select>
+            {errors.cv && touched.cv && (
+              <span className="mt-1 text-xs text-red-500">
+                {errors.cv || error?.response?.data?.cv}
+              </span>
+            )}
           </div>
 
           <div className="flex gap-6">

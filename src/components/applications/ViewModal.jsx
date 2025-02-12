@@ -35,7 +35,7 @@ export default function ViewModal() {
   );
 
   const fetchEmployees = async () => {
-    const { data } = await axiosPrivate.get(`/employees/`);
+    const { data } = await axiosPrivate.get(`/employees`);
     return data;
   };
 

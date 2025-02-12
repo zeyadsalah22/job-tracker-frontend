@@ -24,11 +24,9 @@ export default function ManageCv() {
       return;
     }
     const file = e.target.files[0];
-    console.log(file);
     const formData = new FormData();
     formData.append("cv", file);
     formData.append("user_id", user.id);
-    console.log(formData);
     await axiosPrivate
       .post("/cvs", formData, {
         headers: {
