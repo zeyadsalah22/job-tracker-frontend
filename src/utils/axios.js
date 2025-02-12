@@ -16,7 +16,7 @@ const axiosPrivate = axios.create({
 const useRefreshToken = () => {
   const refresh = async () => {
     const response = await axios.post(
-      "http://127.0.0.1:8000/api/token/refresh/",
+      "https://better-fiann-zeyadsalah-3825b5df.koyeb.app/api/token/refresh/",
       {
         refresh: localStorage.getItem("refresh"),
       }
