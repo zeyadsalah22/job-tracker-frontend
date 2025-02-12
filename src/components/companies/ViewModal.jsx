@@ -113,6 +113,14 @@ export default function ViewModal() {
                         {company.location}
                       </div>
                     )}
+                    {company.description === "" ? (
+                      "No provided Information."
+                    ) : (
+                      <div className="gap-1 flex">
+                        <span className="text-gray-600">Description:</span>
+                        {company.description}
+                      </div>
+                    )}
                   </div>
                 </div>
                 <div className="flex gap-2">
