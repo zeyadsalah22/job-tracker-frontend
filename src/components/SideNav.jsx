@@ -7,21 +7,40 @@ import {
   CircleHelp,
   ChevronRight,
   ChevronLeft,
+  CalendarDays,
+  ChevronDown,
+  ChevronUp,
+  FileText,
 } from "lucide-react";
 import useUserStore from "../store/user.store";
 import useSideNavStore from "../store/sidenav.store";
 import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
 
 export default function SideNav() {
   const { pathname } = useLocation();
   const user = useUserStore((state) => state.user);
   const toggle = useSideNavStore((state) => state.toggle);
   const isClosed = useSideNavStore((state) => state.isClosed);
+  const [isTrackerExpanded, setIsTrackerExpanded] = useState(false);
 
-  const navItems = [
+  // Check if current path is a tracker sub-route
+  useEffect(() => {
+    const trackerPaths = [
+      "/dashboard",
+      "/applications",
+      "/companies",
+      "/employees",
+      "/questions",
+    ];
+    const isTrackerPage = trackerPaths.some((path) => pathname.startsWith(path));
+    setIsTrackerExpanded(isTrackerPage);
+  }, [pathname]);
+
+  const trackerItems = [
     {
       name: "Dashboard",
-      href: "/",
+      href: "/dashboard",
       icon: <Gauge size={20} />,
     },
     {
@@ -46,6 +65,25 @@ export default function SideNav() {
     },
   ];
 
+  const mainTabs = [
+    {
+      name: "Tracker",
+      href: "/dashboard",
+      icon: <Gauge size={20} />,
+      subItems: trackerItems,
+    },
+    {
+      name: "Interviews",
+      href: "/interviews",
+      icon: <CalendarDays size={20} />,
+    },
+    {
+      name: "Resume Matching",
+      href: "/resume-matching",
+      icon: <FileText size={20} />,
+    },
+  ];
+
   return (
     <motion.div
       initial={false}
@@ -56,7 +94,7 @@ export default function SideNav() {
         duration: 0.4,
         ease: "easeInOut",
       }}
-      className={`h-screen sticky top-0 left-0 flex flex-col justify-between `}
+      className={`h-screen sticky top-0 left-0 flex flex-col justify-between bg-white`}
     >
       <div className="flex relative flex-col">
         <div className="absolute -right-4 top-32">
@@ -80,19 +118,64 @@ export default function SideNav() {
         </div>
 
         <div className="flex flex-col overflow-hidden">
-          {navItems.map((item, index) => (
-            <Link
-              key={index}
-              to={item.href}
-              className={`${
-                pathname === item.href && "text-primary"
-              } flex items-center gap-4 px-6 py-5 hover:bg-gray-100 ${
-                !isClosed && "justify-center"
-              } text-sm transition-all`}
-            >
-              {item.icon}
-              {isClosed && <span>{item.name}</span>}
-            </Link>
+          {mainTabs.map((tab, index) => (
+            <div key={index}>
+              {tab.name === "Tracker" ? (
+                <div
+                  className={`${
+                    pathname === tab.href && "text-primary"
+                  } flex items-center gap-4 px-6 py-5 hover:bg-gray-100 ${
+                    !isClosed && "justify-center"
+                  } text-sm transition-all cursor-pointer`}
+                  onClick={() => {
+                    setIsTrackerExpanded(!isTrackerExpanded);
+                  }}
+                >
+                  {tab.icon}
+                  {isClosed && (
+                    <>
+                      <span>{tab.name}</span>
+                      <span className="ml-auto">
+                        {isTrackerExpanded ? (
+                          <ChevronUp size={16} />
+                        ) : (
+                          <ChevronDown size={16} />
+                        )}
+                      </span>
+                    </>
+                  )}
+                </div>
+              ) : (
+                <Link
+                  to={tab.href}
+                  className={`${
+                    pathname === tab.href && "text-primary"
+                  } flex items-center gap-4 px-6 py-5 hover:bg-gray-100 ${
+                    !isClosed && "justify-center"
+                  } text-sm transition-all`}
+                >
+                  {tab.icon}
+                  {isClosed && <span>{tab.name}</span>}
+                </Link>
+              )}
+              
+              {isClosed && tab.subItems && isTrackerExpanded && (
+                <div className="pl-12">
+                  {tab.subItems.map((item, subIndex) => (
+                    <Link
+                      key={subIndex}
+                      to={item.href}
+                      className={`${
+                        pathname === item.href && "text-primary"
+                      } flex items-center gap-4 px-6 py-3 hover:bg-gray-100 text-sm transition-all`}
+                    >
+                      {item.icon}
+                      <span>{item.name}</span>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
           ))}
         </div>
       </div>

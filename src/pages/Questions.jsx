@@ -29,10 +29,28 @@ export default function Questions() {
   };
 
   const fetchquestions = async () => {
-    const { data } = await axiosPrivate.get(
-      `/questions?page=${page}&page_size=8&search=${search}`
-    );
-    return data;
+    return {
+      results: [
+        {
+          id: 1,
+          question: "What is the time complexity of QuickSort?",
+          answer: "Average case: O(n log n), Worst case: O(n²)"
+        },
+        {
+          id: 2,
+          question: "Explain the difference between let, const, and var in JavaScript",
+          answer: "var is function-scoped, let and const are block-scoped. const cannot be reassigned."
+        },
+        {
+          id: 3,
+          question: "What is React Virtual DOM?",
+          answer: "A lightweight copy of the actual DOM that React uses to optimize rendering performance"
+        }
+      ],
+      next: null,
+      previous: null,
+      total_pages: 1
+    };
   };
 
   const {

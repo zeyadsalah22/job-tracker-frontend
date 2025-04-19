@@ -20,8 +20,20 @@ export default function ViewModal() {
   const axiosPrivate = useAxiosPrivate();
 
   const fetchEmployee = async () => {
-    const { data } = await axiosPrivate.get(`/employees/${id}`);
-    return data;
+    return {
+      id: 1,
+      name: "John Doe",
+      email: "john.doe@google.com",
+      linkedin_link: "https://linkedin.com/in/johndoe",
+      job_title: "Senior Software Engineer",
+      contacted: "STRONG_CONNECTION",
+      company: {
+        name: "Google",
+        location: "Mountain View, CA",
+        linkedin_link: "https://linkedin.com/company/google",
+        careers_link: "https://careers.google.com"
+      }
+    };
   };
 
   const {

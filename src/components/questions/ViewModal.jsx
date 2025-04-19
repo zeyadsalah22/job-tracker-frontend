@@ -12,8 +12,14 @@ export default function ViewModal() {
   const axiosPrivate = useAxiosPrivate();
 
   const fetchquestion = async () => {
-    const { data } = await axiosPrivate.get(`/questions/${id}`);
-    return data;
+    return {
+      id: 1,
+      question: "What is the time complexity of QuickSort?",
+      answer: "Average case: O(n log n), Worst case: O(n²)",
+      application: {
+        job_title: "Software Engineer"
+      }
+    };
   };
 
   const {

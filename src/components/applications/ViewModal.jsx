@@ -22,8 +22,25 @@ export default function ViewModal() {
   const axiosPrivate = useAxiosPrivate();
 
   const fetchApplication = async () => {
-    const { data } = await axiosPrivate.get(`/applications/${id}`);
-    return data;
+    return {
+      id: 1,
+      job_title: "Software Engineer",
+      job_type: "Full-time",
+      stage: "Technical Interview",
+      status: "PENDING",
+      submission_date: "2024-03-15",
+      ats_score: "85",
+      description: "Looking for a skilled software engineer with experience in React and Node.js",
+      submitted_cv: { cv: "https://example.com/cv.pdf" },
+      link: "https://careers.google.com/jobs/123",
+      company: {
+        name: "Google",
+        location: "Mountain View, CA",
+        careers_link: "https://careers.google.com",
+        linkedin_link: "https://linkedin.com/company/google"
+      },
+      contacted_employees: [1, 2]
+    };
   };
 
   const { data: application, isLoading } = useQuery(
@@ -35,8 +52,24 @@ export default function ViewModal() {
   );
 
   const fetchEmployees = async () => {
-    const { data } = await axiosPrivate.get(`/employees`);
-    return data;
+    return {
+      results: [
+        {
+          id: 1,
+          name: "John Doe",
+          linkedin_link: "https://linkedin.com/in/johndoe",
+          email: "john.doe@google.com",
+          job_title: "Senior Software Engineer"
+        },
+        {
+          id: 2,
+          name: "Jane Smith",
+          linkedin_link: "https://linkedin.com/in/janesmith",
+          email: "jane.smith@google.com",
+          job_title: "Technical Recruiter"
+        }
+      ]
+    };
   };
 
   const { data: employees, isLoading: employeesLoading } = useQuery(

@@ -30,10 +30,37 @@ export default function Employees() {
   };
 
   const fetchEmployees = async () => {
-    const { data } = await axiosPrivate.get(
-      `/employees?page_size=8&page=${page}&search=${search}&ordering=${order}`
-    );
-    return data;
+    return {
+      results: [
+        {
+          id: 1,
+          name: "John Doe",
+          job_title: "Senior Software Engineer",
+          company: { name: "Google" },
+          email: "john.doe@google.com",
+          linkedin_link: "https://linkedin.com/in/johndoe"
+        },
+        {
+          id: 2,
+          name: "Jane Smith",
+          job_title: "Frontend Developer",
+          company: { name: "Microsoft" },
+          email: "jane.smith@microsoft.com",
+          linkedin_link: "https://linkedin.com/in/janesmith"
+        },
+        {
+          id: 3,
+          name: "Mike Johnson",
+          job_title: "Full Stack Developer",
+          company: { name: "Amazon" },
+          email: "mike.johnson@amazon.com",
+          linkedin_link: "https://linkedin.com/in/mikejohnson"
+        }
+      ],
+      next: null,
+      previous: null,
+      total_pages: 1
+    };
   };
 
   const {

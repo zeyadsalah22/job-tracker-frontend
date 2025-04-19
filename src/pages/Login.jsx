@@ -7,14 +7,19 @@ import ReactLoading from "react-loading";
 import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
 import useUserStore from "../store/user.store";
-import axios, { useAxiosPrivate } from "../utils/axios";
 
 export default function Login() {
-  const token = localStorage.getItem("access");
   const navigate = useNavigate();
   const setUser = useUserStore((state) => state.setUser);
   const [loading, setLoading] = useState(false);
-  const axiosPrivate = useAxiosPrivate();
+
+  // Check if already logged in
+  useEffect(() => {
+    const token = localStorage.getItem("access");
+    if (token) {
+      navigate("/dashboard");
+    }
+  }, [navigate]);
 
   const { values, errors, handleSubmit, handleChange, touched } = useFormik({
     initialValues: {
@@ -25,37 +30,32 @@ export default function Login() {
     onSubmit: async (values) => {
       setLoading(true);
       try {
-        const response = await axios.post("/token/", values);
-        const authTokens = response.data;
-        localStorage.setItem("access", authTokens.access);
-        localStorage.setItem("refresh", authTokens.refresh);
-        const userResponse = await axiosPrivate.get("/users/me/");
-        setUser(userResponse.data);
-        navigate("/dashboard");
+        // Mock successful login
+        localStorage.setItem("access", "mock_access_token");
+        localStorage.setItem("refresh", "mock_refresh_token");
+        
+        // Set mock user data
+        const mockUser = {
+          id: 1,
+          username: values.username || "testuser",
+          email: "test@example.com"
+        };
+        setUser(mockUser);
+        
+        // Set start date if not already set
+        if (!localStorage.getItem("start_date")) {
+          localStorage.setItem("start_date", new Date().toISOString().split("T")[0]);
+        }
 
         toast.success("Login successful");
-        localStorage.setItem(
-          "start_date",
-          localStorage.getItem("start_date")
-            ? localStorage.getItem("start_date")
-            : new Date().toISOString().split("T")[0]
-        );
+        setLoading(false); // Reset loading state before navigation
+        navigate("/dashboard", { replace: true });
       } catch (error) {
         setLoading(false);
-        toast.error(error.response.data.detail);
+        toast.error("An error occurred");
       }
     },
   });
-
-  useEffect(() => {
-    if (token) {
-      navigate("/dashboard");
-    }
-  }, [token, navigate]);
-
-  if (token) {
-    return null;
-  }
 
   return (
     <div className="h-screen flex flex-col justify-center items-center gap-4">

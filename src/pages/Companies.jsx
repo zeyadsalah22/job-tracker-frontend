@@ -30,10 +30,40 @@ export default function Companies() {
   };
 
   const fetchCompanies = async () => {
-    const { data } = await axiosPrivate.get(
-      `/companies?page_size=8&page=${page}&search=${search}&ordering=${order}`
-    );
-    return data;
+    return {
+      results: [
+        {
+          id: 1,
+          name: "Google",
+          location: "Mountain View, CA",
+          careers_link: "https://careers.google.com",
+          website: "https://google.com",
+          size: "Large",
+          industry: "Technology"
+        },
+        {
+          id: 2,
+          name: "Microsoft",
+          location: "Redmond, WA",
+          careers_link: "https://careers.microsoft.com",
+          website: "https://microsoft.com",
+          size: "Large",
+          industry: "Technology"
+        },
+        {
+          id: 3,
+          name: "Amazon",
+          location: "Seattle, WA",
+          careers_link: "https://amazon.jobs",
+          website: "https://amazon.com",
+          size: "Large",
+          industry: "Technology"
+        }
+      ],
+      next: null,
+      previous: null,
+      total_pages: 1
+    };
   };
   const {
     data: companies,

@@ -30,10 +30,37 @@ export default function Applications() {
   };
 
   const fetchApplications = async () => {
-    const { data } = await axiosPrivate.get(
-      `/applications?page_size=8&page=${page}&search=${search}&ordering=${order}`
-    );
-    return data;
+    return {
+      results: [
+        {
+          id: 1,
+          company: { name: "Google" },
+          job_title: "Software Engineer",
+          submission_date: "2024-03-15",
+          status: "PENDING",
+          notes: "Applied through company website"
+        },
+        {
+          id: 2,
+          company: { name: "Microsoft" },
+          job_title: "Frontend Developer",
+          submission_date: "2024-03-20",
+          status: "INTERVIEW",
+          notes: "Technical interview scheduled"
+        },
+        {
+          id: 3,
+          company: { name: "Amazon" },
+          job_title: "Full Stack Developer",
+          submission_date: "2024-03-25",
+          status: "ACCEPTED",
+          notes: "Received offer letter"
+        }
+      ],
+      next: null,
+      previous: null,
+      total_pages: 1
+    };
   };
 
   const {

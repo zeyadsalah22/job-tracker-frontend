@@ -15,6 +15,12 @@ import Employees from "./pages/Employees";
 import Questions from "./pages/Questions";
 import Question from "./components/questions/ViewModal";
 import ProtectedRoute from "./utils/ProtectedRoute";
+import Interviews from "./pages/Interviews";
+import Interview from "./components/interviews/ViewModal";
+import StartInterview from "./pages/StartInterview";
+import InterviewRecording from "./pages/InterviewRecording";
+import ResumeMatching from "./pages/ResumeMatching";
+import ResumeTestDetails from "./components/resume-matching/ViewModal";
 
 export default function App() {
   return (
@@ -99,6 +105,54 @@ export default function App() {
           element={
             <ProtectedRoute>
               <Question />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/interviews"
+          element={
+            <ProtectedRoute>
+              <Interviews />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/interviews/start"
+          element={
+            <ProtectedRoute>
+              <StartInterview />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/interviews/recording"
+          element={
+            <ProtectedRoute>
+              <InterviewRecording />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/interviews/:id"
+          element={
+            <ProtectedRoute>
+              <Interview />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/resume-matching"
+          element={
+            <ProtectedRoute>
+              <ResumeMatching />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/resume-matching/:id"
+          element={
+            <ProtectedRoute>
+              <ResumeTestDetails />
             </ProtectedRoute>
           }
         />

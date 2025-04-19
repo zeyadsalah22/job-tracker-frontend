@@ -36,32 +36,54 @@ export default function ViewModal() {
   };
 
   const fetchCompany = async () => {
-    const { data } = await axiosPrivate.get(`/companies/${id}`);
-    return data;
+    const companyData = {
+      id: 1,
+      name: "Google",
+      location: "Mountain View, CA",
+      description: "A multinational technology company specializing in Internet-related services and products.",
+      careers_link: "https://careers.google.com",
+      linkedin_link: "https://linkedin.com/company/google"
+    };
+    return companyData;
   };
-
-  const {
-    data: company,
-    isLoading,
-    error,
-  } = useQuery(["company", { id }], fetchCompany, {
-    enabled: !!id,
-  });
 
   const fetchEmployees = async () => {
-    const { data } = await axiosPrivate.get(
-      `/employees?company__id=${id}&page=${page}&search=${search}`
-    );
-    return data;
+    return {
+      results: [
+        {
+          id: 1,
+          name: "John Doe",
+          job_title: "Senior Software Engineer"
+        },
+        {
+          id: 2,
+          name: "Jane Smith",
+          job_title: "Technical Recruiter"
+        }
+      ],
+      next: null,
+      previous: null,
+      total_pages: 1
+    };
   };
 
-  const { data: employees, refetch } = useQuery(
+  const { data: employees, refetch, isLoading: isEmployeesLoading } = useQuery(
     ["employees", { id, search, page }],
     fetchEmployees,
     {
       enabled: !!id,
     }
   );
+
+  const { data: company, isLoading: isCompanyLoading } = useQuery(
+    ["company", { id }],
+    fetchCompany,
+    {
+      enabled: !!id,
+    }
+  );
+
+  const isLoading = isCompanyLoading || isEmployeesLoading;
 
   const table_head = [
     {
@@ -157,7 +179,7 @@ export default function ViewModal() {
                 <p className="font-semibold text-gray-500">Employees</p>
                 <Table
                   actions
-                  isLoading={isLoading}
+                  isLoading={isEmployeesLoading}
                   search={search}
                   viewSearch
                   setSearch={setSearch}

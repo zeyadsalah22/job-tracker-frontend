@@ -13,8 +13,7 @@ function Todo() {
   const axiosPrivate = useAxiosPrivate();
 
   const fetchTodos = async () => {
-    const { data } = await axiosPrivate.get(`/todos`);
-    return data;
+    return { results: [] }; // Return empty todos for now
   };
 
   const { data: todos, isLoading, refetch } = useQuery(["todos"], fetchTodos);
@@ -40,7 +39,7 @@ function Todo() {
   };
 
   return (
-    <div className="bg-white col-span-1 rounded-lg p-6 shadow-md flex flex-col justify-between w-[30%]">
+    <div className="bg-white rounded-lg p-6 shadow-md flex flex-col justify-between h-full">
       <div className="flex flex-col gap-4">
         <p className="text-lg font-medium">Todo List</p>
         <div className="flex flex-col">
@@ -97,274 +96,309 @@ function Todo() {
           )}
         </div>
       </div>
-
-      <AddTodoModal
-        openAdd={openAdd}
-        setOpenAdd={setOpenAdd}
-        refetch={refetch}
-      />
-
       <button
         onClick={() => setOpenAdd(true)}
-        className="bg-primary hover:bg-primary/85 transition-all text-white py-2 px-4 rounded-lg flex items-center justify-center gap-2"
+        className="flex items-center justify-center gap-2 bg-primary text-white py-2 px-4 rounded-lg hover:bg-primary/80 transition-all mt-4"
       >
         <Plus size={18} />
         Add Task
       </button>
+      <AddTodoModal refetch={refetch} openAdd={openAdd} setOpenAdd={setOpenAdd} />
     </div>
   );
 }
 
 export default function Dashboard() {
-  const [interval, setInterval] = useState("week");
-  const [points, setPoints] = useState(12);
-  const [start_date, setStartDate] = useState(
-    localStorage.getItem("start_date")
-  );
   const axiosPrivate = useAxiosPrivate();
+  const [timePeriod, setTimePeriod] = useState("months");
+  const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
 
   const fetchStatistics = async () => {
-    const { data } = await axiosPrivate.get(`/statistics`);
-    return data;
+    return {
+      total_applications: 55,
+      total_accepted: 10,
+      total_pending: 15,
+      total_rejected: 30
+    };
   };
-
-  const {
-    data: statistics,
-    isLoading,
-    refetch,
-  } = useQuery(["statistics"], fetchStatistics);
 
   const fetchPercents = async () => {
-    const { data } = await axiosPrivate.get(`/percents`);
-    return data;
+    return {
+      applied: 40,
+      interview: 30,
+      offer: 20,
+      rejected: 10
+    };
   };
-
-  const {
-    data: percents,
-    isLoading: percentsLoading,
-    refetch: refetchPercents,
-  } = useQuery(["percents"], fetchPercents);
 
   const fetchTimeseries = async () => {
-    const { data } = await axiosPrivate.get(
-      `/timeseries?start_date=${start_date}&points=${points}&interval=${interval}`,
-      {
-        headers: {
-          Authorization: `Bearer  ${localStorage.getItem("access")}`,
-        },
-      }
-    );
-    return data;
+    const selectedDate = new Date(startDate);
+    
+    let labels = [];
+    if (timePeriod === "days") {
+      const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      const startDay = selectedDate.getDay();
+      labels = [...days.slice(startDay), ...days.slice(0, startDay)];
+    } else if (timePeriod === "weeks") {
+      const weekNumber = Math.ceil(selectedDate.getDate() / 7);
+      labels = Array.from({ length: 4 }, (_, i) => `Week ${weekNumber + i}`);
+    } else {
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const startMonth = selectedDate.getMonth();
+      labels = months.slice(startMonth, startMonth + 6);
+    }
+
+    if (timePeriod === "days") {
+      return {
+        labels,
+        applications: [3, 5, 7, 4, 6, 2, 1],
+        accepted: [1, 2, 1, 1, 2, 0, 0],
+        pending: [1, 2, 3, 2, 2, 1, 1],
+        rejected: [1, 1, 3, 1, 2, 1, 0]
+      };
+    } else if (timePeriod === "weeks") {
+      return {
+        labels,
+        applications: [12, 15, 18, 10],
+        accepted: [3, 4, 5, 2],
+        pending: [4, 5, 6, 3],
+        rejected: [5, 6, 7, 5]
+      };
+    } else {
+      return {
+        labels,
+        applications: [5, 8, 12, 15, 20, 25],
+        accepted: [1, 2, 3, 4, 5, 6],
+        pending: [2, 3, 4, 5, 6, 7],
+        rejected: [2, 3, 5, 6, 9, 12]
+      };
+    }
   };
 
-  const {
-    data: timeseries,
-    isLoading: timeseriesLoading,
-    refetch: refetchTimeseries,
-  } = useQuery(
-    ["timeseries", { interval, start_date, points }],
+  const { data: statistics, isLoading: statisticsLoading } = useQuery(
+    ["statistics"],
+    fetchStatistics
+  );
+  const { data: percents, isLoading: percentsLoading } = useQuery(
+    ["percents"],
+    fetchPercents
+  );
+  const { data: timeseries, isLoading: timeseriesLoading } = useQuery(
+    ["timeseries", timePeriod, startDate],
     fetchTimeseries
   );
-
-  const cards = [
-    {
-      title: "Applications",
-      value: statistics?.total_applications,
-      date: "Last 7 days",
-      icon: <Book size={50} />,
-      color: "#8055F9",
-    },
-    {
-      title: "Rejections",
-      value: statistics?.rejected_applications,
-      date: "Last 7 days",
-      icon: <X size={50} />,
-      color: "#FC678D",
-    },
-    {
-      title: "Pendings",
-      value: statistics?.pending_applications,
-      date: "Last 7 days",
-      icon: <LoaderCircle size={50} />,
-      color: "#FF7F43",
-    },
-    {
-      title: "Acceptences",
-      value: statistics?.accepted_applications,
-      date: "Last 7 days",
-      icon: <CheckCheck size={50} />,
-      color: "#2059FD",
-    },
-  ];
-
-  const weeks = timeseries?.results?.map((result) =>
-    result.date.split("-").pop()
-  );
-
-  const totalApplications = timeseries?.results?.map(
-    (result) => result.total_applications
-  );
-  const rejections = timeseries?.results?.map((result) => result.rejections);
-  const acceptances = timeseries?.results?.map((result) => result.acceptances);
-
-  const startMonth = timeseries?.start_date?.split("-")[1];
-
-  const months = {
-    "01": "January",
-    "02": "February",
-    "03": "March",
-    "04": "April",
-    "05": "May",
-    "06": "June",
-    "07": "July",
-    "08": "August",
-    "09": "September",
-    10: "October",
-    11: "November",
-    12: "December",
-  };
-
-  const monthName = months[startMonth];
-  const chartData = {
-    labels: weeks,
-    datasets: [
-      {
-        label: "Total Applications",
-        data: totalApplications,
-        borderColor: "rgba(63, 81, 181, 0.5)",
-        pointBackgroundColor: "rgba(63, 81, 181, 0.5)",
-        pointBorderColor: "rgba(63, 81, 181, 0.5)",
-        fill: false,
-      },
-      {
-        label: "Rejections",
-        data: rejections,
-        borderColor: "rgba(77, 182, 172, 0.5)",
-        pointBackgroundColor: "rgba(77, 182, 172, 0.5)",
-        pointBorderColor: "rgba(77, 182, 172, 0.5)",
-        fill: false,
-      },
-      {
-        label: "Acceptances",
-        data: acceptances,
-        borderColor: "rgba(66, 133, 244, 0.5)",
-        pointBackgroundColor: "rgba(66, 133, 244, 0.5)",
-        pointBorderColor: "rgba(66, 133, 244, 0.5)",
-        fill: false,
-      },
-      {
-        label: "Pendings",
-        data: totalApplications?.map(
-          (total, index) => total - (rejections[index] + acceptances[index])
-        ),
-        borderColor: "rgba(156, 39, 176, 0.5)",
-        pointBackgroundColor: "rgba(156, 39, 176, 0.5)",
-        pointBorderColor: "rgba(156, 39, 176, 0.5)",
-        fill: false,
-      },
-    ],
-  };
 
   return (
     <Layout>
       <div className="flex flex-col gap-6">
-        <div className="grid lg:grid-cols-4 md:grid-cols-2 gap-6">
-          {cards.map((card, index) => (
-            <div
-              key={index}
-              className={`rounded-lg p-4 shadow-md flex justify-between text-white`}
-              style={{ backgroundColor: card.color }}
-            >
-              <div className="flex flex-col gap-2">
-                <h2 className="text-xl font-semibold">{card.title}</h2>
-                <h2 className="text-xl font-semibold">{card.value}</h2>
-                <p className="">{card.date}</p>
+        <div className="grid grid-cols-4 gap-6">
+          <div className="bg-white rounded-lg p-6 shadow-md">
+            <div className="flex items-center gap-4">
+              <div className="bg-primary/10 p-3 rounded-lg">
+                <Book className="text-primary" size={24} />
               </div>
-              <span className="self-end opacity-65">{card.icon}</span>
+              <div>
+                <p className="text-gray-500">Total Applications</p>
+                <p className="text-2xl font-bold">
+                  {statisticsLoading ? (
+                    <ReactLoading
+                      type="bubbles"
+                      color="#7571F9"
+                      height={25}
+                      width={25}
+                    />
+                  ) : (
+                    statistics?.total_applications
+                  )}
+                </p>
+              </div>
             </div>
-          ))}
+          </div>
+          <div className="bg-white rounded-lg p-6 shadow-md">
+            <div className="flex items-center gap-4">
+              <div className="bg-primary/10 p-3 rounded-lg">
+                <CheckCheck className="text-primary" size={24} />
+              </div>
+              <div>
+                <p className="text-gray-500">Total Accepted</p>
+                <p className="text-2xl font-bold">
+                  {statisticsLoading ? (
+                    <ReactLoading
+                      type="bubbles"
+                      color="#7571F9"
+                      height={25}
+                      width={25}
+                    />
+                  ) : (
+                    statistics?.total_accepted
+                  )}
+                </p>
+              </div>
+            </div>
+          </div>
+          <div className="bg-white rounded-lg p-6 shadow-md">
+            <div className="flex items-center gap-4">
+              <div className="bg-primary/10 p-3 rounded-lg">
+                <LoaderCircle className="text-primary" size={24} />
+              </div>
+              <div>
+                <p className="text-gray-500">Total Pending</p>
+                <p className="text-2xl font-bold">
+                  {statisticsLoading ? (
+                    <ReactLoading
+                      type="bubbles"
+                      color="#7571F9"
+                      height={25}
+                      width={25}
+                    />
+                  ) : (
+                    statistics?.total_pending
+                  )}
+                </p>
+              </div>
+            </div>
+          </div>
+          <div className="bg-white rounded-lg p-6 shadow-md">
+            <div className="flex items-center gap-4">
+              <div className="bg-primary/10 p-3 rounded-lg">
+                <X className="text-primary" size={24} />
+              </div>
+              <div>
+                <p className="text-gray-500">Total Rejected</p>
+                <p className="text-2xl font-bold">
+                  {statisticsLoading ? (
+                    <ReactLoading
+                      type="bubbles"
+                      color="#7571F9"
+                      height={25}
+                      width={25}
+                    />
+                  ) : (
+                    statistics?.total_rejected
+                  )}
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
-        <div className="bg-white col-span-2 rounded-lg p-6 shadow-md gap-2 flex flex-col">
-          <h2 className="font-semibold">{monthName} Data</h2>
-          <div className="flex gap-2">
-            <div className="flex flex-col gap-2 w-[200px]">
-              <label className="text-sm flex items-center text-gray-600">
-                <p>Starting date</p>
-              </label>
+        <div className="bg-white rounded-lg p-6 shadow-md">
+          <div className="flex justify-between items-center mb-4">
+            <p className="text-lg font-medium">Applications Over Time</p>
+            <div className="flex gap-4">
               <input
                 type="date"
-                value={start_date}
+                value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="border-2 border-gray-200 px-2 py-1 rounded-lg w-full focus:border-primary focus:ring-primary"
+                className="border rounded-lg px-3 py-1 focus:outline-none focus:ring-2 focus:ring-primary"
               />
-            </div>
-
-            <div className="flex flex-col gap-2 w-[200px]">
-              <label className="text-sm flex items-center text-gray-600">
-                <p>Points</p>
-              </label>
-              <input
-                type="number"
-                value={points}
-                onChange={(e) => setPoints(e.target.value)}
-                className="border-2 border-gray-200 px-2 py-1 rounded-lg w-full focus:border-primary focus:ring-primary"
-              />
-            </div>
-
-            <div className="flex flex-col gap-2 w-[200px]">
-              <label className="text-sm flex items-center text-gray-600">
-                <p>Interval</p>
-              </label>
               <select
-                value={interval}
-                onChange={(e) => setInterval(e.target.value)}
-                className="border-2 border-gray-200 px-2 py-1 rounded-lg w-full focus:border-primary focus:ring-primary"
+                value={timePeriod}
+                onChange={(e) => setTimePeriod(e.target.value)}
+                className="border rounded-lg px-3 py-1 focus:outline-none focus:ring-2 focus:ring-primary"
               >
-                <option value="week">Week</option>
-                <option value="month">Month</option>
-                <option value="day">Day</option>
+                <option value="days">Daily</option>
+                <option value="weeks">Weekly</option>
+                <option value="months">Monthly</option>
               </select>
             </div>
           </div>
-          <TEChart type="line" data={chartData} height={350} />
+          <div className="h-80">
+            {timeseriesLoading ? (
+              <div className="flex justify-center items-center h-full">
+                <ReactLoading
+                  type="bubbles"
+                  color="#7571F9"
+                  height={50}
+                  width={50}
+                />
+              </div>
+            ) : (
+              <TEChart
+                type="line"
+                data={{
+                  labels: timeseries?.labels,
+                  datasets: [
+                    {
+                      label: "Total Applications",
+                      data: timeseries?.applications,
+                      borderColor: "#7571F9",
+                      tension: 0.3,
+                    },
+                    {
+                      label: "Accepted",
+                      data: timeseries?.accepted,
+                      borderColor: "#00C853",
+                      tension: 0.3,
+                    },
+                    {
+                      label: "Pending",
+                      data: timeseries?.pending,
+                      borderColor: "#FFB800",
+                      tension: 0.3,
+                    },
+                    {
+                      label: "Rejected",
+                      data: timeseries?.rejected,
+                      borderColor: "#FF3D00",
+                      tension: 0.3,
+                    }
+                  ],
+                }}
+                options={{
+                  maintainAspectRatio: false,
+                  responsive: true,
+                  plugins: {
+                    legend: {
+                      position: 'top',
+                    }
+                  }
+                }}
+              />
+            )}
+          </div>
         </div>
-        <div className="flex gap-6 w-full">
-          <div className="bg-white col-span-1 rounded-lg p-6 shadow-md w-[70%]">
-            <TEChart
-              type="pie"
-              data={{
-                labels: [
-                  "Applied",
-                  "Assessment",
-                  "Interview",
-                  "Offer",
-                  "Phone Screen",
-                ],
-                datasets: [
-                  {
-                    label: "Percents",
-                    data: [
-                      percents?.applied_stage,
-                      percents?.assessment_stage,
-                      percents?.interview_stage,
-                      percents?.offer_stage,
-                      percents?.phonescreen_stage,
+        <div className="grid grid-cols-2 gap-6">
+          <div className="bg-white rounded-lg p-6 shadow-md">
+            <p className="text-lg font-medium mb-4">Application Status</p>
+            <div className="h-80">
+              {percentsLoading ? (
+                <div className="flex justify-center items-center h-full">
+                  <ReactLoading
+                    type="bubbles"
+                    color="#7571F9"
+                    height={50}
+                    width={50}
+                  />
+                </div>
+              ) : (
+                <TEChart
+                  type="doughnut"
+                  data={{
+                    labels: ["Applied", "Interview", "Offer", "Rejected"],
+                    datasets: [
+                      {
+                        data: [
+                          percents?.applied,
+                          percents?.interview,
+                          percents?.offer,
+                          percents?.rejected,
+                        ],
+                        backgroundColor: [
+                          "#7571F9",
+                          "#FFB800",
+                          "#00C853",
+                          "#FF3D00",
+                        ],
+                      },
                     ],
-                    backgroundColor: [
-                      "rgba(63, 81, 181, 0.5)",
-                      "rgba(77, 182, 172, 0.5)",
-                      "rgba(66, 133, 244, 0.5)",
-                      "rgba(156, 39, 176, 0.5)",
-                      "rgba(244, 67, 54, 0.5)",
-                    ],
-                  },
-                ],
-              }}
-              options={{
-                maintainAspectRatio: false,
-              }}
-              height={500}
-            />
+                  }}
+                  options={{
+                    maintainAspectRatio: false,
+                    responsive: true,
+                  }}
+                />
+              )}
+            </div>
           </div>
           <Todo />
         </div>
