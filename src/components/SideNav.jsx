@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import useUserStore from "../store/user.store";
 import useSideNavStore from "../store/sidenav.store";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
 
 export default function SideNav() {
@@ -84,6 +84,37 @@ export default function SideNav() {
     },
   ];
 
+  const subItemsVariants = {
+    hidden: { opacity: 0, height: 0 },
+    visible: {
+      opacity: 1,
+      height: "auto",
+      transition: {
+        duration: 0.3,
+        ease: "easeInOut",
+      },
+    },
+    exit: {
+      opacity: 0,
+      height: 0,
+      transition: {
+        duration: 0.3,
+        ease: "easeInOut",
+      },
+    },
+  };
+
+  const tabVariants = {
+    hidden: { opacity: 0, x: -20 },
+    visible: {
+      opacity: 1,
+      x: 0,
+      transition: {
+        duration: 0.3,
+      },
+    },
+  };
+
   return (
     <motion.div
       initial={false}
@@ -98,12 +129,14 @@ export default function SideNav() {
     >
       <div className="flex relative flex-col">
         <div className="absolute -right-4 top-32">
-          <button
+          <motion.button
             onClick={toggle}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
             className="text-primary shadow-md border bg-white p-1 rounded-lg"
           >
             {isClosed ? <ChevronLeft size={20} /> : <ChevronRight size={20} />}
-          </button>
+          </motion.button>
         </div>
         <div
           className={`bg-primary py-7 px-6 text-xl flex font-semibold text-white ${
@@ -119,7 +152,13 @@ export default function SideNav() {
 
         <div className="flex flex-col overflow-hidden">
           {mainTabs.map((tab, index) => (
-            <div key={index}>
+            <motion.div
+              key={index}
+              variants={tabVariants}
+              initial="hidden"
+              animate="visible"
+              transition={{ delay: index * 0.1 }}
+            >
               {tab.name === "Tracker" ? (
                 <div
                   className={`${
@@ -135,13 +174,15 @@ export default function SideNav() {
                   {isClosed && (
                     <>
                       <span>{tab.name}</span>
-                      <span className="ml-auto">
-                        {isTrackerExpanded ? (
-                          <ChevronUp size={16} />
-                        ) : (
-                          <ChevronDown size={16} />
-                        )}
-                      </span>
+                      <motion.span
+                        animate={{
+                          rotate: isTrackerExpanded ? 180 : 0,
+                        }}
+                        transition={{ duration: 0.3 }}
+                        className="ml-auto"
+                      >
+                        <ChevronDown size={16} />
+                      </motion.span>
                     </>
                   )}
                 </div>
@@ -159,23 +200,33 @@ export default function SideNav() {
                 </Link>
               )}
               
-              {isClosed && tab.subItems && isTrackerExpanded && (
-                <div className="pl-12">
-                  {tab.subItems.map((item, subIndex) => (
-                    <Link
-                      key={subIndex}
-                      to={item.href}
-                      className={`${
-                        pathname === item.href && "text-primary"
-                      } flex items-center gap-4 px-6 py-3 hover:bg-gray-100 text-sm transition-all`}
+              {isClosed && tab.subItems && (
+                <AnimatePresence>
+                  {isTrackerExpanded && (
+                    <motion.div
+                      variants={subItemsVariants}
+                      initial="hidden"
+                      animate="visible"
+                      exit="exit"
+                      className="pl-12"
                     >
-                      {item.icon}
-                      <span>{item.name}</span>
-                    </Link>
-                  ))}
-                </div>
+                      {tab.subItems.map((item, subIndex) => (
+                        <Link
+                          key={subIndex}
+                          to={item.href}
+                          className={`${
+                            pathname === item.href && "text-primary"
+                          } flex items-center gap-4 px-6 py-3 hover:bg-gray-100 text-sm transition-all`}
+                        >
+                          {item.icon}
+                          <span>{item.name}</span>
+                        </Link>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               )}
-            </div>
+            </motion.div>
           ))}
         </div>
       </div>
@@ -198,18 +249,22 @@ export default function SideNav() {
               </p>
             </div>
           </div>
-          <span className="hover:text-primary transition-all group-hover:text-primary group-hover:scale-125">
+          <motion.span
+            whileHover={{ scale: 1.2 }}
+            className="hover:text-primary transition-all group-hover:text-primary"
+          >
             <ChevronRight size={20} />
-          </span>
+          </motion.span>
         </Link>
       ) : (
         <Link
           to={"/profile"}
-          className="flex items-center justify-center mb-3 "
+          className="flex items-center justify-center mb-3"
         >
-          <img
+          <motion.img
+            whileHover={{ scale: 1.1 }}
             src="https://i.pinimg.com/originals/a6/58/32/a65832155622ac173337874f02b218fb.png"
-            className="h-12 w-12 rounded-full hover:border-primary border-2  transition-all"
+            className="h-12 w-12 rounded-full hover:border-primary border-2 transition-all"
             alt="Profile"
           />
         </Link>

@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Video, Mic, MicOff, VideoOff, Square, Circle } from "lucide-react";
 
-export default function VideoRecorder({ onRecordingComplete, isRecording, onStartRecording, onStopRecording }) {
+export default function VideoRecorder({ onRecordingComplete, isRecording, onStartRecording, onStopRecording, isCameraTested, setIsCameraTested }) {
   const [stream, setStream] = useState(null);
   const [isCameraOn, setIsCameraOn] = useState(false);
   const [isMicOn, setIsMicOn] = useState(false);
@@ -21,6 +21,7 @@ export default function VideoRecorder({ onRecordingComplete, isRecording, onStar
       }
       setIsCameraOn(true);
       setIsMicOn(true);
+      setIsCameraTested(true);
     } catch (error) {
       console.error("Error accessing camera and microphone:", error);
       alert("Please allow camera and microphone access to continue.");
@@ -29,13 +30,35 @@ export default function VideoRecorder({ onRecordingComplete, isRecording, onStar
 
   const stopCamera = () => {
     if (stream) {
-      stream.getTracks().forEach((track) => track.stop());
+      // Stop all tracks
+      stream.getTracks().forEach(track => {
+        track.stop();
+        track.enabled = false;
+      });
+      
+      // Clear the stream
       setStream(null);
+      
+      // Clear the video element
       if (videoRef.current) {
         videoRef.current.srcObject = null;
       }
+      
+      // Reset states
       setIsCameraOn(false);
       setIsMicOn(false);
+      setIsCameraTested(false);
+      
+      // Release media devices
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
+        mediaRecorderRef.current.stop();
+      }
+      
+      // Clear any remaining chunks
+      chunksRef.current = [];
+      
+      // Reset the media recorder
+      mediaRecorderRef.current = null;
     }
   };
 
@@ -87,6 +110,7 @@ export default function VideoRecorder({ onRecordingComplete, isRecording, onStar
     }
   };
 
+  // Cleanup function to stop camera when component unmounts
   useEffect(() => {
     return () => {
       stopCamera();

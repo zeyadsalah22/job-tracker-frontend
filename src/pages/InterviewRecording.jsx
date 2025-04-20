@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "../components/Layout";
 import VideoRecorder from "../components/interviews/VideoRecorder";
-import { ArrowLeft, CheckCircle } from "lucide-react";
+import { ArrowLeft, CheckCircle, Play, RefreshCw, Loader2 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function InterviewRecording() {
   const navigate = useNavigate();
@@ -10,6 +11,10 @@ export default function InterviewRecording() {
   const [isRecording, setIsRecording] = useState(false);
   const [isCameraTested, setIsCameraTested] = useState(false);
   const [recordings, setRecordings] = useState([]);
+  const [isTesting, setIsTesting] = useState(true);
+  const [testRecording, setTestRecording] = useState(null);
+  const [videoRecorderRef, setVideoRecorderRef] = useState(null);
+  const [isFinishing, setIsFinishing] = useState(false);
 
   // Static data for demonstration
   const questions = [
@@ -21,8 +26,12 @@ export default function InterviewRecording() {
   ];
 
   const handleRecordingComplete = (blob) => {
-    setRecordings((prev) => [...prev, blob]);
-    setCurrentQuestionIndex((prev) => prev + 1);
+    if (isTesting) {
+      setTestRecording(blob);
+    } else {
+      setRecordings((prev) => [...prev, blob]);
+      setCurrentQuestionIndex((prev) => prev + 1);
+    }
     setIsRecording(false);
   };
 
@@ -34,10 +43,27 @@ export default function InterviewRecording() {
     setIsRecording(false);
   };
 
+  const handleStartInterview = () => {
+    setIsTesting(false);
+    setTestRecording(null);
+  };
+
+  const handleRetest = () => {
+    setTestRecording(null);
+  };
+
   const handleFinishInterview = () => {
-    // TODO: Save all recordings and interview data
-    console.log("Interview completed with recordings:", recordings);
-    navigate("/interviews");
+    setIsFinishing(true);
+    // Stop the camera before navigating away
+    if (videoRecorderRef) {
+      videoRecorderRef.stopCamera();
+    }
+    // Simulate loading time
+    setTimeout(() => {
+      // TODO: Save all recordings and interview data
+      console.log("Interview completed with recordings:", recordings);
+      navigate("/interviews/1"); // Navigate to the interview view page
+    }, 2000);
   };
 
   const currentQuestion = questions[currentQuestionIndex];
@@ -56,45 +82,47 @@ export default function InterviewRecording() {
         </div>
 
         <div className="flex gap-6 mt-6 h-full">
-          {/* Questions Panel */}
-          <div className="w-1/3 flex flex-col">
-            <div className="bg-gray-50 p-4 rounded-lg h-full">
-              <h2 className="text-lg font-medium mb-4">Interview Questions</h2>
-              <div className="space-y-4">
-                {questions.map((question, index) => (
-                  <div
-                    key={index}
-                    className={`p-4 rounded-lg ${
-                      index === currentQuestionIndex
-                        ? "bg-blue-50 border border-blue-200"
-                        : index < currentQuestionIndex
-                        ? "bg-green-50 border border-green-200"
-                        : "bg-gray-50 border border-gray-200"
-                    }`}
-                  >
+          {/* Questions Panel - Only show when not testing */}
+          {!isTesting && (
+            <div className="w-1/3 flex flex-col">
+              <div className="bg-gray-50 p-4 rounded-lg h-full">
+                <h2 className="text-lg font-medium mb-4">Interview Questions</h2>
+                <div className="space-y-4">
+                  {questions.map((question, index) => (
                     <div
-                      className={`${
+                      key={index}
+                      className={`p-4 rounded-lg ${
                         index === currentQuestionIndex
-                          ? "text-gray-900"
+                          ? "bg-blue-50 border border-blue-200"
                           : index < currentQuestionIndex
-                          ? "text-gray-700"
-                          : "text-gray-400 blur-sm"
+                          ? "bg-green-50 border border-green-200"
+                          : "bg-gray-50 border border-gray-200"
                       }`}
                     >
-                      <span className="font-medium">Question {index + 1}:</span>{" "}
-                      {question}
+                      <div
+                        className={`${
+                          index === currentQuestionIndex
+                            ? "text-gray-900"
+                            : index < currentQuestionIndex
+                            ? "text-gray-700"
+                            : "text-gray-400 blur-sm"
+                        }`}
+                      >
+                        <span className="font-medium">Question {index + 1}:</span>{" "}
+                        {question}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
           {/* Video Recording Panel */}
-          <div className="w-2/3 flex flex-col">
+          <div className={`${isTesting ? "w-full" : "w-2/3"} flex flex-col`}>
             <div className="bg-gray-50 p-4 rounded-lg h-full">
               <h2 className="text-lg font-medium mb-4">
-                {!isCameraTested
+                {isTesting
                   ? "Test Your Camera & Microphone"
                   : currentQuestion
                   ? `Question ${currentQuestionIndex + 1} of ${questions.length}`
@@ -102,6 +130,7 @@ export default function InterviewRecording() {
               </h2>
 
               <VideoRecorder
+                ref={setVideoRecorderRef}
                 onRecordingComplete={handleRecordingComplete}
                 isRecording={isRecording}
                 onStartRecording={handleStartRecording}
@@ -110,21 +139,70 @@ export default function InterviewRecording() {
                 setIsCameraTested={setIsCameraTested}
               />
 
-              {isCameraTested && currentQuestion && (
+              {isTesting && testRecording && (
+                <div className="mt-6 flex flex-col items-center gap-4">
+                  <video
+                    src={URL.createObjectURL(testRecording)}
+                    controls
+                    className="w-full max-w-lg rounded-lg"
+                  />
+                  <div className="flex gap-4">
+                    <button
+                      onClick={handleRetest}
+                      className="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition-colors flex items-center gap-2"
+                    >
+                      <RefreshCw size={18} />
+                      Retest
+                    </button>
+                    <button
+                      onClick={handleStartInterview}
+                      className="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors flex items-center gap-2"
+                    >
+                      <Play size={18} />
+                      Start Interview
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {!isTesting && currentQuestion && (
                 <div className="mt-6">
                   <h3 className="text-lg font-medium mb-2">Current Question:</h3>
                   <p className="text-gray-700">{currentQuestion}</p>
                 </div>
               )}
 
-              {!currentQuestion && (
+              {!isTesting && !currentQuestion && (
                 <div className="mt-6 flex justify-center">
-                  <button
-                    onClick={handleFinishInterview}
-                    className="bg-primary text-white px-6 py-2 rounded-lg hover:bg-primary/90 transition-colors flex items-center gap-2"
-                  >
-                    Finish Interview
-                  </button>
+                  <AnimatePresence>
+                    {isFinishing ? (
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.8 }}
+                        className="flex flex-col items-center gap-4"
+                      >
+                        <motion.div
+                          animate={{ rotate: 360 }}
+                          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                        >
+                          <Loader2 size={40} className="text-primary" />
+                        </motion.div>
+                        <p className="text-gray-600">Generating feedback...</p>
+                      </motion.div>
+                    ) : (
+                      <motion.button
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 20 }}
+                        onClick={handleFinishInterview}
+                        className="bg-primary text-white px-6 py-2 rounded-lg hover:bg-primary/90 transition-colors flex items-center gap-2"
+                      >
+                        <CheckCircle size={18} />
+                        Finish Interview
+                      </motion.button>
+                    )}
+                  </AnimatePresence>
                 </div>
               )}
             </div>

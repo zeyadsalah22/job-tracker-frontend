@@ -55,25 +55,7 @@ export default function StartInterview() {
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-6 mt-6">
-          <div className="flex flex-col gap-2">
-            <label htmlFor="company" className="text-sm font-medium text-gray-700">
-              Company (Optional)
-            </label>
-            <select
-              id="company"
-              name="company"
-              value={formData.company}
-              onChange={handleChange}
-              className="border rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-primary"
-            >
-              <option value="">Select a company</option>
-              {companies.map((company) => (
-                <option key={company.id} value={company.id}>
-                  {company.name}
-                </option>
-              ))}
-            </select>
-          </div>
+          
 
           <div className="flex flex-col gap-2">
             <label htmlFor="application" className="text-sm font-medium text-gray-700">
@@ -97,6 +79,25 @@ export default function StartInterview() {
 
           {showPositionFields && (
             <>
+              <div className="flex flex-col gap-2">
+              <label htmlFor="company" className="text-sm font-medium text-gray-700">
+                Company (Optional)
+              </label>
+              <select
+                id="company"
+                name="company"
+                value={formData.company}
+                onChange={handleChange}
+                className="border rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-primary"
+              >
+                <option value="">Select a company</option>
+                {companies.map((company) => (
+                  <option key={company.id} value={company.id}>
+                    {company.name}
+                  </option>
+                ))}
+              </select>
+            </div>
               <div className="flex flex-col gap-2">
                 <label htmlFor="position" className="text-sm font-medium text-gray-700">
                   Position *

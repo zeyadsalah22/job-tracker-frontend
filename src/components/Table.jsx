@@ -9,13 +9,20 @@ import {
 import Search from "./Search";
 import ReactLoading from "react-loading";
 import { Link } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 
 function Actions({ handleOpenEdit, handleOpenDelete, handleOpenView }) {
   return (
-    <div className="flex flex-col  top-6 -left-5 bg-white shadow rounded absolute z-[50]">
+    <motion.div
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -10 }}
+      transition={{ duration: 0.2 }}
+      className="flex flex-col top-6 -left-5 bg-white shadow rounded absolute z-[50]"
+    >
       <span
         onClick={handleOpenEdit}
-        className="font-normal cursor-pointer p-2 hover:text-primary transition-all "
+        className="font-normal cursor-pointer p-2 hover:text-primary transition-all"
       >
         edit
       </span>
@@ -31,7 +38,7 @@ function Actions({ handleOpenEdit, handleOpenDelete, handleOpenView }) {
       >
         delete
       </span>
-    </div>
+    </motion.div>
   );
 }
 
@@ -50,7 +57,6 @@ export default function Table({
   selectedOrders,
 }) {
   const [openDropdownIndex, setOpenDropdownIndex] = React.useState(null);
-
   const dropdownRefs = useRef([]);
 
   const handleOpen = (index) => {
@@ -58,9 +64,7 @@ export default function Table({
   };
 
   const handleClickOutside = (event) => {
-    if (
-      dropdownRefs.current.every((ref) => ref && !ref.contains(event.target))
-    ) {
+    if (dropdownRefs.current.every((ref) => ref && !ref.contains(event.target))) {
       setOpenDropdownIndex(null);
     }
   };
@@ -72,6 +76,33 @@ export default function Table({
     };
   }, []);
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+      },
+    },
+  };
+
+  const rowVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.3,
+      },
+    },
+  };
+
+  const sortIconVariants = {
+    initial: { scale: 1 },
+    hover: { scale: 1.2 },
+    active: { scale: 0.9 },
+  };
+
   return (
     <div className="flex flex-col gap-2">
       <div className="flex self-end">
@@ -82,41 +113,65 @@ export default function Table({
           {table_head.map((head, index) => (
             <span
               key={index}
-              className={
-                "flex items-center gap-2 w-full h-fit pl-4 font-semibold"
-              }
+              className="flex items-center gap-2 w-full h-fit pl-4 font-semibold"
             >
-              <p> {head.name}</p>
+              <p>{head.name}</p>
               {selectedOrders?.find((order) => order === head.key) && (
-                <span
+                <motion.span
                   className="cursor-pointer"
                   onClick={() => setOrder(head.key)}
+                  variants={sortIconVariants}
+                  initial="initial"
+                  whileHover="hover"
+                  whileTap="active"
                 >
                   <ArrowDownUp size={13} />
-                </span>
+                </motion.span>
               )}
             </span>
           ))}
           {actions && <span className="w-[15%] h-fit"></span>}
         </div>
-        <div className="flex flex-col">
+        <motion.div
+          className="flex flex-col"
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+        >
           {isLoading ? (
-            <div className="flex items-center justify-center">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="flex items-center justify-center py-8"
+            >
               <ReactLoading
                 type="bubbles"
                 color="#7571F9"
                 height={40}
                 width={40}
               />
-            </div>
+            </motion.div>
           ) : table_rows?.length === 0 && search ? (
-            <div className="p-4">No search results</div>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="p-4"
+            >
+              No search results
+            </motion.div>
           ) : table_rows?.length === 0 ? (
-            <div className="p-4">The table is empty. Add data to show it!</div>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="p-4"
+            >
+              The table is empty. Add data to show it!
+            </motion.div>
           ) : (
             table_rows?.map((object, rowIndex) => (
-              <div
+              <motion.div
                 key={rowIndex}
+                variants={rowVariants}
                 className="flex w-full items-center py-4 border-b text-sm"
               >
                 {Object.entries(object)
@@ -131,11 +186,7 @@ export default function Table({
                           href={value}
                           target="_blank"
                         >
-                          {
-                            value
-                              .replace(/https?:\/\/(www\.)?/, "")
-                              .split("/")[0]
-                          }
+                          {value.replace(/https?:\/\/(www\.)?/, "").split("/")[0]}
                         </a>
                       </span>
                     ) : (
@@ -159,20 +210,22 @@ export default function Table({
                       className="cursor-pointer relative"
                     >
                       <EllipsisVertical size={18} />
-                      {openDropdownIndex === rowIndex && (
-                        <Actions
-                          handleOpenEdit={() => handleOpenEdit(object.id)}
-                          handleOpenDelete={() => handleOpenDelete(object.id)}
-                          handleOpenView={`/${handleOpenView}/${object.id}`}
-                        />
-                      )}
+                      <AnimatePresence>
+                        {openDropdownIndex === rowIndex && (
+                          <Actions
+                            handleOpenEdit={() => handleOpenEdit(object.id)}
+                            handleOpenDelete={() => handleOpenDelete(object.id)}
+                            handleOpenView={`/${handleOpenView}/${object.id}`}
+                          />
+                        )}
+                      </AnimatePresence>
                     </span>
                   </div>
                 )}
-              </div>
+              </motion.div>
             ))
           )}
-        </div>
+        </motion.div>
       </div>
     </div>
   );
