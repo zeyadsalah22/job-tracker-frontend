@@ -7,9 +7,11 @@ import "react-toastify/dist/ReactToastify.css";
 import Register from "./pages/Register";
 import Profile from "./pages/Profile";
 import Apllication from "./components/applications/ViewModal";
+import UserCompany from "./components/user-companies/ViewModal";
 import Company from "./components/companies/ViewModal";
 import Employee from "./components/employees/ViewModal";
 import Applications from "./pages/Applications";
+import UserCompanies from "./pages/UserCompanies";
 import Companies from "./pages/Companies";
 import Employees from "./pages/Employees";
 import Questions from "./pages/Questions";
@@ -57,6 +59,22 @@ export default function App() {
           element={
             <ProtectedRoute>
               <Apllication />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/user-companies"
+          element={
+            <ProtectedRoute>
+              <UserCompanies />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/user-companies/:id"
+          element={
+            <ProtectedRoute>
+              <UserCompany />
             </ProtectedRoute>
           }
         />

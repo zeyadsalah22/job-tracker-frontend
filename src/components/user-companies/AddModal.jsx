@@ -1,14 +1,16 @@
 import Modal from "../Modal";
+import axios from "axios";
 import { useFormik } from "formik";
 import { useState } from "react";
 import { toast } from "react-toastify";
-import { companySchema } from "../../schemas/Schemas";
+import { userCompanySchema } from "../../schemas/Schemas";
 import FormInput from "../FormInput";
 import ReactLoading from "react-loading";
 import useUserStore from "../../store/user.store";
 import { useAxiosPrivate } from "../../utils/axios";
 
 export default function AddModal({ refetch, openAdd, setOpenAdd }) {
+  const token = localStorage.getItem("access");
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const user = useUserStore((state) => state.user);
@@ -16,17 +18,19 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
 
   const { values, errors, handleSubmit, handleChange, touched } = useFormik({
     initialValues: {
+      user_id: user.id,
       name: "",
       location: "",
-      careersLink: "",
-      linkedinLink: "",
+      careers_link: "",
+      linkedin_link: "",
+      description: "",
     },
 
-    validationSchema: companySchema,
+    validationSchema: userCompanySchema,
     onSubmit: async (values) => {
       setLoading(true);
       await axiosPrivate
-        .post("/Company", values)
+        .post("/companies", values)
         .then(() => {
           setOpenAdd(false);
           setLoading(false);
@@ -37,7 +41,7 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
           setLoading(false);
           setError(error);
           toast.error(
-            error.response?.data?.name?.map((error) => error) ||
+            error.response.data.name.map((error) => error) ||
               "An error occurred. Please try again"
           );
         });
@@ -72,23 +76,34 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
           />
 
           <FormInput
-            name="careersLink"
+            name="careers_link"
             type="text"
             placeHolder="Careers Link"
-            value={values.careersLink}
+            value={values.careers_link}
             onChange={handleChange}
-            error={errors.careersLink || error?.response?.data?.careersLink}
-            touched={touched.careersLink}
+            error={errors.careers_link || error?.response?.data?.careers_link}
+            touched={touched.careers_link}
           />
 
           <FormInput
-            name="linkedinLink"
+            name="linkedin_link"
             type="text"
-            placeHolder="LinkedIn Link"
-            value={values.linkedinLink}
+            placeHolder="Linkedin Link"
+            value={values.linkedin_link}
             onChange={handleChange}
-            error={errors.linkedinLink || error?.response?.data?.linkedinLink}
-            touched={touched.linkedinLink}
+            error={errors.linkedin_link || error?.response?.data?.linkedin_link}
+            touched={touched.linkedin_link}
+          />
+
+          <FormInput
+            label="Description"
+            name="description"
+            placeHolder="Description"
+            textArea
+            onChange={handleChange}
+            value={values.description}
+            error={errors.description || error?.response?.data?.description}
+            touched={touched.description}
           />
 
           {loading ? (
@@ -115,4 +130,4 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
       </div>
     </Modal>
   );
-} 
+}

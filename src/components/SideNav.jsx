@@ -29,7 +29,7 @@ export default function SideNav() {
     const trackerPaths = [
       "/dashboard",
       "/applications",
-      "/companies",
+      "/user-companies",
       "/employees",
       "/questions",
     ];
@@ -49,8 +49,8 @@ export default function SideNav() {
       icon: <AppWindowMac size={20} />,
     },
     {
-      name: "Companies",
-      href: "/companies",
+      name: "User Companies",
+      href: "/user-companies",
       icon: <Building2 size={20} />,
     },
     {
@@ -73,15 +73,20 @@ export default function SideNav() {
       subItems: trackerItems,
     },
     {
-      name: "Interviews",
-      href: "/interviews",
-      icon: <CalendarDays size={20} />,
+      name: "Companies",
+      href: "/companies",
+      icon: <Building2 size={20} />,
     },
     {
       name: "Resume Matching",
       href: "/resume-matching",
       icon: <FileText size={20} />,
     },
+    {
+      name: "Interviews",
+      href: "/interviews",
+      icon: <CalendarDays size={20} />,
+    }, 
   ];
 
   const subItemsVariants = {

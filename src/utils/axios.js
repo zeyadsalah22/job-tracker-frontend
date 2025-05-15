@@ -1,7 +1,7 @@
 import axios from "axios";
 import { useEffect } from "react";
 
-const BASE_URL = "https://better-fiann-zeyadsalah-3825b5df.koyeb.app/api";
+const BASE_URL = "/api";
 
 export default axios.create({
   baseURL: BASE_URL,

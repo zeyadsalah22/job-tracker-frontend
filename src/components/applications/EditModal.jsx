@@ -8,7 +8,7 @@ import ReactLoading from "react-loading";
 import { useQuery } from "react-query";
 import useUserStore from "../../store/user.store";
 import AddModalEmployees from "../employees/AddModal";
-import AddModalCompanies from "../companies/AddModal";
+import AddModalCompanies from "../user-companies/AddModal";
 import { useAxiosPrivate } from "../../utils/axios";
 
 export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {

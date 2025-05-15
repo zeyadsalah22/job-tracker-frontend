@@ -18,7 +18,12 @@ export const registerSchema = Yup.object().shape({
     .oneOf([Yup.ref("password"), null], "Passwords must match"),
 });
 
-export const comapnySchema = Yup.object().shape({
+export const companySchema = Yup.object().shape({
+  name: Yup.string().required("Required"),
+  location: Yup.string().required("Required"),
+});
+
+export const userCompanySchema = Yup.object().shape({
   name: Yup.string().required("Required"),
   location: Yup.string().required("Required"),
 });
@@ -61,6 +66,7 @@ export const questionSchema = Yup.object().shape({
 export const todoSchema = Yup.object().shape({
   user_id: Yup.string().required("Required"),
   application_title: Yup.string().required("Required"),
-  link: Yup.string().optional(),
+  application_link: Yup.string().optional(),
+  deadline: Yup.date().required("Required"),
   completed: Yup.boolean().optional(),
 });

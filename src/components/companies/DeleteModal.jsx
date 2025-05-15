@@ -1,5 +1,4 @@
 import Modal from "../Modal";
-import axios from "axios";
 import { toast } from "react-toastify";
 import { useState } from "react";
 import ReactLoading from "react-loading";
@@ -16,8 +15,9 @@ export default function DeleteModal({
   const axiosPrivate = useAxiosPrivate();
 
   const handleDelete = () => {
+    setLoading(true);
     axiosPrivate
-      .delete(`/companies/${id}`)
+      .delete(`/Company/${id}`)
       .then(() => {
         setOpenDelete(false);
         setLoading(false);
@@ -28,49 +28,49 @@ export default function DeleteModal({
         setLoading(false);
         setError(error);
         toast.error(
-          error.response.data.name.map((error) => error) ||
+          error.response?.data?.name?.map((error) => error) ||
             "An error occurred. Please try again"
         );
       });
   };
 
   return (
-    <Modal open={openDelete} setOpen={setOpenDelete} width="600px">
+    <Modal open={openDelete} setOpen={setOpenDelete} width="400px">
       <div className="flex flex-col gap-4">
         <h1 className="font-semibold text-lg">Delete Company</h1>
-        <div className="flex flex-col gap-3">
-          <p>Are you sure you want to delete this company?</p>
-          <div className="flex gap-2 justify-end">
-            {loading ? (
-              <button
-                disabled
-                className="rounded-md cursor-not-allowed flex items-center justify-center bg-red-500 px-2 py-1 text-white transition h-10"
-              >
-                <ReactLoading
-                  type="bubbles"
-                  color="#ffffff"
-                  height={25}
-                  width={25}
-                />
-              </button>
-            ) : (
-              <button
-                onClick={handleDelete}
-                type="submit"
-                className="rounded-md bg-red-500 px-2 py-1 text-white transition hover:bg-red-600 h-10"
-              >
-                Delete
-              </button>
-            )}
+        <p className="text-gray-500">
+          Are you sure you want to delete this company? This action cannot be
+          undone.
+        </p>
+        <div className="flex gap-4">
+          <button
+            onClick={() => setOpenDelete(false)}
+            className="flex-1 rounded border border-gray-300 px-4 py-2 text-gray-500 transition hover:bg-gray-50"
+          >
+            Cancel
+          </button>
+          {loading ? (
             <button
-              onClick={() => setOpenDelete(false)}
-              className="bg-gray-200 text-gray-800 px-2 py-1 text-sm rounded-md hover:bg-gray-300 transition-all h-10"
+              disabled
+              className="flex-1 rounded cursor-not-allowed flex items-center justify-center bg-red-500 px-4 py-2 text-white transition"
             >
-              Cancel
+              <ReactLoading
+                type="bubbles"
+                color="#ffffff"
+                height={25}
+                width={25}
+              />
             </button>
-          </div>
+          ) : (
+            <button
+              onClick={handleDelete}
+              className="flex-1 rounded bg-red-500 px-4 py-2 text-white transition hover:bg-red-600"
+            >
+              Delete
+            </button>
+          )}
         </div>
       </div>
     </Modal>
   );
-}
+} 

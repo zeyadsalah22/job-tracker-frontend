@@ -1,6 +1,6 @@
 import { useState } from "react";
 import Layout from "../components/Layout";
-import { Book, CheckCheck, X, LoaderCircle, Trash2, Plus } from "lucide-react";
+import { Book, CheckCheck, X, LoaderCircle, Trash2, Plus, Calendar } from "lucide-react";
 import { TEChart } from "tw-elements-react";
 import { useQuery } from "react-query";
 import ReactLoading from "react-loading";
@@ -13,7 +13,32 @@ function Todo() {
   const axiosPrivate = useAxiosPrivate();
 
   const fetchTodos = async () => {
-    return { results: [] }; // Return empty todos for now
+    // Static data for demonstration
+    return {
+      results: [
+        {
+          id: 1,
+          application_title: "Senior Frontend Developer at Google",
+          application_link: "https://careers.google.com/jobs/results/123",
+          deadline: "2024-04-15",
+          completed: false
+        },
+        {
+          id: 2,
+          application_title: "Full Stack Developer at Microsoft",
+          application_link: "https://careers.microsoft.com/jobs/456",
+          deadline: "2024-04-20",
+          completed: true
+        },
+        {
+          id: 3,
+          application_title: "React Developer at Amazon",
+          application_link: "https://amazon.jobs/789",
+          deadline: "2024-04-25",
+          completed: false
+        }
+      ]
+    };
   };
 
   const { data: todos, isLoading, refetch } = useQuery(["todos"], fetchTodos);
@@ -50,7 +75,7 @@ function Todo() {
                 color="#7571F9"
                 height={25}
                 width={25}
-              />{" "}
+              />
             </div>
           ) : todos?.results?.length === 0 ? (
             <p className="text-gray-500">No tasks. Add a task!</p>
@@ -58,36 +83,42 @@ function Todo() {
             todos?.results?.map((todo) => (
               <div
                 key={todo.id}
-                className="flex justify-between items-center py-2"
+                className="flex justify-between items-center py-2 border-b last:border-b-0"
               >
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-1">
                   <input
                     type="checkbox"
                     checked={todo.completed}
                     onChange={() => toggleCompletion(todo.id)}
                     className="cursor-pointer"
                   />
-                  {todo.application_link && !todo.completed ? (
-                    <a
-                      href={todo.application_link}
-                      target="_blank"
-                      className="hover:underline text-blue-600 cursor-pointer"
-                    >
-                      {todo.application_title}
-                    </a>
-                  ) : (
-                    <p
-                      className={`${
-                        todo.completed ? "line-through text-gray-400" : ""
-                      }`}
-                    >
-                      {todo.application_title}
-                    </p>
-                  )}
+                  <div className="flex flex-col">
+                    {todo.application_link && !todo.completed ? (
+                      <a
+                        href={todo.application_link}
+                        target="_blank"
+                        className="hover:underline text-blue-600 cursor-pointer"
+                      >
+                        {todo.application_title}
+                      </a>
+                    ) : (
+                      <p
+                        className={`${
+                          todo.completed ? "line-through text-gray-400" : ""
+                        }`}
+                      >
+                        {todo.application_title}
+                      </p>
+                    )}
+                    <div className="flex items-center gap-1 text-sm text-gray-500">
+                      <Calendar size={14} />
+                      <span>Deadline: {new Date(todo.deadline).toLocaleDateString()}</span>
+                    </div>
+                  </div>
                 </div>
                 <span
                   onClick={() => deleteTodo(todo.id)}
-                  className="cursor-pointer hover:text-red-500 transition-all"
+                  className="cursor-pointer hover:text-red-500 transition-all ml-2"
                 >
                   <Trash2 size={18} />
                 </span>

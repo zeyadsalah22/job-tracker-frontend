@@ -1,79 +1,75 @@
-import { useState } from "react";
-import { useQuery } from "react-query";
+import { Plus } from "lucide-react";
 import Layout from "../components/Layout";
-import { useAxiosPrivate } from "../utils/axios";
-import ReactLoading from "react-loading";
-import AddModal from "../components/companies/AddModal";
-import EditModal from "../components/companies/EditModal";
-import DeleteModal from "../components/companies/DeleteModal";
-import { Plus, Pencil, Trash2, Eye } from "lucide-react";
-import { Link } from "react-router-dom";
 import Table from "../components/Table";
 import React from "react";
+import EditModal from "../components/user-companies/EditModal";
+import DeleteModal from "../components/user-companies/DeleteModal";
+import { useQuery } from "react-query";
 import Pagination from "../components/Pagination";
+import AddModal from "../components/user-companies/AddModal";
+import { useAxiosPrivate } from "../utils/axios";
 
-export default function Companies() {
-  const [openAdd, setOpenAdd] = React.useState(false);
+export default function UserCompanies() {
   const [openEdit, setOpenEdit] = React.useState(false);
   const [openDelete, setOpenDelete] = React.useState(false);
-  const [selectedId, setSelectedId] = useState(null);
+  const [openAdd, setOpenAdd] = React.useState(false);
+  const [id, setId] = React.useState(null);
   const [page, setPage] = React.useState(1);
   const [search, setSearch] = React.useState("");
-  const [sortField, setSortField] = React.useState("");
-  const [sortDirection, setSortDirection] = React.useState(false); // false = ascending, true = descending
+  const [order, setOrder] = React.useState("");
   const axiosPrivate = useAxiosPrivate();
 
-  const handleEdit = (id) => {
-    setSelectedId(id);
+  const handleOpenEdit = (id) => {
     setOpenEdit(true);
+    setId(id);
   };
 
-  const handleDelete = (id) => {
-    setSelectedId(id);
+  const handleOpenDelete = (id) => {
     setOpenDelete(true);
-  };
-
-  const handleSort = (field) => {
-    if (sortField === field) {
-      // If clicking the same field, toggle direction
-      setSortDirection(!sortDirection);
-    } else {
-      // If clicking a new field, set it as sort field and default to ascending
-      setSortField(field);
-      setSortDirection(false);
-    }
+    setId(id);
   };
 
   const fetchCompanies = async () => {
-    const response = await axiosPrivate.get('/Company', {
-      params: {
-        SearchTerm: search || undefined,
-        PageNumber: page,
-        PageSize: 10,
-        SortBy: sortField || undefined,
-        SortDescending: sortField ? sortDirection : undefined,
-      }
-    });
-    
     return {
-      results: response.data.items.map(item => ({
-        id: item.companyId,
-        name: item.name,
-        location: item.location,
-        careers_link: item.careersLink,
-        linkedin_link: item.linkedinLink
-      })),
-      next: response.data.hasNext ? page + 1 : null,
-      previous: response.data.hasPrevious ? page - 1 : null,
-      total_pages: response.data.totalPages
+      results: [
+        {
+          id: 1,
+          name: "Google",
+          location: "Mountain View, CA",
+          careers_link: "https://careers.google.com",
+          website: "https://google.com",
+          size: "Large",
+          industry: "Technology"
+        },
+        {
+          id: 2,
+          name: "Microsoft",
+          location: "Redmond, WA",
+          careers_link: "https://careers.microsoft.com",
+          website: "https://microsoft.com",
+          size: "Large",
+          industry: "Technology"
+        },
+        {
+          id: 3,
+          name: "Amazon",
+          location: "Seattle, WA",
+          careers_link: "https://amazon.jobs",
+          website: "https://amazon.com",
+          size: "Large",
+          industry: "Technology"
+        }
+      ],
+      next: null,
+      previous: null,
+      total_pages: 1
     };
   };
-
   const {
     data: companies,
     isLoading,
     refetch,
-  } = useQuery(["companies", { search, page, sortField, sortDirection }], fetchCompanies);
+  } = useQuery(["user-companies", { search, page, order }], fetchCompanies);
 
   const table_head = [
     {
@@ -88,10 +84,6 @@ export default function Companies() {
       name: "Careers Link",
       key: "careers_link",
     },
-    {
-      name: "LinkedIn Link",
-      key: "linkedin_link",
-    },
   ];
 
   return (
@@ -99,7 +91,7 @@ export default function Companies() {
       <div className="bg-white rounded-lg h-full flex flex-col p-4 justify-between">
         <div className="flex flex-col">
           <div className="flex items-center justify-between pb-4 border-b-2">
-            <h1 className="text-2xl font-bold">Companies</h1>
+            <h1 className="text-2xl font-bold">User Companies</h1>
             <button
               onClick={() => setOpenAdd(true)}
               className="bg-primary hover:bg-primary/85 transition-all text-white py-2 px-4 rounded-lg flex items-center justify-center gap-2"
@@ -116,22 +108,21 @@ export default function Companies() {
               search={search}
               setSearch={setSearch}
               table_head={table_head}
-              selectedOrders={["name", "location"]}
+              selectedOrders={["name"]}
               table_rows={companies?.results.map(
-                ({ id, name, careers_link, linkedin_link, location }) => {
+                ({ id, name, careers_link, location }) => {
                   return {
                     id,
                     name,
                     location,
                     careers_link,
-                    linkedin_link,
                   };
                 }
               )}
-              handleOpenDelete={handleDelete}
-              handleOpenEdit={handleEdit}
-              handleOpenView={"companies"}
-              setOrder={handleSort}
+              handleOpenDelete={handleOpenDelete}
+              handleOpenEdit={handleOpenEdit}
+              handleOpenView={"user-companies"}
+              setOrder={setOrder}
             />
           </div>
         </div>
@@ -145,14 +136,14 @@ export default function Companies() {
           />
         </div>
         <EditModal
-          id={selectedId}
+          id={id}
           refetch={refetch}
           openEdit={openEdit}
           setOpenEdit={setOpenEdit}
         />
 
         <DeleteModal
-          id={selectedId}
+          id={id}
           openDelete={openDelete}
           setOpenDelete={setOpenDelete}
           refetch={refetch}
@@ -162,4 +153,4 @@ export default function Companies() {
       </div>
     </Layout>
   );
-} 
+}

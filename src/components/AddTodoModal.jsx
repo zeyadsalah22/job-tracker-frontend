@@ -20,6 +20,7 @@ export default function AddTodoModal({ refetch, openAdd, setOpenAdd }) {
         user_id: "",
         application_title: "",
         application_link: "",
+        deadline: "",
         completed: false,
       },
 
@@ -56,7 +57,7 @@ export default function AddTodoModal({ refetch, openAdd, setOpenAdd }) {
           <FormInput
             name="application_title"
             type="text"
-            placeHolder="Title"
+            placeHolder="Application Title"
             value={values.application_title}
             onChange={handleChange}
             error={
@@ -69,13 +70,25 @@ export default function AddTodoModal({ refetch, openAdd, setOpenAdd }) {
           <FormInput
             name="application_link"
             type="text"
-            placeHolder="Link"
+            placeHolder="Application Link"
             value={values.application_link}
             onChange={handleChange}
             error={
               errors.application_link || error?.response?.data?.application_link
             }
             touched={touched.application_link}
+          />
+          <FormInput
+            name="deadline"
+            type="date"
+            placeHolder="Deadline"
+            value={values.deadline}
+            onChange={handleChange}
+            error={
+              errors.deadline || error?.response?.data?.deadline
+            }
+            touched={touched.deadline}
+            required
           />
 
           {loading ? (

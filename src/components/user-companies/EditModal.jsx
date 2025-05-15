@@ -2,21 +2,18 @@ import Modal from "../Modal";
 import { useFormik } from "formik";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import { companySchema } from "../../schemas/Schemas";
 import FormInput from "../FormInput";
 import ReactLoading from "react-loading";
 import { useQuery } from "react-query";
-import useUserStore from "../../store/user.store";
 import { useAxiosPrivate } from "../../utils/axios";
 
 export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
-  const user = useUserStore((state) => state.user);
   const axiosPrivate = useAxiosPrivate();
 
   const fetchCompany = async () => {
-    const { data } = await axiosPrivate.get(`/Company/${id}`);
+    const { data } = await axiosPrivate.get(`/companies/${id}`);
     return data;
   };
 
@@ -33,26 +30,25 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
       initialValues: {
         name: "",
         location: "",
-        careersLink: "",
-        linkedinLink: "",
+        careers_link: "",
+        linkedin_link: "",
       },
 
-      validationSchema: companySchema,
       onSubmit: async (values) => {
         setLoading(true);
         await axiosPrivate
-          .put(`/Company/${id}`, values)
+          .patch(`/companies/${id}`, values)
           .then(() => {
             setOpenEdit(false);
             setLoading(false);
-            toast.success("Company updated successfully");
+            toast.success("company updated successfully");
             refetch();
           })
           .catch((error) => {
             setLoading(false);
             setError(error);
             toast.error(
-              error.response?.data?.name?.map((error) => error) ||
+              error.response.data.name.map((error) => error) ||
                 "An error occurred. Please try again"
             );
           });
@@ -60,28 +56,32 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
     });
 
   useEffect(() => {
-    if (company) {
+    if (!isLoading && company) {
       setFieldValue("name", company.name);
       setFieldValue("location", company.location);
-      setFieldValue("careersLink", company.careersLink);
-      setFieldValue("linkedinLink", company.linkedinLink);
+      setFieldValue("careers_link", company.careers_link);
+      setFieldValue("linkedin_link", company.linkedin_link);
+      setFieldValue("description", company.description);
     }
-  }, [company, setFieldValue]);
+  }, [setFieldValue, company, isLoading]);
+
+  if (isLoading) {
+    return <p>Loading...</p>;
+  }
 
   return (
     <Modal open={openEdit} setOpen={setOpenEdit} width="600px">
       <div className="flex flex-col gap-4">
-        <h1 className="font-semibold text-lg">Update Company</h1>
+        <h1 className="font-semibold text-lg">Update company</h1>
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
           <FormInput
             name="name"
             type="text"
-            placeHolder="Name"
+            placeHolder="company Name"
             value={values.name}
             onChange={handleChange}
             error={errors.name || error?.response?.data?.name}
             touched={touched.name}
-            required
           />
 
           <FormInput
@@ -92,27 +92,37 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
             onChange={handleChange}
             error={errors.location || error?.response?.data?.location}
             touched={touched.location}
-            required
           />
 
           <FormInput
-            name="careersLink"
+            name="linkedin_link"
+            type="text"
+            placeHolder="Linkedin Link"
+            value={values.linkedin_link}
+            onChange={handleChange}
+            error={errors.linkedin_link || error?.response?.data?.linkedin_link}
+            touched={touched.linkedin_link}
+          />
+
+          <FormInput
+            name="careers_link"
             type="text"
             placeHolder="Careers Link"
-            value={values.careersLink}
+            value={values.careers_link}
             onChange={handleChange}
-            error={errors.careersLink || error?.response?.data?.careersLink}
-            touched={touched.careersLink}
+            error={errors.careers_link || error?.response?.data?.careers_link}
+            touched={touched.careers_link}
           />
 
           <FormInput
-            name="linkedinLink"
-            type="text"
-            placeHolder="LinkedIn Link"
-            value={values.linkedinLink}
+            label="Description"
+            name="description"
+            placeHolder="Description"
+            textArea
             onChange={handleChange}
-            error={errors.linkedinLink || error?.response?.data?.linkedinLink}
-            touched={touched.linkedinLink}
+            value={values.description}
+            error={errors.description || error?.response?.data?.description}
+            touched={touched.description}
           />
 
           {loading ? (
@@ -139,4 +149,4 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
       </div>
     </Modal>
   );
-} 
+}

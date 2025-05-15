@@ -9,7 +9,7 @@ import ReactLoading from "react-loading";
 import { useQuery } from "react-query";
 import useUserStore from "../../store/user.store";
 import Dropdown from "../Dropdown";
-import AddModalCompanies from "../companies/AddModal";
+import AddModalCompanies from "../user-companies/AddModal";
 import { useAxiosPrivate } from "../../utils/axios";
 
 export default function AddModal({ refetch, openAdd, setOpenAdd }) {
