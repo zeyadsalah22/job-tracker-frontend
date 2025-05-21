@@ -1,23 +1,32 @@
 import { Plus } from "lucide-react";
 import Layout from "../components/Layout";
 import Table from "../components/Table";
-import React from "react";
+import React, { useState } from "react";
 import EditModal from "../components/user-companies/EditModal";
 import DeleteModal from "../components/user-companies/DeleteModal";
 import { useQuery } from "react-query";
 import Pagination from "../components/Pagination";
 import AddModal from "../components/user-companies/AddModal";
 import { useAxiosPrivate } from "../utils/axios";
+import useUserStore from "../store/user.store";
 
 export default function UserCompanies() {
-  const [openEdit, setOpenEdit] = React.useState(false);
-  const [openDelete, setOpenDelete] = React.useState(false);
-  const [openAdd, setOpenAdd] = React.useState(false);
-  const [id, setId] = React.useState(null);
-  const [page, setPage] = React.useState(1);
-  const [search, setSearch] = React.useState("");
-  const [order, setOrder] = React.useState("");
+  const [openEdit, setOpenEdit] = useState(false);
+  const [openDelete, setOpenDelete] = useState(false);
+  const [openAdd, setOpenAdd] = useState(false);
+  const [id, setId] = useState(null);
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
+  const [sortField, setSortField] = useState("");
+  const [sortDirection, setSortDirection] = useState(false); // false = ascending, true = descending
   const axiosPrivate = useAxiosPrivate();
+  const user = useUserStore((state) => state.user);
+
+  // Mapping between display keys and API field names
+  const fieldMapping = {
+    name: "name",
+    location: "location"
+  };
 
   const handleOpenEdit = (id) => {
     setOpenEdit(true);
@@ -29,48 +38,88 @@ export default function UserCompanies() {
     setId(id);
   };
 
-  const fetchCompanies = async () => {
-    return {
-      results: [
-        {
-          id: 1,
-          name: "Google",
-          location: "Mountain View, CA",
-          careers_link: "https://careers.google.com",
-          website: "https://google.com",
-          size: "Large",
-          industry: "Technology"
-        },
-        {
-          id: 2,
-          name: "Microsoft",
-          location: "Redmond, WA",
-          careers_link: "https://careers.microsoft.com",
-          website: "https://microsoft.com",
-          size: "Large",
-          industry: "Technology"
-        },
-        {
-          id: 3,
-          name: "Amazon",
-          location: "Seattle, WA",
-          careers_link: "https://amazon.jobs",
-          website: "https://amazon.com",
-          size: "Large",
-          industry: "Technology"
-        }
-      ],
-      next: null,
-      previous: null,
-      total_pages: 1
-    };
+  // This function will be passed to the Table component as setOrder
+  const handleSort = (field) => {
+    console.log("Sorting by field:", field, "-> mapped to:", fieldMapping[field] || field);
+    if (sortField === (fieldMapping[field] || field)) {
+      // If clicking the same field, toggle direction
+      setSortDirection(!sortDirection);
+    } else {
+      // If clicking a new field, set it as sort field and default to ascending
+      setSortField(fieldMapping[field] || field);
+      setSortDirection(false);
+    }
   };
+
+  const fetchUserCompanies = async () => {    
+    try {      
+      console.log("Fetching with params:", {        
+        search,        
+        page,        
+        sortField,        
+        sortDirection      
+      });            
+      
+      // Create params object for better logging
+      const params = {
+        SearchTerm: search || undefined,
+        UserId: user?.userId || undefined,
+        PageNumber: page,
+        PageSize: 10,
+        SortBy: sortField || undefined,
+        SortDescending: sortField ? sortDirection : undefined,
+      };
+      
+      console.log("Actual API params being sent:", params);
+      
+      const response = await axiosPrivate.get('/user-companies', {
+        params
+      });
+      
+      console.log("User companies response:", response.data);
+      
+      // Transform the API response to match the expected format for the UI
+      const items = Array.isArray(response.data) ? response.data : (response.data.items || []);
+      
+      return {
+        results: items.map(item => ({
+          id: item.companyId,
+          name: item.companyName,
+          location: item.companyLocation,
+          careers_link: item.companyCareersLink,
+          linkedin_link: item.companyLinkedinLink,
+          description: item.description
+        })),
+        next: response.data.hasNext ? page + 1 : null,
+        previous: response.data.hasPrevious ? page - 1 : null,
+        total_pages: response.data.totalPages || 1
+      };
+    } catch (error) {
+      console.error("Error fetching user companies:", error);
+      return {
+        results: [],
+        next: null,
+        previous: null,
+        total_pages: 1
+      };
+    }
+  };
+
   const {
     data: companies,
     isLoading,
     refetch,
-  } = useQuery(["user-companies", { search, page, order }], fetchCompanies);
+  } = useQuery(
+    ["user-companies", { search, page, sortField, sortDirection, userId: user?.userId }], 
+    fetchUserCompanies,
+    {
+      enabled: !!user?.userId,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      refetchOnWindowFocus: false
+    }
+  );
 
+  // Define table columns with consistent naming that matches API field names
   const table_head = [
     {
       name: "Name",
@@ -108,8 +157,8 @@ export default function UserCompanies() {
               search={search}
               setSearch={setSearch}
               table_head={table_head}
-              selectedOrders={["name"]}
-              table_rows={companies?.results.map(
+              selectedOrders={["name", "location"]}
+              table_rows={companies?.results?.map(
                 ({ id, name, careers_link, location }) => {
                   return {
                     id,
@@ -118,11 +167,11 @@ export default function UserCompanies() {
                     careers_link,
                   };
                 }
-              )}
+              ) || []}
               handleOpenDelete={handleOpenDelete}
               handleOpenEdit={handleOpenEdit}
               handleOpenView={"user-companies"}
-              setOrder={setOrder}
+              setOrder={handleSort}
             />
           </div>
         </div>
@@ -132,7 +181,7 @@ export default function UserCompanies() {
             prevPage={companies?.previous}
             page={page}
             setPage={setPage}
-            totalPages={companies?.total_pages}
+            totalPages={companies?.total_pages || 1}
           />
         </div>
         <EditModal

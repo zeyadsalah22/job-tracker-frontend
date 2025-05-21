@@ -10,7 +10,7 @@ export default function ViewModal() {
   const axiosPrivate = useAxiosPrivate();
 
   const fetchCompany = async () => {
-    const { data } = await axiosPrivate.get(`/Company/${id}`);
+    const { data } = await axiosPrivate.get(`/companies/${id}`);
     return data;
   };
 

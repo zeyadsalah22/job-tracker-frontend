@@ -7,68 +7,82 @@ import ReactLoading from "react-loading";
 import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
 import useUserStore from "../store/user.store";
+import axios, { useAxiosPrivate } from "../utils/axios";
 
 export default function Login() {
+  const token = localStorage.getItem("access");
   const navigate = useNavigate();
   const setUser = useUserStore((state) => state.setUser);
   const [loading, setLoading] = useState(false);
-
-  // Check if already logged in
-  useEffect(() => {
-    const token = localStorage.getItem("access");
-    if (token) {
-      navigate("/dashboard");
-    }
-  }, [navigate]);
+  const axiosPrivate = useAxiosPrivate();
 
   const { values, errors, handleSubmit, handleChange, touched } = useFormik({
     initialValues: {
-      username: "",
+      email: "",
       password: "",
     },
     validationSchema: loginSchema,
     onSubmit: async (values) => {
       setLoading(true);
       try {
-        // Mock successful login
-        localStorage.setItem("access", "mock_access_token");
-        localStorage.setItem("refresh", "mock_refresh_token");
-        
-        // Set mock user data
-        const mockUser = {
-          id: 1,
-          username: values.username || "testuser",
-          email: "test@example.com"
+        // The format expected by the backend
+        const loginData = {
+          Email: values.email,
+          Password: values.password
         };
-        setUser(mockUser);
+        
+        console.log("Sending login data:", loginData);
+        const response = await axios.post("/auth/login", loginData);
+        console.log("Login response:", response.data);
+        
+        const token = response.data.token;
+        localStorage.setItem("access", token);
+        
+        // Get user info
+        try {
+          const userResponse = await axiosPrivate.get("/users/me");
+          setUser(userResponse.data);
+        } catch (error) {
+          console.error("Failed to fetch user data:", error);
+        }
+        
+        navigate("/dashboard");
+        toast.success("Login successful");
         
         // Set start date if not already set
-        if (!localStorage.getItem("start_date")) {
-          localStorage.setItem("start_date", new Date().toISOString().split("T")[0]);
-        }
-
-        toast.success("Login successful");
-        setLoading(false); // Reset loading state before navigation
-        navigate("/dashboard", { replace: true });
+        localStorage.setItem(
+          "start_date",
+          localStorage.getItem("start_date")
+            ? localStorage.getItem("start_date")
+            : new Date().toISOString().split("T")[0]
+        );
       } catch (error) {
+        console.error("Login error:", error.response?.data);
         setLoading(false);
-        toast.error("An error occurred");
+        toast.error(error.response?.data?.message || "Login failed. Please check your credentials.");
       }
     },
   });
+
+  // Don't automatically redirect to dashboard if on the login page
+  useEffect(() => {
+    if (token && window.location.pathname !== "/") {
+      navigate("/dashboard");
+    }
+  }, [token, navigate]);
 
   return (
     <div className="h-screen flex flex-col justify-center items-center gap-4">
       <img src="/logo.png" alt="logo" className="w-32 h-24" />
       <form onSubmit={handleSubmit} className="flex flex-col w-[500px] gap-5">
         <FormInput
-          name="username"
+          name="email"
           type="text"
-          placeHolder="Username"
-          value={values.username}
+          placeHolder="Email"
+          value={values.email}
           onChange={handleChange}
-          error={errors.username}
-          touched={touched.username}
+          error={errors.email}
+          touched={touched.email}
         />
         <FormInput
           name="password"

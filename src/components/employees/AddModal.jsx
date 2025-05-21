@@ -45,44 +45,58 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
   ];
 
   const fetchCompanies = async () => {
-    const { data } = await axiosPrivate.get(
-      `/companies?search=${companySearch}`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-    return data;
+    try {
+      const params = {
+        SearchTerm: companySearch || undefined,
+        PageSize: 100 // Ensure we get a good number of results
+      };
+      
+      console.log("Fetching user companies with params:", params);
+      const response = await axiosPrivate.get('/user-companies', { params });
+      console.log("User companies response:", response.data);
+      
+      // Map the API response to match what the dropdown expects
+      const items = response.data.items || [];
+      return {
+        results: items.map(company => ({
+          id: company.companyId,
+          name: company.companyName || company.name, // Handle different possible API formats
+          value: company.companyId,
+          location: company.companyLocation || company.location
+        }))
+      };
+    } catch (error) {
+      console.error("Error fetching user companies:", error);
+      return {
+        results: []
+      };
+    }
   };
 
   const {
     data: companies,
     isLoading: companyies_Loading,
     refetch: company_refetch,
-  } = useQuery(["companies", companySearch], fetchCompanies);
+  } = useQuery(["user-companies", companySearch], fetchCompanies);
 
   const { values, errors, handleSubmit, handleChange, touched, setFieldValue } =
     useFormik({
       initialValues: {
-        user_id: "",
+        userId: "",
         name: "",
-        linkedin_link: "",
+        linkedinLink: "",
         email: "",
-        job_title: "",
+        jobTitle: "",
         contacted: "",
-        company_id: "",
+        companyId: "",
       },
 
       validationSchema: employeeSchema,
       onSubmit: async (values) => {
         setLoading(true);
+        
         await axiosPrivate
-          .post("/employees", values, {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          })
+          .post("/employees", values)
           .then(() => {
             setOpenAdd(false);
             setLoading(false);
@@ -102,7 +116,7 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
 
   useEffect(() => {
     if (user) {
-      values.user_id = user.id;
+      values.userId = user.userId;
     }
   }, [user, values]);
 
@@ -110,7 +124,7 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
     if (id === "add-company") {
       setAddCompany(true);
     }
-    setFieldValue("company_id", id);
+    setFieldValue("companyId", id);
   };
 
   return (
@@ -139,13 +153,13 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
           />
 
           <FormInput
-            name="linkedin_link"
+            name="linkedinLink"
             type="text"
             placeHolder="Linkedin Link"
-            value={values.linkedin_link}
+            value={values.linkedinLink}
             onChange={handleChange}
-            error={errors.linkedin_link || error?.response?.data?.linkedin_link}
-            touched={touched.linkedin_link}
+            error={errors.linkedinLink || error?.response?.data?.linkedinLink}
+            touched={touched.linkedinLink}
           />
 
           <FormInput
@@ -159,13 +173,13 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
           />
 
           <FormInput
-            name="job_title"
+            name="jobTitle"
             type="text"
             placeHolder="Job Title"
-            value={values.job_title}
+            value={values.jobTitle}
             onChange={handleChange}
-            error={errors.job_title || error?.response?.data?.job_title}
-            touched={touched.job_title}
+            error={errors.jobTitle || error?.response?.data?.jobTitle}
+            touched={touched.jobTitle}
             required
           />
 
@@ -207,18 +221,18 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
                   name: "Add Company",
                   value: "add-company",
                 }}
-                id={values.company_id}
+                id={values.companyId}
                 options={companies?.results}
                 query={companySearch}
                 setQuery={setCompanySearch}
                 setValue={setCompanyId}
                 isLoading={companyies_Loading}
-                error={errors.company_id || error?.response?.data?.company_id}
-                touched={touched.company_id}
+                error={errors.companyId || error?.response?.data?.companyId}
+                touched={touched.companyId}
               />
-              {errors.company_id && touched.company_id && (
+              {errors.companyId && touched.companyId && (
                 <span className="mt-1 text-xs text-red-500">
-                  {errors.company_id || error?.response?.data?.company_id}
+                  {errors.companyId || error?.response?.data?.companyId}
                 </span>
               )}
             </div>

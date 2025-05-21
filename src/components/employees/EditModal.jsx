@@ -8,12 +8,16 @@ import ReactLoading from "react-loading";
 import { useQuery } from "react-query";
 import useUserStore from "../../store/user.store";
 import { useAxiosPrivate } from "../../utils/axios";
+import Dropdown from "../Dropdown";
+import AddModalCompanies from "../user-companies/AddModal";
 
 export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const user = useUserStore((state) => state.user);
   const axiosPrivate = useAxiosPrivate();
+  const [companySearch, setCompanySearch] = useState("");
+  const [addCompany, setAddCompany] = useState(false);
 
   const contacted = [
     {
@@ -39,12 +43,18 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
   ];
 
   const fetchEmployee = async () => {
-    const { data } = await axiosPrivate.get(`/employees/${id}`);
-    return data;
+    try {
+      const response = await axiosPrivate.get(`/employees/${id}`);
+      console.log("Employee details for edit:", response.data);
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching employee details:", error);
+      throw error;
+    }
   };
 
   const { data: employee, isLoading } = useQuery(
-    ["employee", { id }],
+    ["employee", id],
     fetchEmployee,
     {
       enabled: !!id,
@@ -52,57 +62,97 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
   );
 
   const fetchCompanies = async () => {
-    const { data } = await axiosPrivate.get(`/companies`);
-    return data.results;
+    try {
+      const params = {
+        SearchTerm: companySearch || undefined,
+        PageSize: 100 // Ensure we get a good number of results
+      };
+      
+      console.log("Fetching user companies with params:", params);
+      const response = await axiosPrivate.get('/user-companies', { params });
+      console.log("User companies response:", response.data);
+      
+      // Map the API response to match what the dropdown expects
+      const items = response.data.items || [];
+      return {
+        results: items.map(company => ({
+          id: company.companyId,
+          name: company.companyName || company.name, // Handle different possible API formats
+          value: company.companyId,
+          location: company.companyLocation || company.location
+        }))
+      };
+    } catch (error) {
+      console.error("Error fetching user companies:", error);
+      return {
+        results: []
+      };
+    }
   };
 
-  const { data: companies } = useQuery(["companies"], fetchCompanies);
+  const {
+    data: companies,
+    isLoading: companiesLoading,
+    refetch: companyRefetch
+  } = useQuery(["user-companies", companySearch], fetchCompanies);
 
   const { values, errors, handleSubmit, handleChange, touched, setFieldValue } =
     useFormik({
       initialValues: {
-        user_id: "",
+        userId: "",
         name: "",
-        linkedin_link: "",
+        linkedinLink: "",
         email: "",
-        job_title: "",
+        jobTitle: "",
         contacted: "",
-        company_id: "",
+        companyId: "",
       },
 
       validationSchema: employeeSchema,
       onSubmit: async (values) => {
         setLoading(true);
-        await axiosPrivate
-          .patch(`/employees/${id}`, values)
-          .then(() => {
-            setOpenEdit(false);
-            setLoading(false);
-            toast.success("Employee updated successfully");
-            refetch();
-          })
-          .catch((error) => {
-            setLoading(false);
-            setError(error);
-            toast.error(
-              error.response.data.name.map((error) => error) ||
-                "An error occurred. Please try again"
-            );
-          });
+        
+        try {
+          console.log("Updating employee with values:", values);
+          const response = await axiosPrivate.put(`/employees/${id}`, values);
+          console.log("Update response:", response.data);
+          
+          setOpenEdit(false);
+          setLoading(false);
+          toast.success("Employee updated successfully");
+          refetch();
+        } catch (error) {
+          console.error("Error updating employee:", error);
+          setLoading(false);
+          setError(error);
+          
+          const errorMessage = error.response?.data?.errors 
+            ? Object.values(error.response.data.errors).flat().join(", ")
+            : "An error occurred. Please try again";
+            
+          toast.error(errorMessage);
+        }
       },
     });
 
   useEffect(() => {
     if (!isLoading && employee) {
-      setFieldValue("name", employee.name);
-      setFieldValue("linkedin_link", employee.linkedin_link);
-      setFieldValue("email", employee.email);
-      setFieldValue("job_title", employee.job_title);
-      setFieldValue("contacted", employee.contacted);
-      setFieldValue("company_id", employee.company.id);
-      setFieldValue("user_id", user.id);
+      setFieldValue("userId", employee.userId || user.userId);
+      setFieldValue("name", employee.name || "");
+      setFieldValue("linkedinLink", employee.linkedinLink || "");
+      setFieldValue("email", employee.email || "");
+      setFieldValue("jobTitle", employee.jobTitle || "");
+      setFieldValue("contacted", employee.contacted || "");
+      setFieldValue("companyId", employee.companyId);
     }
   }, [setFieldValue, employee, isLoading, user]);
+
+  const setCompanyId = (id) => {
+    if (id === "add-company") {
+      setAddCompany(true);
+    }
+    setFieldValue("companyId", id);
+  };
 
   if (isLoading) {
     return <p>Loading...</p>;
@@ -112,6 +162,15 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
     <Modal open={openEdit} setOpen={setOpenEdit} width="600px">
       <div className="flex flex-col gap-4">
         <h1 className="font-semibold text-lg">Update Employee</h1>
+        <div className="z-[100]">
+          {addCompany && (
+            <AddModalCompanies
+              openAdd={addCompany}
+              setOpenAdd={setAddCompany}
+              refetch={companyRefetch}
+            />
+          )}
+        </div>
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
           <FormInput
             name="name"
@@ -121,16 +180,17 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
             onChange={handleChange}
             error={errors.name || error?.response?.data?.name}
             touched={touched.name}
+            required
           />
 
           <FormInput
-            name="linkedin_link"
+            name="linkedinLink"
             type="text"
             placeHolder="Linkedin Link"
-            value={values.linkedin_link}
+            value={values.linkedinLink}
             onChange={handleChange}
-            error={errors.linkedin_link || error?.response?.data?.linkedin_link}
-            touched={touched.linkedin_link}
+            error={errors.linkedinLink || error?.response?.data?.linkedinLink}
+            touched={touched.linkedinLink}
           />
 
           <FormInput
@@ -144,17 +204,21 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
           />
 
           <FormInput
-            name="job_title"
+            name="jobTitle"
             type="text"
             placeHolder="Job Title"
-            value={values.job_title}
+            value={values.jobTitle}
             onChange={handleChange}
-            error={errors.job_title || error?.response?.data?.job_title}
-            touched={touched.job_title}
+            error={errors.jobTitle || error?.response?.data?.jobTitle}
+            touched={touched.jobTitle}
+            required
           />
 
           <div className="flex gap-6 w-full">
-            <div className="w-full">
+            <div className="flex flex-col gap-2 w-full">
+              <p className="text-sm text-gray-600">
+                Choose Status<span className="text-red-500">*</span>
+              </p>
               <select
                 name="contacted"
                 value={values.contacted}
@@ -174,40 +238,32 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
               </select>
               {errors.contacted && touched.contacted && (
                 <span className="mt-1 text-xs text-red-500">
-                  {errors.contacted}
+                  {errors.contacted || error?.response?.data?.contacted}
                 </span>
               )}
             </div>
 
-            <div className="w-full">
-              <select
-                name="company_id"
-                value={values.company_id}
-                onChange={handleChange}
-                className={`${
-                  touched.company_id && errors.company_id && "border-red-500"
-                } w-full rounded-md border px-4 py-2 text-gray-500 focus:border-primary focus:outline-none
-                ${
-                  values.company_id ? "text-black" : "text-gray-500"
-                } focus:ring-primary`}
-              >
-                <option value="" disabled className="text-gray-400">
-                  Select Company
-                </option>
-                {companies?.length > 0 &&
-                  companies.map((company) => (
-                    <option
-                      key={company.id}
-                      value={company.id}
-                      className="text-black"
-                    >
-                      {company.name}
-                    </option>
-                  ))}
-              </select>
-              {errors.company_id && touched.company_id && (
+            <div className="flex flex-col gap-2 w-full">
+              <p className="text-sm text-gray-600">
+                Choose Company<span className="text-red-500">*</span>
+              </p>
+              <Dropdown
+                add={{
+                  name: "Add Company",
+                  value: "add-company",
+                }}
+                id={values.companyId}
+                options={companies?.results}
+                query={companySearch}
+                setQuery={setCompanySearch}
+                setValue={setCompanyId}
+                isLoading={companiesLoading}
+                error={errors.companyId || error?.response?.data?.companyId}
+                touched={touched.companyId}
+              />
+              {errors.companyId && touched.companyId && (
                 <span className="mt-1 text-xs text-red-500">
-                  {errors.company_id}
+                  {errors.companyId || error?.response?.data?.companyId}
                 </span>
               )}
             </div>

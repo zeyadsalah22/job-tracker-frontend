@@ -1,8 +1,8 @@
 import Modal from "../Modal";
-import axios from "axios";
 import { toast } from "react-toastify";
 import { useState } from "react";
 import ReactLoading from "react-loading";
+import { useAxiosPrivate } from "../../utils/axios";
 
 export default function DeleteModal({
   id,
@@ -12,28 +12,29 @@ export default function DeleteModal({
 }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const axiosPrivate = useAxiosPrivate();
 
-  const handleDelete = () => {
-    axios
-      .delete(`http://127.0.0.1:8000/api/employees/${id}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("access")}`,
-        },
-      })
-      .then(() => {
-        setOpenDelete(false);
-        setLoading(false);
-        toast.success("Employee deleted successfully");
-        refetch();
-      })
-      .catch((error) => {
-        setLoading(false);
-        setError(error);
-        toast.error(
-          error.response.data.name.map((error) => error) ||
-            "An error occurred. Please try again"
-        );
-      });
+  const handleDelete = async () => {
+    setLoading(true);
+    try {
+      console.log("Deleting employee with ID:", id);
+      await axiosPrivate.delete(`/employees/${id}`);
+      
+      setOpenDelete(false);
+      setLoading(false);
+      toast.success("Employee deleted successfully");
+      refetch();
+    } catch (error) {
+      console.error("Error deleting employee:", error);
+      setLoading(false);
+      setError(error);
+      
+      const errorMessage = error.response?.data?.errors 
+        ? Object.values(error.response.data.errors).flat().join(", ")
+        : "An error occurred. Please try again";
+          
+      toast.error(errorMessage);
+    }
   };
 
   return (

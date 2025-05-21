@@ -6,20 +6,32 @@ import FormInput from "../FormInput";
 import ReactLoading from "react-loading";
 import { useQuery } from "react-query";
 import { useAxiosPrivate } from "../../utils/axios";
+import * as Yup from "yup";
+
+// Simple schema for description only
+const userCompanySchema = Yup.object().shape({
+  description: Yup.string().required("Description is required"),
+});
 
 export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const axiosPrivate = useAxiosPrivate();
 
-  const fetchCompany = async () => {
-    const { data } = await axiosPrivate.get(`/companies/${id}`);
-    return data;
+  const fetchUserCompany = async () => {
+    try {
+      const response = await axiosPrivate.get(`/user-companies/${id}`);
+      console.log("User company data for edit:", response.data);
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching user company:", error);
+      throw error;
+    }
   };
 
-  const { data: company, isLoading } = useQuery(
-    ["company", { id }],
-    fetchCompany,
+  const { data: userCompany, isLoading } = useQuery(
+    ["user-company", { id }],
+    fetchUserCompany,
     {
       enabled: !!id,
     }
@@ -28,42 +40,35 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
   const { values, errors, handleSubmit, handleChange, touched, setFieldValue } =
     useFormik({
       initialValues: {
-        name: "",
-        location: "",
-        careers_link: "",
-        linkedin_link: "",
+        description: "",
       },
-
+      validationSchema: userCompanySchema,
       onSubmit: async (values) => {
         setLoading(true);
-        await axiosPrivate
-          .patch(`/companies/${id}`, values)
-          .then(() => {
-            setOpenEdit(false);
-            setLoading(false);
-            toast.success("company updated successfully");
-            refetch();
-          })
-          .catch((error) => {
-            setLoading(false);
-            setError(error);
-            toast.error(
-              error.response.data.name.map((error) => error) ||
-                "An error occurred. Please try again"
-            );
+        try {
+          await axiosPrivate.put(`/user-companies/${id}`, { 
+            description: values.description 
           });
+          setOpenEdit(false);
+          setLoading(false);
+          toast.success("Company information updated successfully");
+          refetch();
+        } catch (error) {
+          setLoading(false);
+          setError(error);
+          toast.error(
+            error.response?.data?.message || 
+            "An error occurred. Please try again"
+          );
+        }
       },
     });
 
   useEffect(() => {
-    if (!isLoading && company) {
-      setFieldValue("name", company.name);
-      setFieldValue("location", company.location);
-      setFieldValue("careers_link", company.careers_link);
-      setFieldValue("linkedin_link", company.linkedin_link);
-      setFieldValue("description", company.description);
+    if (!isLoading && userCompany) {
+      setFieldValue("description", userCompany.description || "");
     }
-  }, [setFieldValue, company, isLoading]);
+  }, [setFieldValue, userCompany, isLoading]);
 
   if (isLoading) {
     return <p>Loading...</p>;
@@ -72,57 +77,24 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
   return (
     <Modal open={openEdit} setOpen={setOpenEdit} width="600px">
       <div className="flex flex-col gap-4">
-        <h1 className="font-semibold text-lg">Update company</h1>
+        <h1 className="font-semibold text-lg">Update Company Notes</h1>
+        {userCompany && (
+          <div className="bg-gray-50 p-3 rounded-md">
+            <p className="font-medium text-gray-700">{userCompany.companyName}</p>
+            <p className="text-sm text-gray-500">{userCompany.companyLocation}</p>
+          </div>
+        )}
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-          <FormInput
-            name="name"
-            type="text"
-            placeHolder="company Name"
-            value={values.name}
-            onChange={handleChange}
-            error={errors.name || error?.response?.data?.name}
-            touched={touched.name}
-          />
-
-          <FormInput
-            name="location"
-            type="text"
-            placeHolder="Location"
-            value={values.location}
-            onChange={handleChange}
-            error={errors.location || error?.response?.data?.location}
-            touched={touched.location}
-          />
-
-          <FormInput
-            name="linkedin_link"
-            type="text"
-            placeHolder="Linkedin Link"
-            value={values.linkedin_link}
-            onChange={handleChange}
-            error={errors.linkedin_link || error?.response?.data?.linkedin_link}
-            touched={touched.linkedin_link}
-          />
-
-          <FormInput
-            name="careers_link"
-            type="text"
-            placeHolder="Careers Link"
-            value={values.careers_link}
-            onChange={handleChange}
-            error={errors.careers_link || error?.response?.data?.careers_link}
-            touched={touched.careers_link}
-          />
-
           <FormInput
             label="Description"
             name="description"
-            placeHolder="Description"
+            placeHolder="Add your notes about this company (e.g., positions of interest, information gathering)"
             textArea
             onChange={handleChange}
             value={values.description}
             error={errors.description || error?.response?.data?.description}
             touched={touched.description}
+            required
           />
 
           {loading ? (
@@ -142,7 +114,7 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
               type="submit"
               className="rounded bg-primary px-8 py-2 text-white transition hover:bg-primary/80 h-10"
             >
-              Submit
+              Update Notes
             </button>
           )}
         </form>

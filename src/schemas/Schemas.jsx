@@ -1,21 +1,41 @@
 import * as Yup from "yup";
 
 export const loginSchema = Yup.object().shape({
-  username: Yup.string().required("Required"),
+  email: Yup.string()
+    .email("Invalid email format")
+    .required("Email is required"),
   password: Yup.string()
-    .required("Required")
-    .min(5, "Password is too short - should be 6 chars minimum."),
+    .required("Password is required")
+    .min(6, "Password is too short - should be 6 chars minimum."),
 });
 
 export const registerSchema = Yup.object().shape({
-  username: Yup.string().required("Required"),
-  email: Yup.string().email("Invalid email").required("Required"),
-  password: Yup.string()
-    .required("Required")
-    .min(8, "Password is too short - should be 8 chars minimum."),
-  re_password: Yup.string()
-    .required("Required")
-    .oneOf([Yup.ref("password"), null], "Passwords must match"),
+  Fname: Yup.string()
+    .required("First name is required")
+    .min(2, "First name must be at least 2 characters")
+    .max(50, "First name cannot be longer than 50 characters"),
+  Lname: Yup.string()
+    .required("Last name is required")
+    .min(2, "Last name must be at least 2 characters")
+    .max(50, "Last name cannot be longer than 50 characters"),
+  Email: Yup.string()
+    .email("Invalid email format")
+    .required("Email is required")
+    .max(100, "Email cannot be longer than 100 characters"),
+  Password: Yup.string()
+    .required("Password is required")
+    .min(6, "Password must be at least 6 characters")
+    .max(255, "Password cannot be longer than 255 characters"),
+  ConfirmPassword: Yup.string()
+    .required("Confirm password is required")
+    .oneOf([Yup.ref("Password"), null], "Passwords must match"),
+  Address: Yup.string()
+    .nullable()
+    .max(255, "Address cannot be longer than 255 characters"),
+  BirthDate: Yup.date()
+    .nullable()
+    .transform((curr, orig) => (orig === "" ? null : curr))
+    .typeError("Please enter a valid date")
 });
 
 export const companySchema = Yup.object().shape({
@@ -30,16 +50,16 @@ export const userCompanySchema = Yup.object().shape({
 
 export const employeeSchema = Yup.object().shape({
   name: Yup.string().required("Required"),
-  linkedin_link: Yup.string()
+  linkedinLink: Yup.string()
     .matches(
       /^https?:\/\/(www\.)?linkedin\.com\/(in|pub|company)\/[a-zA-Z0-9_-]+\/?$/,
       "Enter correct url!"
     )
     .optional(),
   email: Yup.string().email("Invalid email").optional(),
-  job_title: Yup.string().required("Required"),
+  jobTitle: Yup.string().required("Required"),
   contacted: Yup.string().required("Required"),
-  company_id: Yup.string().required("Required"),
+  companyId: Yup.string().required("Required"),
 });
 
 export const applicationSchema = Yup.object().shape({
@@ -52,7 +72,7 @@ export const applicationSchema = Yup.object().shape({
   stage: Yup.string().required("Required"),
   status: Yup.string().required("Required"),
   submission_date: Yup.string().required("Required"),
-  contacted_employees: Yup.array().required("Required"),
+  contacted_employees: Yup.array().default([]),
   submitted_cv: Yup.number().required("Required"),
 });
 
@@ -64,9 +84,9 @@ export const questionSchema = Yup.object().shape({
 });
 
 export const todoSchema = Yup.object().shape({
-  user_id: Yup.string().required("Required"),
-  application_title: Yup.string().required("Required"),
-  application_link: Yup.string().optional(),
+  userId: Yup.string().required("Required"),
+  applicationTitle: Yup.string().required("Required"),
+  applicationLink: Yup.string().optional(),
   deadline: Yup.date().required("Required"),
   completed: Yup.boolean().optional(),
 });

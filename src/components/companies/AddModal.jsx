@@ -26,7 +26,7 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
     onSubmit: async (values) => {
       setLoading(true);
       await axiosPrivate
-        .post("/Company", values)
+        .post("/companies", values)
         .then(() => {
           setOpenAdd(false);
           setLoading(false);

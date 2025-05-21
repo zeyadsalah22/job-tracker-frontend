@@ -14,30 +14,46 @@ export default function Register() {
   const [error, setError] = useState(null);
   const token = localStorage.getItem("access");
 
-  const { values, errors, handleSubmit, handleChange, touched } = useFormik({
+  const { values, errors, handleSubmit, handleChange, touched, setFieldValue } = useFormik({
     initialValues: {
-      username: "",
-      email: "",
-      password: "",
-      re_password: "",
+      Fname: "",
+      Lname: "",
+      Email: "",
+      Password: "",
+      ConfirmPassword: "",
+      Address: "",
+      BirthDate: null
     },
     validationSchema: registerSchema,
     onSubmit: async (values) => {
       setLoading(true);
-      await axios
-        .post("/users/", values)
-        .then(() => {
-          navigate("/");
-          toast.success("Registration successful. Please login to continue.");
-        })
-        .catch((error) => {
-          setLoading(false);
-          setError(error);
-          toast.error(
-            error.response.data.non_field_errors.map((error) => error) ||
-              "An error occurred. Please try again"
-          );
-        });
+      
+      // Format the date properly if it exists
+      const formattedData = {
+        ...values,
+        BirthDate: values.BirthDate ? new Date(values.BirthDate).toISOString().split('T')[0] : null
+      };
+      
+      try {
+        await axios.post("/auth/register", formattedData);
+        navigate("/");
+        toast.success("Registration successful. Please login to continue.");
+      } catch (error) {
+        console.log(error);
+        setLoading(false);
+        setError(error);
+        
+        // Handle different types of error responses
+        if (error.response?.data) {
+          // If there's a specific error message
+          const errorMessage = 
+            error.response.data.message || 
+            Object.values(error.response.data).flat().join(', ');
+          toast.error(errorMessage || "Registration failed. Please try again.");
+        } else {
+          toast.error("An error occurred. Please try again.");
+        }
+      }
     },
   });
 
@@ -52,49 +68,87 @@ export default function Register() {
   }
 
   return (
-    <div className="h-screen flex flex-col justify-center items-center gap-4">
+    <div className="h-screen flex flex-col justify-center items-center gap-4 overflow-y-auto py-8">
       <img src="/logo.png" alt="logo" className="w-32 h-24" />
       <form onSubmit={handleSubmit} className="flex flex-col w-[500px] gap-5">
         <FormInput
           type="text"
-          name="username"
-          placeHolder="Username"
-          label="Username"
-          value={values?.username}
+          name="Fname"
+          placeHolder="First Name"
+          label="First Name"
+          value={values.Fname}
           onChange={handleChange}
-          error={errors?.username || error?.response?.data?.username}
-          touched={touched.username}
+          error={errors.Fname || error?.response?.data?.Fname}
+          touched={touched.Fname}
+        />
+        <FormInput
+          type="text"
+          name="Lname"
+          placeHolder="Last Name"
+          label="Last Name"
+          value={values.Lname}
+          onChange={handleChange}
+          error={errors.Lname || error?.response?.data?.Lname}
+          touched={touched.Lname}
         />
         <FormInput
           type="email"
-          name="email"
+          name="Email"
           placeHolder="Email"
           label="Email"
-          value={values?.email}
+          value={values.Email}
           onChange={handleChange}
-          error={errors?.email || error?.response?.data?.email}
-          touched={touched.email}
+          error={errors.Email || error?.response?.data?.Email}
+          touched={touched.Email}
         />
         <FormInput
           type="password"
-          name="password"
+          name="Password"
           placeHolder="Password"
           label="Password"
-          value={values?.password}
+          value={values.Password}
           onChange={handleChange}
-          error={errors?.password || error?.response?.data?.password}
-          touched={touched.password}
+          error={errors.Password || error?.response?.data?.Password}
+          touched={touched.Password}
         />
         <FormInput
           type="password"
-          name="re_password"
-          placeHolder="Confirm password"
+          name="ConfirmPassword"
+          placeHolder="Confirm Password"
           label="Confirm Password"
-          value={values?.re_password}
+          value={values.ConfirmPassword}
           onChange={handleChange}
-          error={errors.re_password}
-          touched={touched.re_password}
+          error={errors.ConfirmPassword || error?.response?.data?.ConfirmPassword}
+          touched={touched.ConfirmPassword}
         />
+        <FormInput
+          type="text"
+          name="Address"
+          placeHolder="Address (Optional)"
+          label="Address"
+          value={values.Address}
+          onChange={handleChange}
+          error={errors.Address || error?.response?.data?.Address}
+          touched={touched.Address}
+        />
+        <div className="flex flex-col gap-1">
+          <label htmlFor="BirthDate" className="text-sm font-medium">
+            Birth Date (Optional)
+          </label>
+          <input
+            type="date"
+            id="BirthDate"
+            name="BirthDate"
+            value={values.BirthDate || ""}
+            onChange={handleChange}
+            className="border rounded-md p-2 outline-none focus:border-primary"
+          />
+          {(errors.BirthDate || error?.response?.data?.BirthDate) && touched.BirthDate && (
+            <p className="text-red-500 text-xs mt-1">
+              {errors.BirthDate || error?.response?.data?.BirthDate}
+            </p>
+          )}
+        </div>
 
         {loading ? (
           <button

@@ -5,41 +5,39 @@ import { toast } from "react-toastify";
 import FormInput from "./FormInput";
 import ReactLoading from "react-loading";
 import { todoSchema } from "../schemas/Schemas";
-import useUserStore from "../store/user.store";
 import { useAxiosPrivate } from "../utils/axios";
 
-export default function AddTodoModal({ refetch, openAdd, setOpenAdd }) {
+export default function EditTodoModal({ refetch, openEdit, setOpenEdit, todoItem }) {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
-  const user = useUserStore((state) => state.user);
   const axiosPrivate = useAxiosPrivate();
 
   const initialValues = {
-    userId: user?.userId || "",
-    applicationTitle: "",
-    applicationLink: "",
-    deadline: "",
-    completed: false,
+    userId: todoItem?.userId || "",
+    applicationTitle: todoItem?.applicationTitle || "",
+    applicationLink: todoItem?.applicationLink || "",
+    deadline: todoItem?.deadline ? new Date(todoItem.deadline).toISOString().split('T')[0] : "",
+    completed: todoItem?.completed || false,
   };
 
   const { values, errors, handleSubmit, handleChange, touched, setFieldValue, resetForm } =
     useFormik({
       initialValues,
       validationSchema: todoSchema,
+      enableReinitialize: true,
       onSubmit: async (values) => {
         setLoading(true);
-        console.log("Submitting todo:", values);
+        console.log("Updating todo:", values);
         
         try {
-          const response = await axiosPrivate.post("/todos", values);
-          console.log("Todo created successfully:", response.data);
-          setOpenAdd(false);
+          const response = await axiosPrivate.put(`/todos/${todoItem.todoId}`, values);
+          console.log("Todo updated successfully:", response.data);
+          setOpenEdit(false);
           setLoading(false);
-          toast.success("Task added successfully");
-          resetForm();
+          toast.success("Task updated successfully");
           refetch();
         } catch (error) {
-          console.error("Error adding todo:", error);
+          console.error("Error updating todo:", error);
           setLoading(false);
           setError(error);
           
@@ -64,24 +62,10 @@ export default function AddTodoModal({ refetch, openAdd, setOpenAdd }) {
       },
     });
 
-  // Set user ID when user data is available
-  useEffect(() => {
-    if (user?.userId) {
-      setFieldValue("userId", user.userId);
-    }
-  }, [user?.userId, setFieldValue]);
-
-  // Reset form when modal is closed
-  useEffect(() => {
-    if (!openAdd) {
-      resetForm();
-    }
-  }, [openAdd, resetForm]);
-
   return (
-    <Modal open={openAdd} setOpen={setOpenAdd} width="600px">
+    <Modal open={openEdit} setOpen={setOpenEdit} width="600px">
       <div className="flex flex-col gap-4">
-        <h1 className="font-semibold text-lg">Add Task</h1>
+        <h1 className="font-semibold text-lg">Edit Task</h1>
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
           <FormInput
             name="applicationTitle"
@@ -122,6 +106,20 @@ export default function AddTodoModal({ refetch, openAdd, setOpenAdd }) {
             touched={touched.deadline}
             required
           />
+          
+          <div className="flex items-center gap-2 mb-2">
+            <input
+              type="checkbox"
+              id="completed"
+              name="completed"
+              checked={values.completed}
+              onChange={() => setFieldValue("completed", !values.completed)}
+              className="cursor-pointer h-4 w-4"
+            />
+            <label htmlFor="completed" className="text-sm cursor-pointer">
+              Mark as completed
+            </label>
+          </div>
 
           {loading ? (
             <button
@@ -140,11 +138,11 @@ export default function AddTodoModal({ refetch, openAdd, setOpenAdd }) {
               type="submit"
               className="rounded bg-primary px-8 py-2 text-white transition hover:bg-primary/80 h-10"
             >
-              Submit
+              Update
             </button>
           )}
         </form>
       </div>
     </Modal>
   );
-}
+} 

@@ -22,29 +22,18 @@ export default function ViewModal() {
   const axiosPrivate = useAxiosPrivate();
 
   const fetchApplication = async () => {
-    return {
-      id: 1,
-      job_title: "Software Engineer",
-      job_type: "Full-time",
-      stage: "Technical Interview",
-      status: "PENDING",
-      submission_date: "2024-03-15",
-      ats_score: "85",
-      description: "Looking for a skilled software engineer with experience in React and Node.js",
-      submitted_cv: { cv: "https://example.com/cv.pdf" },
-      link: "https://careers.google.com/jobs/123",
-      company: {
-        name: "Google",
-        location: "Mountain View, CA",
-        careers_link: "https://careers.google.com",
-        linkedin_link: "https://linkedin.com/company/google"
-      },
-      contacted_employees: [1, 2]
-    };
+    try {
+      const response = await axiosPrivate.get(`/applications/${id}`);
+      console.log("Application data:", response.data);
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching application:", error);
+      throw error;
+    }
   };
 
   const { data: application, isLoading } = useQuery(
-    ["application", { id }],
+    ["application", id],
     fetchApplication,
     {
       enabled: !!id,
@@ -52,34 +41,33 @@ export default function ViewModal() {
   );
 
   const fetchEmployees = async () => {
-    return {
-      results: [
-        {
-          id: 1,
-          name: "John Doe",
-          linkedin_link: "https://linkedin.com/in/johndoe",
-          email: "john.doe@google.com",
-          job_title: "Senior Software Engineer"
-        },
-        {
-          id: 2,
-          name: "Jane Smith",
-          linkedin_link: "https://linkedin.com/in/janesmith",
-          email: "jane.smith@google.com",
-          job_title: "Technical Recruiter"
-        }
-      ]
-    };
+    if (!application?.companyId) return { items: [] };
+    
+    try {
+      const params = { CompanyId: application.companyId };
+      const response = await axiosPrivate.get('/employees', { params });
+      console.log("Employees data:", response.data);
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching employees:", error);
+      return { items: [] };
+    }
   };
 
   const { data: employees, isLoading: employeesLoading } = useQuery(
-    ["employees"],
-    fetchEmployees
+    ["employees", application?.companyId],
+    fetchEmployees,
+    {
+      enabled: !!application?.companyId,
+    }
   );
 
-  const employeesWithGivenIds = employees?.results?.filter((employee) =>
-    application?.contacted_employees?.includes(employee.id)
-  );
+  // Filter employees if contactedEmployees array exists
+  const contactedEmployeesList = employees?.items?.filter(
+    (employee) => application?.contactedEmployees?.some(
+      (contactedEmp) => contactedEmp.employeeId === employee.employeeId
+    )
+  ) || [];
 
   const table_head = [
     {
@@ -88,7 +76,7 @@ export default function ViewModal() {
     },
     {
       name: "Linkedin Link",
-      key: "linkedin_link",
+      key: "linkedinLink",
     },
     {
       name: "Email",
@@ -96,7 +84,7 @@ export default function ViewModal() {
     },
     {
       name: "Job Title",
-      key: "job_title",
+      key: "jobTitle",
     },
   ];
 
@@ -124,63 +112,63 @@ export default function ViewModal() {
                       <NotebookPen size={40} />
                     </div>
                     <div className="flex flex-col gap-2">
-                      {application.job_title === "" ? (
+                      {!application?.jobTitle ? (
                         "No provided Information."
                       ) : (
                         <div className="gap-1 flex">
                           <span className="text-gray-600">Job title:</span>
-                          {application.job_title}
+                          {application.jobTitle}
                         </div>
                       )}
 
-                      {application.job_type === "" ? (
+                      {!application?.jobType ? (
                         "No provided Information."
                       ) : (
                         <div className="gap-1 flex">
                           <span className="text-gray-600">Job type:</span>
-                          {application.job_type.toLowerCase()}
+                          {application.jobType}
                         </div>
                       )}
 
-                      {application.stage === "" ? (
+                      {!application?.stage ? (
                         "No provided Information."
                       ) : (
                         <div className="gap-1 flex">
                           <span className="text-gray-600">Stage:</span>
-                          {application.stage.toLowerCase()}
+                          {application.stage}
                         </div>
                       )}
 
-                      {application.status === "" ? (
+                      {!application?.status ? (
                         "No provided Information."
                       ) : (
                         <div className="gap-1 flex">
                           <span className="text-gray-600">Status:</span>
-                          {application.status.toLowerCase()}
+                          {application.status}
                         </div>
                       )}
 
-                      {application.submission_date === "" ? (
+                      {!application?.submissionDate ? (
                         "No provided Information."
                       ) : (
                         <div className="gap-1 flex">
                           <span className="text-gray-600">
                             Submission date:
                           </span>
-                          {application.submission_date}
+                          {application.submissionDate}
                         </div>
                       )}
 
-                      {application.ats_score === "" ? (
+                      {application?.atsScore === undefined ? (
                         "No provided Information."
                       ) : (
                         <div className="gap-1 flex">
                           <span className="text-gray-600">ATS score:</span>
-                          {application.ats_score}
+                          {application.atsScore}
                         </div>
                       )}
 
-                      {application.description === "" ? (
+                      {!application?.description ? (
                         "No provided Information."
                       ) : (
                         <div className="gap-1 flex">
@@ -189,32 +177,26 @@ export default function ViewModal() {
                         </div>
                       )}
                       <div className="flex gap-1">
-                        {application.submitted_cv === "" ? (
+                        {!application?.submittedCvId ? (
                           "No provided Information."
                         ) : (
                           <div className="flex gap-1">
-                            <span className="text-gray-600">Submitted cv:</span>
-
-                            <a
-                              className="text-primary hover:text-blue-800 transition-all flex items-center gap-1"
-                              href={application.submitted_cv.cv}
-                              target="_blank"
-                            >
-                              {application.submitted_cv.cv.split("/").pop()}
-                            </a>
+                            <span className="text-gray-600">Submitted CV ID:</span>
+                            <span>{application.submittedCvId}</span>
                           </div>
                         )}
                       </div>
                     </div>
                   </div>
                   <p>
-                    {application.link === "" ? (
+                    {!application?.link ? (
                       "No provided Information."
                     ) : (
                       <a
                         className="text-primary hover:text-blue-800 transition-all flex items-center gap-1"
                         href={application.link}
                         target="_blank"
+                        rel="noopener noreferrer"
                       >
                         <SquareArrowOutUpRight size={20} />
                       </a>
@@ -228,7 +210,7 @@ export default function ViewModal() {
                       <Building2 size={40} />
                     </div>
                     <div className="flex flex-col gap-2">
-                      {application.company.name === "" ? (
+                      {!application?.company?.name ? (
                         "No provided Information."
                       ) : (
                         <div className="gap-1 flex">
@@ -236,7 +218,7 @@ export default function ViewModal() {
                           {application.company.name}
                         </div>
                       )}
-                      {application.company.location === "" ? (
+                      {!application?.company?.location ? (
                         "No provided Information."
                       ) : (
                         <div className="gap-1 flex">
@@ -248,26 +230,28 @@ export default function ViewModal() {
                   </div>
                   <div className="flex gap-2">
                     <p>
-                      {application.company.careers_link === "" ? (
+                      {!application?.company?.careersLink ? (
                         "No provided Information."
                       ) : (
                         <a
                           className="text-primary hover:text-blue-800 transition-all flex items-center gap-1"
-                          href={application.company.careers_link}
+                          href={application.company.careersLink}
                           target="_blank"
+                          rel="noopener noreferrer"
                         >
                           <SquareArrowOutUpRight size={20} />
                         </a>
                       )}
                     </p>
                     <p>
-                      {application.company.linkedin_link === "" ? (
+                      {!application?.company?.linkedinLink ? (
                         "No provided Information."
                       ) : (
                         <a
                           className="text-primary hover:text-blue-800 transition-all flex items-center gap-1"
-                          href={application.company.linkedin_link}
+                          href={application.company.linkedinLink}
                           target="_blank"
+                          rel="noopener noreferrer"
                         >
                           <Linkedin size={20} />
                         </a>
@@ -282,18 +266,16 @@ export default function ViewModal() {
                 </p>
                 {employeesLoading ? (
                   <p>Loading...</p>
+                ) : contactedEmployeesList.length === 0 ? (
+                  <p>No contacted employees found</p>
                 ) : (
                   <Table
                     table_head={table_head}
-                    table_rows={employeesWithGivenIds?.map((employee) => ({
-                      name: employee.name,
-                      linkedin_link: employee.linkedin_link
-                        ? employee.linkedin_link
-                        : "No provided Information.",
-                      email: employee.email
-                        ? employee.email
-                        : "No provided Information.",
-                      job_title: employee.job_title,
+                    table_rows={contactedEmployeesList.map((employee) => ({
+                      name: employee.name || "No provided Information.",
+                      linkedinLink: employee.linkedinLink || "No provided Information.",
+                      email: employee.email || "No provided Information.",
+                      jobTitle: employee.jobTitle || "No provided Information.",
                     }))}
                   />
                 )}

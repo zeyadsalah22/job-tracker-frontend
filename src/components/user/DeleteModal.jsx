@@ -7,34 +7,72 @@ import { useNavigate } from "react-router-dom";
 import FormInput from "../FormInput";
 import * as Yup from "yup";
 import { useAxiosPrivate } from "../../utils/axios";
+import useUserStore from "../../store/user.store";
 
 export default function DeleteModal({ openDelete, setOpenDelete }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
   const axiosPrivate = useAxiosPrivate();
+  const user = useUserStore((state) => state.user);
+  const userLogout = useUserStore((state) => state.logout);
 
   const { values, errors, handleSubmit, handleChange, touched } = useFormik({
     initialValues: {
-      current_password: "",
+      password: "",
     },
     validationSchema: Yup.object({
-      current_password: Yup.string().required("Password is required"),
+      password: Yup.string().required("Password is required"),
     }),
     onSubmit: async (values) => {
       setLoading(true);
 
+      if (!user?.userId) {
+        setLoading(false);
+        toast.error("User information not available");
+        return;
+      }
+
       try {
-        await axiosPrivate.delete(`/users/me/`);
+        console.log("Attempting to delete user with ID:", user.userId);
+        
+        // Send the password in the request body for verification
+        await axiosPrivate.delete(`/users/${user.userId}`, {
+          data: { password: values.password }
+        });
+        
         setOpenDelete(false);
         setLoading(false);
         toast.success("User deleted successfully");
+        
+        // Clear user data and redirect to login
+        localStorage.removeItem("access");
+        userLogout();
         navigate("/");
-        localStorage.removeItem("token");
       } catch (error) {
+        console.error("Error deleting user:", error);
         setLoading(false);
         setError(error);
-        toast.error(error.response.data.current_password[0]);
+        
+        // Improved error handling
+        let errorMessage = "An error occurred. Please try again";
+        
+        if (error.response?.data) {
+          if (typeof error.response.data === 'string') {
+            errorMessage = error.response.data;
+          } else if (error.response.data.message) {
+            errorMessage = error.response.data.message;
+          } else if (typeof error.response.data === 'object') {
+            // Try to extract error from various possible response formats
+            if (error.response.data.password) {
+              errorMessage = error.response.data.password;
+            } else {
+              errorMessage = Object.values(error.response.data).flat().join(', ');
+            }
+          }
+        }
+        
+        toast.error(errorMessage);
       }
     },
   });
@@ -43,18 +81,18 @@ export default function DeleteModal({ openDelete, setOpenDelete }) {
     <Modal open={openDelete} setOpen={setOpenDelete} width="600px">
       <div className="flex flex-col gap-4">
         <h1 className="font-semibold text-lg">Delete User</h1>
+        <p className="text-gray-600">
+          This action cannot be undone. Please enter your password to confirm.
+        </p>
         <div className="flex flex-col gap-3">
           <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
             <FormInput
-              name="current_password"
+              name="password"
               type="password"
-              placeHolder="Enter your current password"
-              value={values.current_password}
-              error={
-                errors.current_password ||
-                error?.response?.data?.current_password
-              }
-              touched={touched.current_password}
+              placeHolder="Enter your password"
+              value={values.password}
+              error={errors.password || error?.response?.data?.password}
+              touched={touched.password}
               onChange={handleChange}
             />
             <div className="flex gap-2 justify-end">

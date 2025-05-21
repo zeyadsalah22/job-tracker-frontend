@@ -30,44 +30,56 @@ export default function Employees() {
   };
 
   const fetchEmployees = async () => {
-    return {
-      results: [
-        {
-          id: 1,
-          name: "John Doe",
-          job_title: "Senior Software Engineer",
-          company: { name: "Google" },
-          email: "john.doe@google.com",
-          linkedin_link: "https://linkedin.com/in/johndoe"
-        },
-        {
-          id: 2,
-          name: "Jane Smith",
-          job_title: "Frontend Developer",
-          company: { name: "Microsoft" },
-          email: "jane.smith@microsoft.com",
-          linkedin_link: "https://linkedin.com/in/janesmith"
-        },
-        {
-          id: 3,
-          name: "Mike Johnson",
-          job_title: "Full Stack Developer",
-          company: { name: "Amazon" },
-          email: "mike.johnson@amazon.com",
-          linkedin_link: "https://linkedin.com/in/mikejohnson"
-        }
-      ],
-      next: null,
-      previous: null,
-      total_pages: 1
-    };
+    try {
+      // Build query parameters
+      const params = {
+        PageNumber: page,
+        PageSize: 10, // Default page size
+        SearchTerm: search || undefined,
+      };
+      
+      // Add sorting if specified
+      if (order) {
+        // Check if order starts with '-' to determine sort direction
+        const isDescending = order.startsWith('-');
+        params.SortBy = isDescending ? order.substring(1) : order;
+        params.SortDescending = isDescending;
+      }
+      
+      console.log("Employees request params:", params);
+      const response = await axiosPrivate.get('/employees', { params });
+      console.log("Employees response:", response.data);
+      
+      return {
+        results: response.data.items,
+        next: response.data.hasNext ? page + 1 : null,
+        previous: response.data.hasPrevious ? page - 1 : null,
+        total_pages: response.data.totalPages
+      };
+    } catch (error) {
+      console.error("Error fetching employees:", error);
+      return {
+        results: [],
+        next: null,
+        previous: null,
+        total_pages: 0
+      };
+    }
   };
 
   const {
     data: employees,
     isLoading,
     refetch,
-  } = useQuery(["employees", { search, page, order }], fetchEmployees);
+    error,
+  } = useQuery(
+    ["employees", page, search, order],
+    fetchEmployees,
+    {
+      keepPreviousData: true, // Keep previous data while fetching new data
+      refetchOnWindowFocus: false // Don't refetch when window regains focus
+    }
+  );
 
   const table_head = [
     {
@@ -76,24 +88,31 @@ export default function Employees() {
     },
     {
       name: "Job Title",
-      key: "job_title",
+      key: "jobTitle",
     },
     {
-      name: "Company Name",
-      key: "company_name",
+      name: "Company",
+      key: "companyName",
+    },
+    {
+      name: "Email",
+      key: "email",
     },
   ];
 
-  const table_rows = employees?.results?.map(
-    ({ id, name, job_title, company }) => {
-      return {
-        id,
-        name,
-        job_title,
-        company_name: company?.name,
-      };
-    }
-  );
+  const table_rows = employees?.results?.map((employee) => {
+    return {
+      id: employee.employeeId,
+      name: employee.name,
+      jobTitle: employee.jobTitle,
+      companyName: employee.companyName,
+      email: employee.email,
+    };
+  });
+
+  if (error) {
+    return <div>Something went wrong</div>;
+  }
 
   return (
     <Layout>
@@ -122,19 +141,19 @@ export default function Employees() {
               handleOpenEdit={handleOpenEdit}
               handleOpenView={"employees"}
               setOrder={setOrder}
-              selectedOrders={["name"]}
+              selectedOrders={["name", "jobTitle", "companyName", "email"]}
             />
           </div>
         </div>
 
-        {employees?.results?.length !== 0 && (
+        {employees?.results?.length > 0 && (
           <div className="self-center">
             <Pagination
-              nextPage={employees?.next}
-              prevPage={employees?.previous}
               page={page}
               setPage={setPage}
               totalPages={employees?.total_pages}
+              nextPage={employees?.next !== null}
+              prevPage={employees?.previous !== null}
             />
           </div>
         )}

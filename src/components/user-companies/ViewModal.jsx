@@ -36,15 +36,14 @@ export default function ViewModal() {
   };
 
   const fetchCompany = async () => {
-    const companyData = {
-      id: 1,
-      name: "Google",
-      location: "Mountain View, CA",
-      description: "A multinational technology company specializing in Internet-related services and products.",
-      careers_link: "https://careers.google.com",
-      linkedin_link: "https://linkedin.com/company/google"
-    };
-    return companyData;
+    try {
+      const response = await axiosPrivate.get(`/user-companies/${id}`);
+      console.log("Company data:", response.data);
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching company:", error);
+      throw error;
+    }
   };
 
   const fetchEmployees = async () => {
@@ -102,7 +101,7 @@ export default function ViewModal() {
         <div className="flex flex-col gap-4">
           <div className="flex items-center gap-2 pb-4 border-b-2">
             <Link
-              to={`/companies`}
+              to={`/user-companies`}
               className="py-2 px-4 hover:bg-[#f1f1f1] transition-all w-fit rounded-lg flex items-center gap-2"
             >
               <ArrowLeft size={19} />
@@ -119,24 +118,33 @@ export default function ViewModal() {
                     <Building2 size={40} />
                   </div>
                   <div className="flex flex-col gap-2">
-                    {company.name === "" ? (
-                      "No provided Information."
+                    {!company.companyName ? (
+                      <div className="gap-1 flex">
+                        <span className="text-gray-600">Company:</span>
+                        <span className="text-gray-400">Not specified</span>
+                      </div>
                     ) : (
                       <div className="gap-1 flex">
                         <span className="text-gray-600">Company:</span>
-                        {company.name}
+                        {company.companyName}
                       </div>
                     )}
-                    {company.location === "" ? (
-                      "No provided Information."
+                    {!company.companyLocation ? (
+                      <div className="gap-1 flex">
+                        <span className="text-gray-600">Location:</span>
+                        <span className="text-gray-400">Not specified</span>
+                      </div>
                     ) : (
                       <div className="gap-1 flex">
                         <span className="text-gray-600">Location:</span>
-                        {company.location}
+                        {company.companyLocation}
                       </div>
                     )}
-                    {company.description === "" ? (
-                      "No provided Information."
+                    {!company.description ? (
+                      <div className="gap-1 flex">
+                        <span className="text-gray-600">Description:</span>
+                        <span className="text-gray-400">Not specified</span>
+                      </div>
                     ) : (
                       <div className="gap-1 flex">
                         <span className="text-gray-600">Description:</span>
@@ -147,28 +155,32 @@ export default function ViewModal() {
                 </div>
                 <div className="flex gap-2">
                   <p>
-                    {company.careers_link === "" ? (
-                      "No provided Information."
+                    {!company.companyCareersLink ? (
+                      ""
                     ) : (
                       <a
                         className="text-primary hover:text-blue-800 transition-all flex items-center gap-1"
-                        href={company.careers_link}
+                        href={company.companyCareersLink}
                         target="_blank"
+                        title="Careers Page"
                       >
-                        <SquareArrowOutUpRight size={20} />
+                        <Career size={20} />
+                        <span>Careers</span>
                       </a>
                     )}
                   </p>
                   <p>
-                    {company.linkedin_link === "" ? (
-                      "No provided Information."
+                    {!company.companyLinkedinLink ? (
+                      ""
                     ) : (
                       <a
                         className="text-primary hover:text-blue-800 transition-all flex items-center gap-1"
-                        href={company.linkedin_link}
+                        href={company.companyLinkedinLink}
                         target="_blank"
+                        title="LinkedIn Profile"
                       >
                         <Linkedin size={20} />
+                        <span>LinkedIn</span>
                       </a>
                     )}
                   </p>

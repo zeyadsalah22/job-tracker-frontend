@@ -22,53 +22,87 @@ export default function Profile() {
   const navigate = useNavigate();
   const [changePassword, setChangePassword] = useState(false);
   const axiosPrivate = useAxiosPrivate();
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Fetch user data
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const response = await axiosPrivate.get("/users/me");
+        console.log("User data from API:", response.data);
+        setUser(response.data);
+        setIsLoading(false);
+      } catch (error) {
+        console.error("Failed to fetch user data:", error);
+        toast.error("Failed to load user profile");
+        setIsLoading(false);
+      }
+    };
+
+    fetchUserData();
+  }, [axiosPrivate, setUser]);
 
   const { values, errors, handleSubmit, handleChange, touched, setFieldValue } =
     useFormik({
       initialValues: {
-        username: "",
+        fname: "",
+        lname: "",
         email: "",
-        old_password: "",
-        password: "",
-        re_password: "",
+        address: "",
+        birthDate: ""
       },
       onSubmit: async (values) => {
         setLoading(true);
-        await axiosPrivate
-          .patch("/users/me/", values)
-          .then(() => {
-            setUser(values);
-            toast.success("Profile updated successfully");
-            setLoading(false);
-          })
-          .catch((error) => {
-            setLoading(false);
-            setError(error);
-            toast.error(
-              error.response.data.non_field_errors.map((error) => error) ||
-                "An error occurred. Please try again"
-            );
-          });
+        try {
+          // Use userId instead of id, and ensure it exists
+          if (!user || !user.userId) {
+            throw new Error("User ID not found");
+          }
+          
+          console.log("Updating user with ID:", user.userId);
+          await axiosPrivate.put(`/users/${user.userId}`, values);
+          setUser({...user, ...values});
+          toast.success("Profile updated successfully");
+          setLoading(false);
+        } catch (error) {
+          console.error("Profile update error:", error);
+          setLoading(false);
+          setError(error);
+          const errorMessage = error.response?.data?.message || 
+            Object.values(error.response?.data || {}).flat().join(', ') || 
+            error.message;
+          toast.error(errorMessage || "An error occurred. Please try again");
+        }
       },
     });
 
   useEffect(() => {
     if (user) {
-      setFieldValue("username", user.username);
-      setFieldValue("email", user.email);
+      console.log("Setting form values from user:", user);
+      setFieldValue("fname", user.fname || "");
+      setFieldValue("lname", user.lname || "");
+      setFieldValue("email", user.email || "");
+      setFieldValue("address", user.address || "");
+      setFieldValue("birthDate", user.birthDate ? user.birthDate.split('T')[0] : "");
     }
   }, [user, setFieldValue]);
 
   const handleLogout = async () => {
-    await axiosPrivate.post("/token/logout/", {
-      refresh: localStorage.getItem("refresh"),
-    });
-    userLogout();
     localStorage.removeItem("access");
-    localStorage.removeItem("refresh");
+    userLogout();
     navigate("/");
     toast.success("Logout successful");
   };
+
+  if (isLoading) {
+    return (
+      <Layout>
+        <div className="bg-white rounded-lg h-full flex items-center justify-center">
+          <ReactLoading type="spinningBubbles" color="#7571F9" height={50} width={50} />
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
@@ -91,24 +125,62 @@ export default function Profile() {
             >
               <FormInput
                 type="text"
-                name="username"
-                placeHolder="Username"
-                label="Username"
-                value={values?.username}
+                name="fname"
+                placeHolder="First Name"
+                label="First Name"
+                value={values.fname}
                 onChange={handleChange}
-                error={errors?.username || error?.response?.data?.username}
-                touched={touched.username}
+                error={errors.fname || error?.response?.data?.fname}
+                touched={touched.fname}
+              />
+              <FormInput
+                type="text"
+                name="lname"
+                placeHolder="Last Name"
+                label="Last Name"
+                value={values.lname}
+                onChange={handleChange}
+                error={errors.lname || error?.response?.data?.lname}
+                touched={touched.lname}
               />
               <FormInput
                 type="email"
                 name="email"
                 placeHolder="Email"
                 label="Email"
-                value={values?.email}
+                value={values.email}
                 onChange={handleChange}
-                error={errors?.email || error?.response?.data?.email}
+                error={errors.email || error?.response?.data?.email}
                 touched={touched.email}
               />
+              <FormInput
+                type="text"
+                name="address"
+                placeHolder="Address"
+                label="Address"
+                value={values.address}
+                onChange={handleChange}
+                error={errors.address || error?.response?.data?.address}
+                touched={touched.address}
+              />
+              <div className="flex flex-col gap-1">
+                <label htmlFor="birthDate" className="text-sm font-medium">
+                  Birth Date
+                </label>
+                <input
+                  type="date"
+                  id="birthDate"
+                  name="birthDate"
+                  value={values.birthDate || ""}
+                  onChange={handleChange}
+                  className="border rounded-md p-2 outline-none focus:border-primary"
+                />
+                {(errors.birthDate || error?.response?.data?.birthDate) && touched.birthDate && (
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.birthDate || error?.response?.data?.birthDate}
+                  </p>
+                )}
+              </div>
 
               {loading ? (
                 <button

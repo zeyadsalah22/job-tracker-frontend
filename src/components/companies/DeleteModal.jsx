@@ -17,7 +17,7 @@ export default function DeleteModal({
   const handleDelete = () => {
     setLoading(true);
     axiosPrivate
-      .delete(`/Company/${id}`)
+      .delete(`/companies/${id}`)
       .then(() => {
         setOpenDelete(false);
         setLoading(false);

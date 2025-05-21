@@ -45,7 +45,7 @@ export default function Companies() {
   };
 
   const fetchCompanies = async () => {
-    const response = await axiosPrivate.get('/Company', {
+    const response = await axiosPrivate.get('/companies', {
       params: {
         SearchTerm: search || undefined,
         PageNumber: page,

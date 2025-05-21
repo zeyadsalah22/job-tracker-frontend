@@ -14,23 +14,42 @@ export default function DeleteModal({
   const [error, setError] = useState(null);
   const axiosPrivate = useAxiosPrivate();
 
-  const handleDelete = () => {
-    axiosPrivate
-      .delete(`/applications/${id}`)
-      .then(() => {
-        setOpenDelete(false);
-        setLoading(false);
-        toast.success("Application deleted successfully");
-        refetch();
-      })
-      .catch((error) => {
-        setLoading(false);
-        setError(error);
-        toast.error(
-          error.response.data.name.map((error) => error) ||
-            "An error occurred. Please try again"
-        );
-      });
+  const handleDelete = async () => {
+    try {
+      setLoading(true);
+      console.log(`Deleting application with id: ${id}`);
+      
+      await axiosPrivate.delete(`/applications/${id}`);
+      
+      setOpenDelete(false);
+      setLoading(false);
+      toast.success("Application deleted successfully");
+      refetch();
+    } catch (error) {
+      console.error("Error deleting application:", error);
+      setLoading(false);
+      setError(error);
+      
+      let errorMessage = "An error occurred. Please try again";
+      if (error.response?.data) {
+        // Try to extract error message from different possible formats
+        if (typeof error.response.data === 'string') {
+          errorMessage = error.response.data;
+        } else if (error.response.data.message) {
+          errorMessage = error.response.data.message;
+        } else if (error.response.data.error) {
+          errorMessage = error.response.data.error;
+        } else if (error.response.data.title) {
+          errorMessage = error.response.data.title;
+        } else if (error.response.data.errors) {
+          errorMessage = Object.values(error.response.data.errors).flat().join(", ");
+        } else if (error.response.data.name && Array.isArray(error.response.data.name)) {
+          errorMessage = error.response.data.name.join(", ");
+        }
+      }
+      
+      toast.error(errorMessage);
+    }
   };
 
   return (

@@ -42,46 +42,109 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
       validationSchema: applicationSchema,
       onSubmit: async (values) => {
         setLoading(true);
-        await axiosPrivate
-          .post("/applications", {
-            ...values,
-            submitted_cv: parseInt(values.submitted_cv, 10),
-          })
-          .then(() => {
-            setOpenAdd(false);
-            setLoading(false);
-            toast.success("Application added successfully");
-            refetch();
-          })
-          .catch((error) => {
-            setLoading(false);
-            setError(error);
-            toast.error(
-              error.response?.data?.name?.map((error) => error) ||
-                "An error occurred. Please try again"
-            );
-          });
+        // Transform form values to match backend API format
+        const applicationData = {
+          userId: user?.userId,
+          companyId: parseInt(values.company_id, 10),
+          jobTitle: values.job_title,
+          jobType: values.job_type,
+          description: values.description,
+          link: values.link,
+          submittedCvId: parseInt(values.submitted_cv, 10),
+          atsScore: values.ats_score ? parseInt(values.ats_score, 10) : null,
+          stage: values.stage,
+          status: values.status,
+          submissionDate: values.submission_date,
+          contactedEmployees: values.contacted_employees.map(id => parseInt(id, 10))
+        };
+
+        console.log("Submitting application data:", applicationData);
+        
+        try {
+          const response = await axiosPrivate.post("/applications", applicationData);
+          console.log("Application created successfully:", response.data);
+          setOpenAdd(false);
+          setLoading(false);
+          toast.success("Application added successfully");
+          refetch();
+        } catch (error) {
+          console.error("Error adding application:", error);
+          setLoading(false);
+          setError(error);
+          
+          let errorMessage = "An error occurred. Please try again";
+          if (error.response?.data) {
+            // Try to extract error message from different possible formats
+            if (typeof error.response.data === 'string') {
+              errorMessage = error.response.data;
+            } else if (error.response.data.message) {
+              errorMessage = error.response.data.message;
+            } else if (error.response.data.error) {
+              errorMessage = error.response.data.error;
+            } else if (error.response.data.title) {
+              errorMessage = error.response.data.title;
+            } else if (error.response.data.errors) {
+              errorMessage = Object.values(error.response.data.errors).flat().join(", ");
+            }
+          }
+          
+          toast.error(errorMessage);
+        }
       },
     });
 
   const fetchCompanies = async () => {
-    const { data } = await axiosPrivate.get(
-      `/companies?search=${companySearch}`
-    );
-    return data;
+    try {
+      const params = {
+        SearchTerm: companySearch || undefined,
+        PageSize: 100 // Ensure we get a good number of results
+      };
+      
+      console.log("Fetching user companies with params:", params);
+      const response = await axiosPrivate.get('/user-companies', { params });
+      console.log("User companies response:", response.data);
+      
+      // Map the API response to match what the dropdown expects
+      const items = response.data.items || [];
+      return {
+        results: items.map(company => ({
+          id: company.companyId,
+          name: company.companyName || company.name, // Handle different possible API formats
+          value: company.companyId,
+          location: company.companyLocation || company.location
+        }))
+      };
+    } catch (error) {
+      console.error("Error fetching user companies:", error);
+      return {
+        results: []
+      };
+    }
   };
 
   const {
     data: companies,
     isLoading: companyies_Loading,
     refetch: company_refetch,
-  } = useQuery(["companies", companySearch], fetchCompanies);
+  } = useQuery(["user-companies", companySearch], fetchCompanies);
 
   const fetchEmployees = async () => {
-    const { data } = await axiosPrivate.get(
-      `/employees?company__id=${values.company_id}&search=${employeeSearch}`
-    );
-    return data;
+    try {
+      // Only fetch employees if company is selected
+      if (!values.company_id) return { items: [] };
+      
+      const params = { 
+        CompanyId: values.company_id,
+        SearchTerm: employeeSearch || undefined 
+      };
+      
+      const response = await axiosPrivate.get('/employees', { params });
+      console.log("Fetched employees:", response.data);
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching employees:", error);
+      return { items: [] };
+    }
   };
 
   const {
@@ -97,26 +160,30 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
   );
 
   const fetchCvs = async () => {
-    const { data } = await axiosPrivate.get(`/cvs`);
-    return data.results;
+    try {
+      const response = await axiosPrivate.get(`/cvs`);
+      console.log("Fetched CVs for modal:", response.data);
+      return response.data || [];
+    } catch (error) {
+      console.error("Error fetching CVs:", error);
+      return [];
+    }
   };
 
   const { data: cvs, isLoading: cvs_loading } = useQuery(["cvs"], fetchCvs);
 
   const stage = [
-    { name: "Applied", value: "APPLIED" },
-    { name: "Phone Screen", value: "PHONE_SCREEN" },
-    { name: "Assessment", value: "ASSESSMENT" },
-    { name: "Interview", value: "INTERVIEW" },
-    { name: "Offer", value: "OFFER" },
+    { name: "Applied", value: "Applied" },
+    { name: "Phone Screen", value: "Phonescreen" },
+    { name: "Assessment", value: "Assessment" },
+    { name: "Interview", value: "Interview" },
+    { name: "Offer", value: "Offer" },
   ];
 
   const status = [
-    { name: "Pending", value: "PENDING" },
-    { name: "Assessment", value: "ASSESSMENT" },
-    { name: "Interview", value: "INTERVIEW" },
-    { name: "Rejected", value: "REJECTED" },
-    { name: "Accepted", value: "ACCEPTED" },
+    { name: "Pending", value: "Pending" },
+    { name: "Rejected", value: "Rejected" },
+    { name: "Accepted", value: "Accepted" },
   ];
 
   useEffect(() => {
@@ -175,6 +242,7 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
                 name: "Add Company",
                 value: "add-company",
               }}
+              id={values.company_id}
               options={companies?.results}
               query={companySearch}
               setQuery={setCompanySearch}
@@ -250,9 +318,9 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
                   Loading...
                 </option>
               ) : (
-                cvs.map((cv) => (
-                  <option key={cv.id} value={cv.id}>
-                    {cv.cv.split("/").pop()}
+                cvs && cvs.map((cv) => (
+                  <option key={cv.resumeId} value={cv.resumeId}>
+                    Resume {cv.resumeId} ({new Date(cv.createdAt).toLocaleDateString()})
                   </option>
                 ))
               )}
@@ -293,7 +361,7 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
                 <option value="" disabled>
                   Select Stage
                 </option>
-                {stage.map((stage) => (
+                {stage && stage.map((stage) => (
                   <option key={stage.value} value={stage.value}>
                     {stage.name}
                   </option>
@@ -320,7 +388,7 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
                 <option value="" disabled className="text-gray-500">
                   Select Status
                 </option>
-                {status.map((status) => (
+                {status && status.map((status) => (
                   <option key={status.value} value={status.value}>
                     {status.name}
                   </option>
@@ -343,7 +411,7 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
                   name: "Add Employee",
                   value: "add-employee",
                 }}
-                options={employees?.results}
+                options={employees?.items}
                 query={employeeSearch}
                 setQuery={setEmployeeSearch}
                 setValue={setEmployeeId}
@@ -354,7 +422,7 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
               {Array.isArray(values?.contacted_employees) &&
                 values?.contacted_employees.length !== 0 &&
                 values.contacted_employees.map((employeeId) => {
-                  const employee = employees?.results?.find(
+                  const employee = employees?.items?.find(
                     (emp) => emp.id === Number(employeeId)
                   );
                   return (

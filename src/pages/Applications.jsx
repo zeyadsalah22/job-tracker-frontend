@@ -30,37 +30,41 @@ export default function Applications() {
   };
 
   const fetchApplications = async () => {
-    return {
-      results: [
-        {
-          id: 1,
-          company: { name: "Google" },
-          job_title: "Software Engineer",
-          submission_date: "2024-03-15",
-          status: "PENDING",
-          notes: "Applied through company website"
-        },
-        {
-          id: 2,
-          company: { name: "Microsoft" },
-          job_title: "Frontend Developer",
-          submission_date: "2024-03-20",
-          status: "INTERVIEW",
-          notes: "Technical interview scheduled"
-        },
-        {
-          id: 3,
-          company: { name: "Amazon" },
-          job_title: "Full Stack Developer",
-          submission_date: "2024-03-25",
-          status: "ACCEPTED",
-          notes: "Received offer letter"
-        }
-      ],
-      next: null,
-      previous: null,
-      total_pages: 1
-    };
+    try {
+      // Build query parameters
+      const params = {
+        PageNumber: page,
+        PageSize: 10, // Default page size
+        SearchTerm: search || undefined,
+      };
+      
+      // Add sorting if specified
+      if (order) {
+        // Check if order starts with '-' to determine sort direction
+        const isDescending = order.startsWith('-');
+        params.SortBy = isDescending ? order.substring(1) : order;
+        params.SortDescending = isDescending;
+      }
+      
+      console.log("Applications request params:", params);
+      const response = await axiosPrivate.get('/applications', { params });
+      console.log("Applications response:", response.data);
+      
+      return {
+        results: response.data.items,
+        next: response.data.hasNext ? page + 1 : null,
+        previous: response.data.hasPrevious ? page - 1 : null,
+        total_pages: response.data.totalPages
+      };
+    } catch (error) {
+      console.error("Error fetching applications:", error);
+      return {
+        results: [],
+        next: null,
+        previous: null,
+        total_pages: 0
+      };
+    }
   };
 
   const {
@@ -68,28 +72,37 @@ export default function Applications() {
     isLoading,
     refetch,
     error,
-  } = useQuery(["applications", { search, page, order }], fetchApplications);
+  } = useQuery(
+    ["applications", page, search, order],
+    fetchApplications,
+    {
+      keepPreviousData: true, // Keep previous data while fetching new data
+      refetchOnWindowFocus: false // Don't refetch when window regains focus
+    }
+  );
 
   const statusEnum = [
-    { name: "Pending", value: "PENDING" },
-    { name: "Assessment", value: "ASSESSMENT" },
-    { name: "Interview", value: "INTERVIEW" },
-    { name: "Rejected", value: "REJECTED" },
-    { name: "Accepted", value: "ACCEPTED" },
+    { name: "Pending", value: "Pending" },
+    { name: "Assessment", value: "Assessment" },
+    { name: "Phone Screening", value: "Phonescreen" },
+    { name: "Interview", value: "Interview" },
+    { name: "Rejected", value: "Rejected" },
+    { name: "Accepted", value: "Accepted" },
+    { name: "Offer", value: "Offer" },
   ];
 
   const table_head = [
     {
       name: "Company Name",
-      key: "name",
+      key: "companyName",
     },
     {
       name: "Job Title",
-      key: "job_title",
+      key: "jobTitle",
     },
     {
       name: "Submission Date",
-      key: "submission_date",
+      key: "submissionDate",
     },
     {
       name: "Status",
@@ -97,17 +110,18 @@ export default function Applications() {
     },
   ];
 
-  const table_rows = applications?.results?.map(
-    ({ id, company: { name }, job_title, submission_date, status }) => ({
-      id,
-      name,
-      job_title,
-      submission_date,
-      status: statusEnum
-        .filter((item) => item.value === status)
-        .map((item) => item.name),
-    })
-  );
+  const table_rows = applications?.results?.map((application) => {
+    // Find the matching status name
+    const statusName = statusEnum.find(item => item.value === application.stage)?.name || application.stage;
+    
+    return {
+      id: application.applicationId,
+      companyName: application.companyName,
+      jobTitle: application.jobTitle,
+      submissionDate: application.submissionDate,
+      status: statusName,
+    };
+  });
 
   if (error) {
     return <div>Something went wrong</div>;
@@ -140,19 +154,19 @@ export default function Applications() {
               handleOpenDelete={handleOpenDelete}
               handleOpenEdit={handleOpenEdit}
               handleOpenView={"applications"}
-              selectedOrders={["submission_date"]}
+              selectedOrders={["jobTitle", "companyName", "submissionDate", "status"]}
             />
           </div>
         </div>
 
-        {applications?.results?.length !== 0 && (
+        {applications?.results?.length > 0 && (
           <div className="self-center">
             <Pagination
               page={page}
               setPage={setPage}
               totalPages={applications?.total_pages}
-              nextPage={applications?.next}
-              prevPage={applications?.previous}
+              nextPage={applications?.next !== null}
+              prevPage={applications?.previous !== null}
             />
           </div>
         )}
