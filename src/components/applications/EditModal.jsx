@@ -1,6 +1,6 @@
 import Modal from "../Modal";
 import { useFormik } from "formik";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { toast } from "react-toastify";
 import { applicationSchema } from "../../schemas/Schemas";
 import FormInput from "../FormInput";
@@ -8,19 +8,31 @@ import ReactLoading from "react-loading";
 import { useQuery } from "react-query";
 import useUserStore from "../../store/user.store";
 import AddModalEmployees from "../employees/AddModal";
-import AddModalCompanies from "../user-companies/AddModal";
 import { useAxiosPrivate } from "../../utils/axios";
-import Dropdown from "../Dropdown";
 
 export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const user = useUserStore((state) => state.user);
   const [addEmployee, setAddEmployee] = useState(false);
-  const [addCompany, setAddCompany] = useState(false);
-  const [companySearch, setCompanySearch] = useState("");
   const [employeeSearch, setEmployeeSearch] = useState("");
+  const [employeeDropdownOpen, setEmployeeDropdownOpen] = useState(false);
   const axiosPrivate = useAxiosPrivate();
+  const employeeDropdownRef = useRef(null);
+
+  // Handle click outside to close employee dropdown
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (employeeDropdownRef.current && !employeeDropdownRef.current.contains(event.target)) {
+        setEmployeeDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   const fetchApplication = async () => {
     try {
@@ -62,9 +74,17 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
       validationSchema: applicationSchema,
       onSubmit: async (values) => {
         setLoading(true);
+        setError(null);
+        
+        // Validate required fields
+        if (!values.submitted_cv) {
+          toast.error("Please select a CV");
+          setLoading(false);
+          return;
+        }
+        
         // Transform form values to match backend API format
         const applicationData = {
-          companyId: parseInt(values.company_id, 10),
           jobTitle: values.job_title,
           jobType: values.job_type, 
           description: values.description,
@@ -73,7 +93,8 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
           atsScore: values.ats_score ? parseInt(values.ats_score, 10) : null,
           stage: values.stage,
           status: values.status,
-          submissionDate: values.submission_date
+          submissionDate: values.submission_date,
+          contactedEmployeeIds: values.contacted_employees.map(id => parseInt(id, 10))
         };
 
         console.log("Updating application data:", applicationData);
@@ -110,57 +131,59 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
       },
     });
 
-  const fetchCompanies = async () => {
-    try {
-      const params = {
-        SearchTerm: companySearch || undefined,
-        PageSize: 100 // Ensure we get a good number of results
-      };
-      
-      console.log("Fetching user companies with params:", params);
-      const response = await axiosPrivate.get('/user-companies', { params });
-      console.log("User companies response:", response.data);
-      
-      // Map the API response to match what the dropdown expects
-      const items = response.data.items || [];
-      return {
-        results: items.map(company => ({
-          id: company.companyId,
-          name: company.companyName || company.name, // Handle different possible API formats
-          value: company.companyId,
-          location: company.companyLocation || company.location
-        }))
-      };
-    } catch (error) {
-      console.error("Error fetching user companies:", error);
-      return {
-        results: []
-      };
-    }
-  };
-
-  const {
-    data: companies,
-    isLoading: companyies_Loading,
-    refetch: company_refetch,
-  } = useQuery(["user-companies", companySearch], fetchCompanies);
-
   const fetchEmployees = async () => {
     try {
-      // Only fetch employees if company is selected
-      if (!values.company_id) return { items: [] };
+      // Only fetch employees if application is loaded and has a company
+      if (!application?.companyId) return [];
       
       const params = { 
-        CompanyId: values.company_id,
-        SearchTerm: employeeSearch || undefined 
+        CompanyId: application.companyId,
+        Search: employeeSearch || undefined,
+        PageSize: 100
       };
       
       const response = await axiosPrivate.get('/employees', { params });
-      console.log("Fetched employees:", response.data);
-      return response.data;
+      console.log("Fetched employees response:", response.data);
+      console.log("Response data type:", typeof response.data);
+      console.log("Is array:", Array.isArray(response.data));
+      
+      // Handle different possible response structures
+      let employeesArray = [];
+      
+      if (Array.isArray(response.data)) {
+        // Direct array response
+        employeesArray = response.data;
+      } else if (response.data && Array.isArray(response.data.items)) {
+        // Response with items array
+        employeesArray = response.data.items;
+      } else if (response.data && Array.isArray(response.data.data)) {
+        // Response with data array
+        employeesArray = response.data.data;
+      } else if (response.data && response.data.employees && Array.isArray(response.data.employees)) {
+        // Response with employees array
+        employeesArray = response.data.employees;
+      } else {
+        console.log("Unexpected response structure:", response.data);
+        return [];
+      }
+      
+      console.log("Employees array:", employeesArray);
+      
+      return employeesArray.map(employee => ({
+        id: employee.employeeId || employee.id,
+        name: employee.name,
+        employeeId: employee.employeeId || employee.id,
+        email: employee.email,
+        jobTitle: employee.jobTitle,
+        linkedinLink: employee.linkedinLink
+      }));
     } catch (error) {
       console.error("Error fetching employees:", error);
-      return { items: [] };
+      if (error.response) {
+        console.log("Error response:", error.response.data);
+        console.log("Error status:", error.response.status);
+      }
+      return [];
     }
   };
 
@@ -169,10 +192,10 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
     isLoading: employees_loading,
     refetch: employee_refetch,
   } = useQuery(
-    ["employees", { id: values.company_id, employeeSearch }],
+    ["employees", { id: application?.companyId, employeeSearch }],
     fetchEmployees,
     {
-      enabled: !!values.company_id,
+      enabled: !!application?.companyId,
     }
   );
 
@@ -216,28 +239,10 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
       setFieldValue("status", application.status);
       setFieldValue("submission_date", application.submissionDate);
       setFieldValue("contacted_employees", 
-        application.contactedEmployees?.map(emp => emp.employeeId) || []);
+        application.contactedEmployees?.map(emp => emp.employeeId.toString()) || []);
       setFieldValue("submitted_cv", application.submittedCvId);
     }
   }, [setFieldValue, application, isLoading, user]);
-
-  const setCompanyId = (id) => {
-    if (id === "add-company") {
-      setAddCompany(true);
-    }
-    setFieldValue("company_id", id);
-  };
-
-  const setEmployeeId = (id) => {
-    if (id === "add-employee") {
-      setAddEmployee(true);
-      return;
-    }
-
-    if (!values.contacted_employees.includes(id)) {
-      setFieldValue("contacted_employees", [...values.contacted_employees, id]);
-    }
-  };
 
   return (
     <Modal open={openEdit} setOpen={setOpenEdit} width="600px">
@@ -250,15 +255,6 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
           />
         )}
       </div>
-      <div className="z-[100]">
-        {addCompany && (
-          <AddModalCompanies
-            openAdd={addCompany}
-            setOpenAdd={setAddCompany}
-            refetch={company_refetch}
-          />
-        )}
-      </div>
       <div className="flex flex-col gap-4">
         <h1 className="font-semibold text-lg">Update application</h1>
         {isLoading ? (
@@ -267,29 +263,12 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-            <div className="flex flex-col gap-2 w-full">
-              <p className="text-sm text-gray-600">
-                Company<span className="text-red-500">*</span>
-              </p>
-              <Dropdown
-                add={{
-                  name: "Add Company",
-                  value: "add-company",
-                }}
-                id={values.company_id}
-                options={companies?.results}
-                query={companySearch}
-                setQuery={setCompanySearch}
-                setValue={setCompanyId}
-                isLoading={companyies_Loading}
-                error={errors.company_id || error?.response?.data?.company_id}
-                touched={touched.company_id}
-              />
-              {errors.company_id && touched.company_id && (
-                <span className="mt-1 text-xs text-red-500">
-                  {errors.company_id}
-                </span>
-              )}
+            {/* Read-only company display */}
+            <div className="bg-gray-50 p-3 rounded-md border">
+              <div className="text-sm text-gray-600 mb-1">Company</div>
+              <div className="font-medium text-gray-800">
+                {application?.companyName || application?.company?.name || 'Loading company...'}
+              </div>
             </div>
 
             <div className="flex gap-6">
@@ -433,36 +412,110 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
             <div className="flex flex-col gap-2">
               <div className="flex flex-col gap-2 w-full">
                 <div className="text-sm text-gray-600">
-                  Choose Employee<span className="text-red-500">*</span>
+                  Choose Employees<span className="text-red-500">*</span>
                 </div>
-                <Dropdown
-                  add={{
-                    name: "Add Employee",
-                    value: "add-employee",
-                  }}
-                  options={employees?.items}
-                  query={employeeSearch}
-                  setQuery={setEmployeeSearch}
-                  setValue={setEmployeeId}
-                  isLoading={employees_loading}
-                />
+                <div className="relative" ref={employeeDropdownRef}>
+                  <input
+                    type="text"
+                    placeholder="Search and select employees..."
+                    className="w-full rounded-md border px-4 py-2 focus:border-primary focus:outline-none focus:ring-primary"
+                    value={employeeSearch}
+                    onChange={(e) => {
+                      setEmployeeSearch(e.target.value);
+                      setEmployeeDropdownOpen(true);
+                    }}
+                    onFocus={() => {
+                      setEmployeeDropdownOpen(true);
+                      // Trigger employee fetch when focused
+                      if (!employees?.length) {
+                        employee_refetch();
+                      }
+                    }}
+                  />
+                  {employeeDropdownOpen && employees?.length > 0 && (
+                    <div className="absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto mt-1">
+                      {employees_loading ? (
+                        <div className="p-4 text-center text-gray-500">Loading...</div>
+                      ) : (
+                        <>
+                          {employees
+                            .filter(employee => 
+                              !employeeSearch || 
+                              employee.name.toLowerCase().includes(employeeSearch.toLowerCase()) ||
+                              (employee.jobTitle && employee.jobTitle.toLowerCase().includes(employeeSearch.toLowerCase()))
+                            )
+                            .map((employee) => (
+                              <div
+                                key={employee.id}
+                                className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex justify-between items-center"
+                                onClick={() => {
+                                  if (!values.contacted_employees.includes(employee.id.toString())) {
+                                    setFieldValue("contacted_employees", [...values.contacted_employees, employee.id.toString()]);
+                                  }
+                                  setEmployeeSearch("");
+                                  setEmployeeDropdownOpen(false);
+                                }}
+                              >
+                                <div>
+                                  <p className="font-medium">{employee.name}</p>
+                                  {employee.jobTitle && (
+                                    <p className="text-sm text-gray-500">{employee.jobTitle}</p>
+                                  )}
+                                </div>
+                                {values.contacted_employees.includes(employee.id.toString()) && (
+                                  <span className="text-green-600 text-sm">✓ Selected</span>
+                                )}
+                              </div>
+                            ))}
+                          <div
+                            className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-blue-600 border-t"
+                            onClick={() => {
+                              setAddEmployee(true);
+                              setEmployeeSearch("");
+                              setEmployeeDropdownOpen(false);
+                            }}
+                          >
+                            + Add New Employee
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  )}
+                  {employeeDropdownOpen && !employees_loading && employees?.length === 0 && (
+                    <div className="absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-lg p-4 mt-1">
+                      <div className="text-center text-gray-500 mb-2">
+                        No employees found for this company
+                      </div>
+                      <div
+                        className="text-center text-blue-600 cursor-pointer hover:underline"
+                        onClick={() => {
+                          setAddEmployee(true);
+                          setEmployeeSearch("");
+                          setEmployeeDropdownOpen(false);
+                        }}
+                      >
+                        + Add New Employee
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
-              <div className="flex flex-wrap gap-2 mt-1">
+              <div className="flex flex-wrap">
                 {Array.isArray(values?.contacted_employees) &&
-                  values?.contacted_employees.length > 0 &&
+                  values?.contacted_employees.length !== 0 &&
                   values.contacted_employees.map((employeeId) => {
-                    const employee = employees?.items?.find(
-                      (emp) => emp.employeeId === parseInt(employeeId, 10)
+                    const employee = employees?.find(
+                      (emp) => emp.id === Number(employeeId) || emp.employeeId === Number(employeeId)
                     );
                     return (
                       <div
                         key={employeeId}
-                        className="flex bg-primary text-white px-2 py-1 rounded-full text-xs items-center gap-2"
+                        className="flex bg-primary text-white px-2 py-1 rounded-full text-xs items-center gap-2 mr-2 mb-2"
                       >
                         {employee ? (
                           <p>{employee.name}</p>
                         ) : (
-                          <p>Employee {employeeId}</p>
+                          <p>Loading Employee...</p>
                         )}
                         <button
                           type="button"
@@ -474,8 +527,9 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
                               )
                             )
                           }
+                          className="ml-1 hover:bg-red-600 rounded-full w-4 h-4 flex items-center justify-center"
                         >
-                          x
+                          ×
                         </button>
                       </div>
                     );

@@ -1,6 +1,6 @@
 import Modal from "../Modal";
 import { useFormik } from "formik";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { toast } from "react-toastify";
 import { applicationSchema } from "../../schemas/Schemas";
 import FormInput from "../FormInput";
@@ -20,7 +20,23 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
   const [addCompany, setAddCompany] = useState(false);
   const [companySearch, setCompanySearch] = useState("");
   const [employeeSearch, setEmployeeSearch] = useState("");
+  const [employeeDropdownOpen, setEmployeeDropdownOpen] = useState(false);
   const axiosPrivate = useAxiosPrivate();
+  const employeeDropdownRef = useRef(null);
+
+  // Handle click outside to close employee dropdown
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (employeeDropdownRef.current && !employeeDropdownRef.current.contains(event.target)) {
+        setEmployeeDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   const { values, errors, handleSubmit, handleChange, touched, setFieldValue } =
     useFormik({
@@ -42,9 +58,23 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
       validationSchema: applicationSchema,
       onSubmit: async (values) => {
         setLoading(true);
+        setError(null);
+        
+        // Validate required fields
+        if (!values.company_id) {
+          toast.error("Please select a company");
+          setLoading(false);
+          return;
+        }
+        
+        if (!values.submitted_cv) {
+          toast.error("Please select a CV");
+          setLoading(false);
+          return;
+        }
+        
         // Transform form values to match backend API format
         const applicationData = {
-          userId: user?.userId,
           companyId: parseInt(values.company_id, 10),
           jobTitle: values.job_title,
           jobType: values.job_type,
@@ -55,7 +85,7 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
           stage: values.stage,
           status: values.status,
           submissionDate: values.submission_date,
-          contactedEmployees: values.contacted_employees.map(id => parseInt(id, 10))
+          contactedEmployeeIds: values.contacted_employees.map(id => parseInt(id, 10))
         };
 
         console.log("Submitting application data:", applicationData);
@@ -131,19 +161,56 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
   const fetchEmployees = async () => {
     try {
       // Only fetch employees if company is selected
-      if (!values.company_id) return { items: [] };
+      if (!values.company_id) return [];
       
       const params = { 
         CompanyId: values.company_id,
-        SearchTerm: employeeSearch || undefined 
+        Search: employeeSearch || undefined,
+        PageSize: 100
       };
       
       const response = await axiosPrivate.get('/employees', { params });
-      console.log("Fetched employees:", response.data);
-      return response.data;
+      console.log("Fetched employees response:", response.data);
+      console.log("Response data type:", typeof response.data);
+      console.log("Is array:", Array.isArray(response.data));
+      
+      // Handle different possible response structures
+      let employeesArray = [];
+      
+      if (Array.isArray(response.data)) {
+        // Direct array response
+        employeesArray = response.data;
+      } else if (response.data && Array.isArray(response.data.items)) {
+        // Response with items array
+        employeesArray = response.data.items;
+      } else if (response.data && Array.isArray(response.data.data)) {
+        // Response with data array
+        employeesArray = response.data.data;
+      } else if (response.data && response.data.employees && Array.isArray(response.data.employees)) {
+        // Response with employees array
+        employeesArray = response.data.employees;
+      } else {
+        console.log("Unexpected response structure:", response.data);
+        return [];
+      }
+      
+      console.log("Employees array:", employeesArray);
+      
+      return employeesArray.map(employee => ({
+        id: employee.employeeId || employee.id,
+        name: employee.name,
+        employeeId: employee.employeeId || employee.id,
+        email: employee.email,
+        jobTitle: employee.jobTitle,
+        linkedinLink: employee.linkedinLink
+      }));
     } catch (error) {
       console.error("Error fetching employees:", error);
-      return { items: [] };
+      if (error.response) {
+        console.log("Error response:", error.response.data);
+        console.log("Error status:", error.response.status);
+      }
+      return [];
     }
   };
 
@@ -197,17 +264,10 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
       setAddCompany(true);
     }
     setFieldValue("company_id", id);
-  };
-
-  const setEmployeeId = (id) => {
-    if (id === "add-employee") {
-      setAddEmployee(true);
-      return;
-    }
-
-    if (!values.contacted_employees.includes(id)) {
-      setFieldValue("contacted_employees", [...values.contacted_employees, id]);
-    }
+    // Reset employee selection when company changes
+    setFieldValue("contacted_employees", []);
+    setEmployeeSearch("");
+    setEmployeeDropdownOpen(false);
   };
 
   return (
@@ -404,38 +464,123 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
           <div className="flex flex-col gap-2">
             <div className="flex flex-col gap-2 w-full">
               <div className="text-sm text-gray-600">
-                Choose Employee<span className="text-red-500">*</span>
+                Choose Employees<span className="text-red-500">*</span>
               </div>
-              <Dropdown
-                add={{
-                  name: "Add Employee",
-                  value: "add-employee",
-                }}
-                options={employees?.items}
-                query={employeeSearch}
-                setQuery={setEmployeeSearch}
-                setValue={setEmployeeId}
-                isLoading={employees_loading}
-              />
+              <div className="relative" ref={employeeDropdownRef}>
+                <input
+                  type="text"
+                  placeholder={values.company_id ? "Search and select employees..." : "Select a company first"}
+                  className="w-full rounded-md border px-4 py-2 focus:border-primary focus:outline-none focus:ring-primary"
+                  value={employeeSearch}
+                  onChange={(e) => {
+                    setEmployeeSearch(e.target.value);
+                    if (values.company_id) {
+                      setEmployeeDropdownOpen(true);
+                    }
+                  }}
+                  onFocus={() => {
+                    if (values.company_id) {
+                      setEmployeeDropdownOpen(true);
+                      // Trigger employee fetch when focused if company is selected
+                      if (!employees?.length) {
+                        employee_refetch();
+                      }
+                    }
+                  }}
+                  disabled={!values.company_id}
+                />
+                {!values.company_id && (
+                  <div className="text-sm text-gray-500 mt-1">
+                    Please select a company first to choose employees
+                  </div>
+                )}
+                {employeeDropdownOpen && values.company_id && employees?.length > 0 && (
+                  <div className="absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto mt-1">
+                    {employees_loading ? (
+                      <div className="p-4 text-center text-gray-500">Loading...</div>
+                    ) : (
+                      <>
+                        {employees
+                          .filter(employee => 
+                            !employeeSearch || 
+                            employee.name.toLowerCase().includes(employeeSearch.toLowerCase()) ||
+                            (employee.jobTitle && employee.jobTitle.toLowerCase().includes(employeeSearch.toLowerCase()))
+                          )
+                          .map((employee) => (
+                            <div
+                              key={employee.id}
+                              className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex justify-between items-center"
+                              onClick={() => {
+                                if (!values.contacted_employees.includes(employee.id.toString())) {
+                                  setFieldValue("contacted_employees", [...values.contacted_employees, employee.id.toString()]);
+                                }
+                                setEmployeeSearch("");
+                                setEmployeeDropdownOpen(false);
+                              }}
+                            >
+                              <div>
+                                <p className="font-medium">{employee.name}</p>
+                                {employee.jobTitle && (
+                                  <p className="text-sm text-gray-500">{employee.jobTitle}</p>
+                                )}
+                              </div>
+                              {values.contacted_employees.includes(employee.id.toString()) && (
+                                <span className="text-green-600 text-sm">✓ Selected</span>
+                              )}
+                            </div>
+                          ))}
+                        <div
+                          className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-blue-600 border-t"
+                          onClick={() => {
+                            setAddEmployee(true);
+                            setEmployeeSearch("");
+                            setEmployeeDropdownOpen(false);
+                          }}
+                        >
+                          + Add New Employee
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
+                {employeeDropdownOpen && values.company_id && !employees_loading && employees?.length === 0 && (
+                  <div className="absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-lg p-4 mt-1">
+                    <div className="text-center text-gray-500 mb-2">
+                      No employees found for this company
+                    </div>
+                    <div
+                      className="text-center text-blue-600 cursor-pointer hover:underline"
+                      onClick={() => {
+                        setAddEmployee(true);
+                        setEmployeeSearch("");
+                        setEmployeeDropdownOpen(false);
+                      }}
+                    >
+                      + Add New Employee
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
             <div className="flex flex-wrap">
               {Array.isArray(values?.contacted_employees) &&
                 values?.contacted_employees.length !== 0 &&
                 values.contacted_employees.map((employeeId) => {
-                  const employee = employees?.items?.find(
+                  const employee = employees?.find(
                     (emp) => emp.id === Number(employeeId)
                   );
                   return (
                     <div
                       key={employeeId}
-                      className="flex bg-primary text-white px-2 py-1 rounded-full text-xs items-center gap-2"
+                      className="flex bg-primary text-white px-2 py-1 rounded-full text-xs items-center gap-2 mr-2 mb-2"
                     >
                       {employee ? (
                         <p>{employee.name}</p>
                       ) : (
-                        <p>Invalid Employee</p>
+                        <p>Loading Employee...</p>
                       )}
                       <button
+                        type="button"
                         onClick={() =>
                           setFieldValue(
                             "contacted_employees",
@@ -444,8 +589,9 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
                             )
                           )
                         }
+                        className="ml-1 hover:bg-red-600 rounded-full w-4 h-4 flex items-center justify-center"
                       >
-                        x
+                        ×
                       </button>
                     </div>
                   );
