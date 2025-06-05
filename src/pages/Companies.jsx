@@ -110,7 +110,6 @@ export default function Companies() {
           </div>
           <div className="mt-2">
             <Table
-              actions
               viewSearch
               isLoading={isLoading}
               search={search}
@@ -128,9 +127,6 @@ export default function Companies() {
                   };
                 }
               )}
-              handleOpenDelete={handleDelete}
-              handleOpenEdit={handleEdit}
-              handleOpenView={"companies"}
               setOrder={handleSort}
             />
           </div>

@@ -9,24 +9,49 @@ import { useQuery } from "react-query";
 import useUserStore from "../../store/user.store";
 import Dropdown from "../Dropdown";
 import { useAxiosPrivate } from "../../utils/axios";
+import React from "react";
 
 export default function AddModal({ refetch, openAdd, setOpenAdd }) {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [search, setSearch] = useState("");
+  const [applicationSearch, setApplicationSearch] = useState("");
   const axiosPrivate = useAxiosPrivate();
-
   const user = useUserStore((state) => state.user);
 
   const fetchApplications = async () => {
-    const { data } = await axiosPrivate.get(`/applications`);
-    return data;
+    try {
+      const params = {
+        SearchTerm: applicationSearch || undefined,
+        PageSize: 100 // Ensure we get a good number of results
+      };
+      
+      console.log("Fetching applications with params:", params);
+      const response = await axiosPrivate.get('/applications', { params });
+      console.log("Applications response:", response.data);
+      
+      // Map the API response to match what the dropdown expects
+      const items = response.data.items || [];
+      return {
+        results: items.map(application => ({
+          id: application.applicationId,
+          name: `${application.jobTitle} at ${application.companyName}`,
+          value: application.applicationId,
+          jobTitle: application.jobTitle,
+          companyName: application.companyName
+        }))
+      };
+    } catch (error) {
+      console.error("Error fetching applications:", error);
+      return {
+        results: []
+      };
+    }
   };
 
-  const { data: applications, isLoading } = useQuery(
-    ["applications"],
-    fetchApplications
-  );
+  const {
+    data: applications,
+    isLoading: applications_Loading,
+  } = useQuery(["applications", applicationSearch], fetchApplications);
 
   const { values, errors, handleSubmit, handleChange, touched, setFieldValue } =
     useFormik({
@@ -40,41 +65,70 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
       validationSchema: questionSchema,
       onSubmit: async (values) => {
         setLoading(true);
-        await axiosPrivate
-          .post("/questions", values)
-          .then(() => {
-            setOpenAdd(false);
-            setLoading(false);
-            toast.success("Question added successfully");
-            refetch();
-          })
-          .catch((error) => {
-            setLoading(false);
-            setError(error);
-            toast.error(
-              error.response.data.name.map((error) => error) ||
-                "An error occurred. Please try again"
-            );
-          });
+        setError(null);
+        
+        console.log("Form values:", values);
+        console.log("Validation errors:", errors);
+        
+        // Validate required fields
+        if (!values.application_id) {
+          toast.error("Please select an application");
+          setLoading(false);
+          return;
+        }
+        
+        // Transform form values to match backend API format
+        const questionData = {
+          question1: values.question,
+          answer: values.answer,
+          applicationId: parseInt(values.application_id, 10)
+        };
+
+        console.log("Submitting question data:", questionData);
+        
+        try {
+          const response = await axiosPrivate.post("/questions", questionData);
+          console.log("Question created successfully:", response.data);
+          setOpenAdd(false);
+          setLoading(false);
+          toast.success("Question added successfully");
+          refetch();
+        } catch (error) {
+          console.error("Error adding question:", error);
+          setLoading(false);
+          setError(error);
+          
+          let errorMessage = "An error occurred. Please try again";
+          if (error.response?.data) {
+            // Try to extract error message from different possible formats
+            if (typeof error.response.data === 'string') {
+              errorMessage = error.response.data;
+            } else if (error.response.data.message) {
+              errorMessage = error.response.data.message;
+            } else if (error.response.data.error) {
+              errorMessage = error.response.data.error;
+            } else if (error.response.data.title) {
+              errorMessage = error.response.data.title;
+            } else if (error.response.data.errors) {
+              errorMessage = Object.values(error.response.data.errors).flat().join(", ");
+            }
+          }
+          
+          toast.error(errorMessage);
+        }
       },
     });
 
-  const setAppId = (id) => {
+  const setApplicationId = (id) => {
     setFieldValue("application_id", id);
   };
 
-  useEffect(() => {
-    if (user) {
-      setFieldValue("user_id", user.id);
+  // Set user_id when component mounts
+  React.useEffect(() => {
+    if (user?.userId) {
+      setFieldValue("user_id", user.userId);
     }
   }, [user, setFieldValue]);
-
-  const application_names = applications?.results?.map(({ id, job_title }) => {
-    return {
-      id,
-      name: job_title,
-    };
-  });
 
   return (
     <Modal open={openAdd} setOpen={setOpenAdd} width="600px">
@@ -83,23 +137,26 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
           <FormInput
             label="Question"
-            textArea={true}
             name="question"
-            placeHolder="Question"
+            placeHolder="Enter your question"
+            textArea={true}
             value={values.question}
             onChange={handleChange}
             error={errors.question || error?.response?.data?.question}
             touched={touched.question}
+            required
           />
+          
           <FormInput
             label="Answer"
-            textArea={true}
             name="answer"
-            placeHolder="Answer"
+            placeHolder="Enter the answer"
+            textArea={true}
             value={values.answer}
             onChange={handleChange}
             error={errors.answer || error?.response?.data?.answer}
             touched={touched.answer}
+            required
           />
 
           <div className="flex flex-col gap-2 w-full">
@@ -107,19 +164,18 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
               Choose Application<span className="text-red-500">*</span>
             </p>
             <Dropdown
-              options={application_names}
-              query={search}
-              setQuery={setSearch}
-              setValue={setAppId}
-              isLoading={isLoading}
-              error={
-                errors.application_id || error?.response?.data?.application_id
-              }
+              id={values.application_id}
+              options={applications?.results}
+              query={applicationSearch}
+              setQuery={setApplicationSearch}
+              setValue={setApplicationId}
+              isLoading={applications_Loading}
+              error={errors.application_id || error?.response?.data?.application_id}
               touched={touched.application_id}
             />
             {errors.application_id && touched.application_id && (
               <span className="mt-1 text-xs text-red-500">
-                {errors.application_id || error?.response?.data?.application_id}
+                {errors.application_id}
               </span>
             )}
           </div>

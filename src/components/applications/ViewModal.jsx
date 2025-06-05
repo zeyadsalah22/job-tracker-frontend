@@ -40,6 +40,28 @@ export default function ViewModal() {
     }
   );
 
+  const fetchQuestions = async () => {
+    if (!id) return { items: [] };
+    
+    try {
+      const params = { ApplicationId: id };
+      const response = await axiosPrivate.get('/questions', { params });
+      console.log("Questions data:", response.data);
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching questions:", error);
+      return { items: [] };
+    }
+  };
+
+  const { data: questions, isLoading: questionsLoading } = useQuery(
+    ["questions", id],
+    fetchQuestions,
+    {
+      enabled: !!id,
+    }
+  );
+
   const fetchEmployees = async () => {
     if (!application?.companyId) return { items: [] };
     
@@ -68,6 +90,17 @@ export default function ViewModal() {
       (contactedEmp) => contactedEmp.employeeId === employee.employeeId
     )
   ) || [];
+
+  const questions_table_head = [
+    {
+      name: "Question",
+      key: "question",
+    },
+    {
+      name: "Answer",
+      key: "answer",
+    },
+  ];
 
   const table_head = [
     {
@@ -260,6 +293,26 @@ export default function ViewModal() {
                   </div>
                 </div>
               </div>
+              
+              <div className="flex flex-col mt-4">
+                <p className="font-semibold text-gray-500">
+                  Related Questions
+                </p>
+                {questionsLoading ? (
+                  <p>Loading...</p>
+                ) : questions?.items?.length === 0 ? (
+                  <p>No questions found for this application</p>
+                ) : (
+                  <Table
+                    table_head={questions_table_head}
+                    table_rows={questions?.items?.map((question) => ({
+                      question: question.question1 || question.question || "No provided Information.",
+                      answer: question.answer || "No provided Information.",
+                    })) || []}
+                  />
+                )}
+              </div>
+
               <div className="flex flex-col mt-4">
                 <p className="font-semibold text-gray-500">
                   Contacted Employees

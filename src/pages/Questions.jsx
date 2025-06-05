@@ -16,7 +16,14 @@ export default function Questions() {
   const [page, setPage] = React.useState(1);
   const [openAdd, setOpenAdd] = React.useState(false);
   const [search, setSearch] = React.useState("");
+  const [order, setOrder] = React.useState("");
+  const [applicationFilter, setApplicationFilter] = React.useState("");
   const axiosPrivate = useAxiosPrivate();
+
+  // Reset page when search or sorting changes
+  React.useEffect(() => {
+    setPage(1);
+  }, [search, order, applicationFilter]);
 
   const handleOpenEdit = (id) => {
     setOpenEdit(true);
@@ -29,35 +36,55 @@ export default function Questions() {
   };
 
   const fetchquestions = async () => {
-    return {
-      results: [
-        {
-          id: 1,
-          question: "What is the time complexity of QuickSort?",
-          answer: "Average case: O(n log n), Worst case: O(n²)"
-        },
-        {
-          id: 2,
-          question: "Explain the difference between let, const, and var in JavaScript",
-          answer: "var is function-scoped, let and const are block-scoped. const cannot be reassigned."
-        },
-        {
-          id: 3,
-          question: "What is React Virtual DOM?",
-          answer: "A lightweight copy of the actual DOM that React uses to optimize rendering performance"
-        }
-      ],
-      next: null,
-      previous: null,
-      total_pages: 1
-    };
+    try {
+      const params = {
+        SearchTerm: search || undefined,
+        ApplicationId: applicationFilter || undefined,
+        PageNumber: page,
+        PageSize: 10,
+        SortBy: order || undefined,
+        SortDescending: false // You can make this dynamic if needed
+      };
+      
+      console.log("Fetching questions with params:", params);
+      const response = await axiosPrivate.get('/questions', { params });
+      console.log("Questions response:", response.data);
+      
+      // Map the API response to match what the UI expects
+      return {
+        results: response.data.items?.map(question => ({
+          id: question.questionId,
+          question: question.question1 || question.question, // Handle both possible field names
+          answer: question.answer,
+          applicationId: question.applicationId,
+          createdAt: question.createdAt,
+          updatedAt: question.updatedAt
+        })) || [],
+        next: response.data.hasNext ? page + 1 : null,
+        previous: response.data.hasPrevious ? page - 1 : null,
+        total_pages: response.data.totalPages || 1,
+        total_count: response.data.totalCount || 0
+      };
+    } catch (error) {
+      console.error("Error fetching questions:", error);
+      
+      // Return empty structure on error
+      return {
+        results: [],
+        next: null,
+        previous: null,
+        total_pages: 1,
+        total_count: 0
+      };
+    }
   };
 
   const {
     data: questions,
     isLoading,
     refetch,
-  } = useQuery(["questions", { search, page }], fetchquestions);
+    error,
+  } = useQuery(["questions", { search, page, applicationFilter, order }], fetchquestions);
 
   const table_head = [
     {
@@ -69,6 +96,9 @@ export default function Questions() {
       key: "answer",
     },
   ];
+
+  // Define which columns are sortable
+  const selectedOrders = ["question", "answer"];
 
   const table_rows = questions?.results?.map(({ id, question, answer }) => {
     return {
@@ -83,7 +113,9 @@ export default function Questions() {
       <div className="bg-white rounded-lg h-full flex flex-col p-4 justify-between">
         <div className="flex flex-col">
           <div className="flex items-center justify-between pb-4 border-b-2">
-            <h1 className="text-2xl font-bold">Questions</h1>
+            <div>
+              <h1 className="text-2xl font-bold">Questions</h1>
+            </div>
             <button
               onClick={() => setOpenAdd(true)}
               className="bg-primary hover:bg-primary/85 transition-all text-white py-2 px-4 rounded-lg flex items-center justify-center gap-2"
@@ -92,12 +124,16 @@ export default function Questions() {
               Add Question
             </button>
           </div>
+          
           <div className="mt-2">
             <Table
               actions
+              viewSearch
               isLoading={isLoading}
               search={search}
               setSearch={setSearch}
+              setOrder={setOrder}
+              selectedOrders={selectedOrders}
               table_head={table_head}
               table_rows={table_rows}
               handleOpenDelete={handleOpenDelete}
@@ -106,18 +142,16 @@ export default function Questions() {
             />
           </div>
         </div>
-
-        {questions?.results?.length !== 0 && (
-          <div className="self-center">
-            <Pagination
-              nextPage={questions?.next}
-              prevPage={questions?.previous}
-              page={page}
-              setPage={setPage}
-              totalPages={questions?.total_pages}
-            />
-          </div>
-        )}
+        
+        <div className="self-center">
+          <Pagination
+            nextPage={questions?.next}
+            prevPage={questions?.previous}
+            page={page}
+            setPage={setPage}
+            totalPages={questions?.total_pages || 1}
+          />
+        </div>
 
         <EditModal
           id={id}

@@ -82,6 +82,7 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
     onSubmit: async (values) => {
       setLoading(true);
       try {
+        console.log("Adding company:", values);
         await axiosPrivate.post("/user-companies", values);
         setOpenAdd(false);
         setLoading(false);
@@ -91,6 +92,7 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
         setLoading(false);
         setError(error);
         toast.error(
+          "The company you are trying to add is already in your list" ||
           error.response?.data?.message || 
           "An error occurred. Please try again"
         );

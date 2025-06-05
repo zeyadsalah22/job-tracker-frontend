@@ -15,23 +15,49 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
   const user = useUserStore((state) => state.user);
   const axiosPrivate = useAxiosPrivate();
 
-  const fetchQeustion = async () => {
-    const { data } = await axiosPrivate.get(`/questions/${id}`);
-    return data;
+  const fetchQuestion = async () => {
+    try {
+      console.log("Fetching question with id:", id);
+      const response = await axiosPrivate.get(`/questions/${id}`);
+      console.log("Question details for edit:", response.data);
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching question details:", error);
+      throw error;
+    }
   };
 
-  const { data: question } = useQuery(["question", id], fetchQeustion, {
-    enabled: !!id,
-  });
+  const { data: question, isLoading } = useQuery(
+    ["question", id],
+    fetchQuestion,
+    {
+      enabled: !!id,
+    }
+  );
 
-  const fetchApplications = async () => {
-    const { data } = await axiosPrivate.get(`/applications`);
-    return data;
+  const fetchApplication = async () => {
+    try {
+      if (!question?.applicationId) return null;
+      
+      console.log("Fetching application with id:", question.applicationId);
+      const response = await axiosPrivate.get(`/applications/${question.applicationId}`);
+      console.log("Application response:", response.data);
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching application:", error);
+      return null;
+    }
   };
 
-  const { data: applications, isLoading } = useQuery(
-    ["applications"],
-    fetchApplications
+  const {
+    data: application,
+    isLoading: applicationLoading,
+  } = useQuery(
+    ["application", question?.applicationId], 
+    fetchApplication, 
+    {
+      enabled: !!question?.applicationId,
+    }
   );
 
   const { values, errors, handleSubmit, handleChange, touched, setFieldValue } =
@@ -46,95 +72,109 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
       validationSchema: questionSchema,
       onSubmit: async (values) => {
         setLoading(true);
-        await axiosPrivate
-          .patch(`/questions/${id}`, values)
-          .then(() => {
-            setOpenEdit(false);
-            setLoading(false);
-            toast.success("Question added successfully");
-            refetch();
-          })
-          .catch((error) => {
-            setLoading(false);
-            setError(error);
-            toast.error(
-              error.response.data.name.map((error) => error) ||
-                "An error occurred. Please try again"
-            );
-          });
+        setError(null);
+        
+        // Transform form values to match backend API format
+        const questionData = {
+          question1: values.question,
+          answer: values.answer,
+          applicationId: parseInt(values.application_id, 10)
+        };
+
+        console.log("Updating question with data:", questionData);
+        
+        try {
+          const response = await axiosPrivate.patch(`/questions/${id}`, questionData);
+          console.log("Update response:", response.data);
+          
+          setOpenEdit(false);
+          setLoading(false);
+          toast.success("Question updated successfully");
+          refetch();
+        } catch (error) {
+          console.error("Error updating question:", error);
+          setLoading(false);
+          setError(error);
+          
+          let errorMessage = "An error occurred. Please try again";
+          if (error.response?.data) {
+            // Try to extract error message from different possible formats
+            if (typeof error.response.data === 'string') {
+              errorMessage = error.response.data;
+            } else if (error.response.data.message) {
+              errorMessage = error.response.data.message;
+            } else if (error.response.data.error) {
+              errorMessage = error.response.data.error;
+            } else if (error.response.data.title) {
+              errorMessage = error.response.data.title;
+            } else if (error.response.data.errors) {
+              errorMessage = Object.values(error.response.data.errors).flat().join(", ");
+            }
+          }
+          
+          toast.error(errorMessage);
+        }
       },
     });
 
   useEffect(() => {
-    if (user) {
-      values.user_id = user.id;
+    if (!isLoading && question) {
+      setFieldValue("user_id", user?.userId);
+      setFieldValue("question", question.question1 || "");
+      setFieldValue("answer", question.answer || "");
+      setFieldValue("application_id", question.applicationId);
     }
-    setFieldValue("application_id", question?.application.id);
-    setFieldValue("question", question?.question);
-    setFieldValue("answer", question?.answer);
-  }, [user, values, question, setFieldValue]);
+  }, [setFieldValue, question, isLoading, user]);
+
+  if (isLoading) {
+    return (
+      <Modal open={openEdit} setOpen={setOpenEdit} width="600px">
+        <div className="flex items-center justify-center py-8">
+          <ReactLoading type="spin" color="#4F46E5" height={30} width={30} />
+        </div>
+      </Modal>
+    );
+  }
 
   return (
     <Modal open={openEdit} setOpen={setOpenEdit} width="600px">
       <div className="flex flex-col gap-4">
         <h1 className="font-semibold text-lg">Edit Question</h1>
+        
+        {/* Read-only application display */}
+        {application && (
+          <div className="bg-gray-50 p-3 rounded-md border">
+            <div className="text-sm text-gray-600 mb-1">Associated Application</div>
+            <div className="font-medium text-gray-800">
+              {application.jobTitle} at {application.companyName}
+            </div>
+          </div>
+        )}
+        
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
           <FormInput
             label="Question"
-            type="text"
             name="question"
-            placeHolder="Question"
+            placeHolder="Enter your question"
+            textArea={true}
             value={values.question}
             onChange={handleChange}
-            error={errors.question}
+            error={errors.question || error?.response?.data?.question}
             touched={touched.question}
-            textArea
+            required
           />
+          
           <FormInput
             label="Answer"
-            type="text"
             name="answer"
-            placeHolder="Answer"
+            placeHolder="Enter the answer"
+            textArea={true}
             value={values.answer}
             onChange={handleChange}
-            error={errors.answer}
+            error={errors.answer || error?.response?.data?.answer}
             touched={touched.answer}
-            textArea
+            required
           />
-
-          <div className="w-full">
-            <select
-              name="application_id"
-              value={values.application_id}
-              onChange={handleChange}
-              className={`${
-                touched.application_id &&
-                errors.application_id &&
-                "border-red-500"
-              } w-full rounded-md border px-4 py-2 text-gray-500 focus:border-primary focus:outline-none
-                ${
-                  values.application_id ? "text-black" : "text-gray-500"
-                } focus:ring-primary`}
-            >
-              <option value="" disabled className="text-gray-400">
-                Select Application
-              </option>
-              {applications?.results?.map((application) => (
-                <option
-                  key={application.id}
-                  value={application.id}
-                  className="text-black"
-                >
-                  {application.job_title}
-                </option>
-              ))}
-            </select>
-            {errors.application_id && touched.application_id && (
-              <span className="mt-1 text-xs text-red-500">
-                {errors.application_id}
-              </span>
-            )}
-          </div>
 
           {loading ? (
             <button
@@ -153,7 +193,7 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
               type="submit"
               className="rounded bg-primary px-8 py-2 text-white transition hover:bg-primary/80 h-10"
             >
-              Submit
+              Update
             </button>
           )}
         </form>

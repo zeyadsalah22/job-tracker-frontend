@@ -14,31 +14,35 @@ export default function DeleteModal({
   const [error, setError] = useState(null);
   const axiosPrivate = useAxiosPrivate();
 
-  const handleDelete = () => {
-    axiosPrivate
-      .delete(`/questions/${id}`)
-      .then(() => {
-        setOpenDelete(false);
-        setLoading(false);
-        toast.success("Employee deleted successfully");
-        refetch();
-      })
-      .catch((error) => {
-        setLoading(false);
-        setError(error);
-        toast.error(
-          error.response.data.name.map((error) => error) ||
-            "An error occurred. Please try again"
-        );
-      });
+  const handleDelete = async () => {
+    setLoading(true);
+    try {
+      console.log("Deleting question with ID:", id);
+      await axiosPrivate.delete(`/questions/${id}`);
+      
+      setOpenDelete(false);
+      setLoading(false);
+      toast.success("Question deleted successfully");
+      refetch();
+    } catch (error) {
+      console.error("Error deleting question:", error);
+      setLoading(false);
+      setError(error);
+      
+      const errorMessage = error.response?.data?.errors 
+        ? Object.values(error.response.data.errors).flat().join(", ")
+        : "An error occurred. Please try again";
+          
+      toast.error(errorMessage);
+    }
   };
 
   return (
     <Modal open={openDelete} setOpen={setOpenDelete} width="600px">
       <div className="flex flex-col gap-4">
-        <h1 className="font-semibold text-lg">Delete Employee</h1>
+        <h1 className="font-semibold text-lg">Delete Question</h1>
         <div className="flex flex-col gap-3">
-          <p>Are you sure you want to delete this employee?</p>
+          <p>Are you sure you want to delete this question?</p>
           <div className="flex gap-2 justify-end">
             {loading ? (
               <button
