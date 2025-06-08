@@ -22,13 +22,19 @@ export default function Companies() {
   const [sortField, setSortField] = React.useState("");
   const [sortDirection, setSortDirection] = React.useState(false); // false = ascending, true = descending
   const axiosPrivate = useAxiosPrivate();
+  
+  // Get user role from localStorage (1 = Admin, 0 = User)
+  const userRole = parseInt(localStorage.getItem("role")) || 0;
+  const isAdmin = userRole === 1;
 
   const handleEdit = (id) => {
+    if (!isAdmin) return; // Prevent non-admin users from editing
     setSelectedId(id);
     setOpenEdit(true);
   };
 
   const handleDelete = (id) => {
+    if (!isAdmin) return; // Prevent non-admin users from deleting
     setSelectedId(id);
     setOpenDelete(true);
   };
@@ -99,14 +105,21 @@ export default function Companies() {
       <div className="bg-white rounded-lg h-full flex flex-col p-4 justify-between">
         <div className="flex flex-col">
           <div className="flex items-center justify-between pb-4 border-b-2">
-            <h1 className="text-2xl font-bold">Companies</h1>
-            <button
-              onClick={() => setOpenAdd(true)}
-              className="bg-primary hover:bg-primary/85 transition-all text-white py-2 px-4 rounded-lg flex items-center justify-center gap-2"
-            >
-              <Plus size={18} />
-              Add Company
-            </button>
+            <div className="flex flex-col">
+              <h1 className="text-2xl font-bold">Companies</h1>
+              {!isAdmin && (
+                <p className="text-sm text-gray-500 mt-1">View only - Admin access required for modifications</p>
+              )}
+            </div>
+            {isAdmin && (
+              <button
+                onClick={() => setOpenAdd(true)}
+                className="bg-primary hover:bg-primary/85 transition-all text-white py-2 px-4 rounded-lg flex items-center justify-center gap-2"
+              >
+                <Plus size={18} />
+                Add Company
+              </button>
+            )}
           </div>
           <div className="mt-2">
             <Table
@@ -128,6 +141,10 @@ export default function Companies() {
                 }
               )}
               setOrder={handleSort}
+              actions={isAdmin} // Show actions only for admin users
+              handleOpenEdit={isAdmin ? handleEdit : undefined}
+              handleOpenDelete={isAdmin ? handleDelete : undefined}
+              handleOpenView="companies" // For view functionality if needed
             />
           </div>
         </div>
@@ -140,21 +157,27 @@ export default function Companies() {
             totalPages={companies?.total_pages}
           />
         </div>
-        <EditModal
-          id={selectedId}
-          refetch={refetch}
-          openEdit={openEdit}
-          setOpenEdit={setOpenEdit}
-        />
+        
+        {/* Only render modals for admin users */}
+        {isAdmin && (
+          <>
+            <EditModal
+              id={selectedId}
+              refetch={refetch}
+              openEdit={openEdit}
+              setOpenEdit={setOpenEdit}
+            />
 
-        <DeleteModal
-          id={selectedId}
-          openDelete={openDelete}
-          setOpenDelete={setOpenDelete}
-          refetch={refetch}
-        />
+            <DeleteModal
+              id={selectedId}
+              openDelete={openDelete}
+              setOpenDelete={setOpenDelete}
+              refetch={refetch}
+            />
 
-        <AddModal refetch={refetch} openAdd={openAdd} setOpenAdd={setOpenAdd} />
+            <AddModal refetch={refetch} openAdd={openAdd} setOpenAdd={setOpenAdd} />
+          </>
+        )}
       </div>
     </Layout>
   );
