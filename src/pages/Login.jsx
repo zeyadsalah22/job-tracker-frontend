@@ -35,8 +35,16 @@ export default function Login() {
         const response = await axios.post("/auth/login", loginData);
         console.log("Login response:", response.data);
         
-        const token = response.data.token;
-        localStorage.setItem("access", token);
+        // Store all tokens and user data from login response
+        localStorage.setItem("access", response.data.token);
+        localStorage.setItem("refreshToken", response.data.refreshToken);
+        
+        // Store additional user info from login response
+        if (response.data.userId) localStorage.setItem("userId", response.data.userId);
+        if (response.data.email) localStorage.setItem("email", response.data.email);
+        if (response.data.fullName) localStorage.setItem("fullName", response.data.fullName);
+        if (response.data.role !== undefined) localStorage.setItem("role", response.data.role);
+        if (response.data.expiresAt) localStorage.setItem("expiresAt", response.data.expiresAt);
         
         // Get user info
         try {

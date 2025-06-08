@@ -16,26 +16,31 @@ const axiosPrivate = axios.create({
 const useRefreshToken = () => {
   const refresh = async () => {
     const refreshToken = localStorage.getItem("refreshToken");
+    
     if (!refreshToken) {
       throw new Error("No refresh token available");
     }
 
-    const response = await axios.post(BASE_URL + "/auth/refresh", {
-      refreshToken: refreshToken,
-    });
+    try {
+      const response = await axios.post(BASE_URL + "/auth/refresh", {
+        refreshToken: refreshToken,
+      });
 
-    // Store the new tokens
-    localStorage.setItem("access", response.data.token);
-    localStorage.setItem("refreshToken", response.data.refreshToken);
-    
-    // Store additional user info if needed
-    if (response.data.userId) localStorage.setItem("userId", response.data.userId);
-    if (response.data.email) localStorage.setItem("email", response.data.email);
-    if (response.data.fullName) localStorage.setItem("fullName", response.data.fullName);
-    if (response.data.role !== undefined) localStorage.setItem("role", response.data.role);
-    if (response.data.expiresAt) localStorage.setItem("expiresAt", response.data.expiresAt);
+      // Store the new tokens
+      localStorage.setItem("access", response.data.token);
+      localStorage.setItem("refreshToken", response.data.refreshToken);
+      
+      // Store additional user info if needed
+      if (response.data.userId) localStorage.setItem("userId", response.data.userId);
+      if (response.data.email) localStorage.setItem("email", response.data.email);
+      if (response.data.fullName) localStorage.setItem("fullName", response.data.fullName);
+      if (response.data.role !== undefined) localStorage.setItem("role", response.data.role);
+      if (response.data.expiresAt) localStorage.setItem("expiresAt", response.data.expiresAt);
 
-    return response.data.token;
+      return response.data.token;
+    } catch (error) {
+      throw error;
+    }
   };
   return refresh;
 };

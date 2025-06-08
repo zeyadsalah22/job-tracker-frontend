@@ -27,6 +27,12 @@ export default function ProtectedRoute({ children }) {
       } catch (error) {
         // If token is invalid, clear it and redirect
         localStorage.removeItem("access");
+        localStorage.removeItem("refreshToken");
+        localStorage.removeItem("userId");
+        localStorage.removeItem("email");
+        localStorage.removeItem("fullName");
+        localStorage.removeItem("role");
+        localStorage.removeItem("expiresAt");
         navigate("/");
       }
     };

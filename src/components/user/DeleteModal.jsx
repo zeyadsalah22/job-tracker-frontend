@@ -47,6 +47,12 @@ export default function DeleteModal({ openDelete, setOpenDelete }) {
         
         // Clear user data and redirect to login
         localStorage.removeItem("access");
+        localStorage.removeItem("refreshToken");
+        localStorage.removeItem("userId");
+        localStorage.removeItem("email");
+        localStorage.removeItem("fullName");
+        localStorage.removeItem("role");
+        localStorage.removeItem("expiresAt");
         userLogout();
         navigate("/");
       } catch (error) {

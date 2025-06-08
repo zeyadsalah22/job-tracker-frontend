@@ -89,6 +89,12 @@ export default function Profile() {
 
   const handleLogout = async () => {
     localStorage.removeItem("access");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("userId");
+    localStorage.removeItem("email");
+    localStorage.removeItem("fullName");
+    localStorage.removeItem("role");
+    localStorage.removeItem("expiresAt");
     userLogout();
     navigate("/");
     toast.success("Logout successful");
