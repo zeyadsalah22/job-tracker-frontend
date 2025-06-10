@@ -11,7 +11,7 @@ import ReactLoading from "react-loading";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 
-function Actions({ handleOpenEdit, handleOpenDelete, handleOpenView }) {
+function Actions({ handleOpenEdit, handleOpenDelete, handleOpenView}) {
   return (
     <motion.div
       initial={{ opacity: 0, y: -10 }}
@@ -20,12 +20,14 @@ function Actions({ handleOpenEdit, handleOpenDelete, handleOpenView }) {
       transition={{ duration: 0.2 }}
       className="flex flex-col top-6 -left-5 bg-white shadow rounded absolute z-[50]"
     >
-      <span
-        onClick={handleOpenEdit}
-        className="font-normal cursor-pointer p-2 hover:text-primary transition-all"
-      >
-        edit
-      </span>
+      {handleOpenEdit !== null && typeof handleOpenEdit === "function" &&(
+        <span
+          onClick={handleOpenEdit}
+          className="font-normal cursor-pointer p-2 hover:text-primary transition-all"
+        >
+          edit
+        </span>
+      )}
       <Link
         to={handleOpenView}
         className="font-normal cursor-pointer hover:text-primary transition-all p-2 border-t"
@@ -213,7 +215,7 @@ export default function Table({
                       <AnimatePresence>
                         {openDropdownIndex === rowIndex && (
                           <Actions
-                            handleOpenEdit={() => handleOpenEdit(object.id)}
+                            handleOpenEdit={typeof handleOpenEdit === "function" ? () => handleOpenEdit(object.id) : null}
                             handleOpenDelete={() => handleOpenDelete(object.id)}
                             handleOpenView={`/${handleOpenView}/${object.id}`}
                           />

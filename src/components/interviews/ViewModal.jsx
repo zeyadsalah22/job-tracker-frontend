@@ -1,5 +1,5 @@
 import { useQuery } from "react-query";
-import { Link, useParams } from "react-router-dom";
+import { Link, redirect, useParams } from "react-router-dom";
 import Layout from "../Layout";
 import {
   ArrowLeft,
@@ -21,49 +21,72 @@ export default function ViewModal() {
   const axiosPrivate = useAxiosPrivate();
 
   const fetchInterview = async () => {
-    return {
-      id: 1,
-      startDate: "2024-03-15 10:00",
-      duration: "45 minutes",
-      company: {
-        name: "TechCorp",
-        location: "San Francisco, CA",
-        careers_link: "https://careers.techcorp.com",
-        linkedin_link: "https://linkedin.com/company/techcorp"
-      },
-      position: "Software Engineer",
-      jobDescription: "Looking for a skilled software engineer with experience in React and Node.js. The candidate should have strong problem-solving skills and experience with modern web development practices.",
-      feedback: "The candidate demonstrated good technical knowledge but could improve on system design questions. Communication skills were excellent.",
-      application: {
-        id: 1,
-        job_title: "Software Engineer",
-        job_type: "Full-time",
-        submission_date: "2024-03-10",
-        status: "PENDING",
-        stage: "Technical Interview"
-      },
-      questions: [
-        {
-          id: 1,
-          question: "Tell me about yourself",
-          answer: "I am a software engineer with experience in React and Node.js...",
-        },
-        {
-          id: 2,
-          question: "What are your strengths?",
-          answer: "I am a quick learner and have strong problem-solving skills...",
-        },
-      ],
-    };
+    const response = await axiosPrivate.get(`/mockinterview/${id}`);
+    try{
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching interview data:", error);
+      alert("Failed to load interview details. Please try again later.");
+      redirect("/interviews");
+      return null;
+    }
   };
 
-  const { data: interview, isLoading } = useQuery(
+  // Fetch application data if exists using applicationId in interview
+  const fetchApplication = async (applicationId) => {
+    if (!applicationId) return null; // Return null if no applicationId is provided
+    const response = await axiosPrivate.get(`/applications/${applicationId}`);
+    try {
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching application data:", error);
+      alert("Failed to load application details. Please try again later.");
+      return null;
+    }
+  };
+
+  // Fetch company data if exists using companyId in interview
+  const fetchCompany = async (companyId) => {
+    if (!companyId) return null; // Return null if no companyId is provided
+    const response = await axiosPrivate.get(`/user-companies/${companyId}`);
+    try {
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching company data:", error);
+      alert("Failed to load company details. Please try again later.");
+      return null;
+    }
+  };
+
+  const { data: interview, isLoading: isLoadingInterview } = useQuery(
     ["interview", { id }],
     fetchInterview,
     {
       enabled: !!id,
     }
   );
+
+  // Fetch application and company data if interview exists
+  const { data: application, isLoading: isLoadingApplication } = useQuery(
+    ["application", { applicationId: interview?.applicationId }],
+    () => fetchApplication(interview?.applicationId),
+    {
+      enabled: !!interview?.applicationId,
+    }
+  );
+
+  const { data: company, isLoading: isLoadingCompany } = useQuery(
+    ["company", { companyId: interview?.companyId }],
+    () => fetchCompany(interview?.companyId),
+    {
+      enabled: !!interview?.companyId,
+    }
+  );
+
+  // wait for company and application data to be fetched before proceeding
+  if (isLoadingApplication || isLoadingCompany || isLoadingInterview) {
+    return <p>Loading interview details...</p>;
+  }
 
   const table_head = [
     {
@@ -89,7 +112,7 @@ export default function ViewModal() {
             </Link>
             <h1 className="text-lg font-semibold">Interview Details</h1>
           </div>
-          {isLoading ? (
+          {isLoadingInterview ? (
             <p>Loading...</p>
           ) : (
             <div className="flex flex-col gap-4">
@@ -102,11 +125,11 @@ export default function ViewModal() {
                     <div className="flex flex-col gap-2">
                       <div className="gap-1 flex">
                         <span className="text-gray-600">Interview ID:</span>
-                        {interview.id}
+                        {id}
                       </div>
                       <div className="gap-1 flex">
                         <span className="text-gray-600">Position:</span>
-                        {interview.position}
+                        {interview.position ? interview.position : application.jobTitle}
                       </div>
                       <div className="gap-1 flex">
                         <span className="text-gray-600">Start Date:</span>
@@ -118,7 +141,7 @@ export default function ViewModal() {
                       </div>
                       <div className="gap-1 flex">
                         <span className="text-gray-600">Job Description:</span>
-                        <div className="w-96">{interview.jobDescription}</div>
+                        <div className="w-96">{interview.jobDescription ? interview.jobDescription : application.description}</div>
                       </div>
                       <div className="gap-1 flex">
                         <span className="text-gray-600">Feedback:</span>
@@ -129,109 +152,91 @@ export default function ViewModal() {
                 </div>
 
                 <div className="flex flex-col gap-4">
-                  <div className="flex rounded-md p-4 gap-8 shadow w-fit h-fit">
-                    <div className="flex gap-4">
-                      <div className="border rounded-md w-fit p-2 self-start text-primary">
-                        <Building2 size={40} />
+                  {company && (
+                    <div className="flex rounded-md p-4 gap-8 shadow w-fit h-fit">
+                      <div className="flex gap-4">
+                        <div className="border rounded-md w-fit p-2 self-start text-primary">
+                          <Building2 size={40} />
+                        </div>
+                        <div className="flex flex-col gap-2">
+                          {company.name && (
+                            <div className="gap-1 flex">
+                              <span className="text-gray-600">Company:</span>
+                              {company.name}
+                            </div>
+                          )}
+                          {company.location && (
+                            <div className="gap-1 flex">
+                              <span className="text-gray-600">Location:</span>
+                              {company.location}
+                            </div>
+                          )}
+                        </div>
                       </div>
-                      <div className="flex flex-col gap-2">
-                        {interview.company.name === "" ? (
-                          "No provided Information."
-                        ) : (
-                          <div className="gap-1 flex">
-                            <span className="text-gray-600">Company:</span>
-                            {interview.company.name}
-                          </div>
-                        )}
-                        {interview.company.location === "" ? (
-                          "No provided Information."
-                        ) : (
-                          <div className="gap-1 flex">
-                            <span className="text-gray-600">Location:</span>
-                            {interview.company.location}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex gap-2">
-                      <p>
-                        {interview.company.careers_link === "" ? (
-                          "No provided Information."
-                        ) : (
+                      <div className="flex gap-2">
+                        {company.careers_link && (
                           <a
                             className="text-primary hover:text-blue-800 transition-all flex items-center gap-1"
-                            href={interview.company.careers_link}
+                            href={company.careers_link}
                             target="_blank"
                           >
                             <SquareArrowOutUpRight size={20} />
                           </a>
                         )}
-                      </p>
-                      <p>
-                        {interview.company.linkedin_link === "" ? (
-                          "No provided Information."
-                        ) : (
+                        {company.linkedin_link && (
                           <a
                             className="text-primary hover:text-blue-800 transition-all flex items-center gap-1"
-                            href={interview.company.linkedin_link}
+                            href={company.linkedin_link}
                             target="_blank"
                           >
                             <Linkedin size={20} />
                           </a>
                         )}
-                      </p>
+                      </div>
                     </div>
-                  </div>
+                  )}
 
-                  <div className="flex rounded-md p-4 gap-8 shadow w-fit h-fit">
-                    <div className="flex gap-4">
-                      <div className="border rounded-md w-fit p-2 self-start text-primary">
-                        <FileText size={40} />
-                      </div>
-                      <div className="flex flex-col gap-2">
-                        {interview.application.job_title === "" ? (
-                          "No provided Information."
-                        ) : (
-                          <div className="gap-1 flex">
-                            <span className="text-gray-600">Job Title:</span>
-                            {interview.application.job_title}
-                          </div>
-                        )}
-                        {interview.application.job_type === "" ? (
-                          "No provided Information."
-                        ) : (
-                          <div className="gap-1 flex">
-                            <span className="text-gray-600">Job Type:</span>
-                            {interview.application.job_type.toLowerCase()}
-                          </div>
-                        )}
-                        {interview.application.submission_date === "" ? (
-                          "No provided Information."
-                        ) : (
-                          <div className="gap-1 flex">
-                            <span className="text-gray-600">Submission Date:</span>
-                            {interview.application.submission_date}
-                          </div>
-                        )}
-                        {interview.application.status === "" ? (
-                          "No provided Information."
-                        ) : (
-                          <div className="gap-1 flex">
-                            <span className="text-gray-600">Status:</span>
-                            {interview.application.status.toLowerCase()}
-                          </div>
-                        )}
-                        {interview.application.stage === "" ? (
-                          "No provided Information."
-                        ) : (
-                          <div className="gap-1 flex">
-                            <span className="text-gray-600">Stage:</span>
-                            {interview.application.stage.toLowerCase()}
-                          </div>
-                        )}
+                  {application && (
+                    <div className="flex rounded-md p-4 gap-8 shadow w-fit h-fit">
+                      <div className="flex gap-4">
+                        <div className="border rounded-md w-fit p-2 self-start text-primary">
+                          <FileText size={40} />
+                        </div>
+                        <div className="flex flex-col gap-2">
+                          {application.jobTitle && (
+                            <div className="gap-1 flex">
+                              <span className="text-gray-600">Job Title:</span>
+                              {application.jobTitle}
+                            </div>
+                          )}
+                          {application.jobType && (
+                            <div className="gap-1 flex">
+                              <span className="text-gray-600">Job Type:</span>
+                              {application.jobType.toLowerCase()}
+                            </div>
+                          )}
+                          {application.submissionDate && (
+                            <div className="gap-1 flex">
+                              <span className="text-gray-600">Submission Date:</span>
+                              {application.submissionDate}
+                            </div>
+                          )}
+                          {application.status && (
+                            <div className="gap-1 flex">
+                              <span className="text-gray-600">Status:</span>
+                              {application.status.toLowerCase()}
+                            </div>
+                          )}
+                          {application.stage && (
+                            <div className="gap-1 flex">
+                              <span className="text-gray-600">Stage:</span>
+                              {application.stage.toLowerCase()}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               </div>
 
@@ -239,7 +244,7 @@ export default function ViewModal() {
                 <p className="font-semibold text-gray-500">Interview Questions</p>
                 <Table
                   table_head={table_head}
-                  table_rows={interview.questions.map((q) => ({
+                  table_rows={(interview?.interviewQuestions || []).map((q) => ({
                     question: q.question,
                     answer: q.answer,
                   }))}
@@ -251,4 +256,4 @@ export default function ViewModal() {
       </div>
     </Layout>
   );
-} 
+}

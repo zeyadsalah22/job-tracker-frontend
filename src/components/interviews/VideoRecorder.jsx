@@ -1,10 +1,20 @@
-import { useState, useRef, useEffect } from "react";
+import { useImperativeHandle, useState, useRef, useEffect, forwardRef } from "react";
 import { Video, Mic, MicOff, VideoOff, Square, Circle } from "lucide-react";
 
-export default function VideoRecorder({ onRecordingComplete, isRecording, onStartRecording, onStopRecording, isCameraTested, setIsCameraTested }) {
+const VideoRecorder = forwardRef(({ 
+  onRecordingComplete, 
+  isRecording, 
+  onStartRecording, 
+  onStopRecording, 
+  isCameraTested, 
+  setIsCameraTested,
+  canRecord,
+  firstQuestion
+}, ref) => {
   const [stream, setStream] = useState(null);
   const [isCameraOn, setIsCameraOn] = useState(false);
   const [isMicOn, setIsMicOn] = useState(false);
+  // const [firstQuestion, setFirstQuestion] = useState(true); // Track if it's the first question
   const videoRef = useRef(null);
   const mediaRecorderRef = useRef(null);
   const chunksRef = useRef([]);
@@ -62,6 +72,11 @@ export default function VideoRecorder({ onRecordingComplete, isRecording, onStar
     }
   };
 
+  useImperativeHandle(ref, () => ({
+    stream,
+    stopCamera,
+  }));
+
   const toggleCamera = () => {
     if (isCameraOn) {
       stream.getVideoTracks().forEach((track) => (track.enabled = false));
@@ -101,6 +116,7 @@ export default function VideoRecorder({ onRecordingComplete, isRecording, onStar
 
     mediaRecorderRef.current.start();
     onStartRecording();
+    // setFirstQuestion(false); // Set to false after first recording
   };
 
   const stopRecording = () => {
@@ -163,7 +179,10 @@ export default function VideoRecorder({ onRecordingComplete, isRecording, onStar
             {!isRecording ? (
               <button
                 onClick={startRecording}
-                className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors flex items-center gap-2"
+                className={`bg-green-500 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2 ${
+                            !canRecord && !firstQuestion ? "opacity-50 cursor-not-allowed" : "hover:bg-green-600"
+                }`}
+                disabled={!canRecord && !firstQuestion}
               >
                 <Circle size={20} />
                 Start Recording
@@ -182,4 +201,6 @@ export default function VideoRecorder({ onRecordingComplete, isRecording, onStar
       </div>
     </div>
   );
-} 
+});
+
+export default VideoRecorder;

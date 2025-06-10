@@ -19,7 +19,6 @@ import Question from "./components/questions/ViewModal";
 import ProtectedRoute from "./utils/ProtectedRoute";
 import Interviews from "./pages/Interviews";
 import Interview from "./components/interviews/ViewModal";
-import StartInterview from "./pages/StartInterview";
 import InterviewRecording from "./pages/InterviewRecording";
 import ResumeMatching from "./pages/ResumeMatching";
 import ResumeTestDetails from "./components/resume-matching/ViewModal";
@@ -135,15 +134,15 @@ export default function App() {
           }
         />
         <Route
-          path="/interviews/start"
+          path="/interviews/recording"
           element={
             <ProtectedRoute>
-              <StartInterview />
+              <InterviewRecording />
             </ProtectedRoute>
           }
         />
         <Route
-          path="/interviews/recording"
+          path="/interviews/recording/:interviewId"
           element={
             <ProtectedRoute>
               <InterviewRecording />

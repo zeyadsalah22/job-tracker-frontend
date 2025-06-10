@@ -1,12 +1,13 @@
 import { Plus } from "lucide-react";
 import Layout from "../components/Layout";
 import Table from "../components/Table";
-import React from "react";
+import React, { useEffect } from "react";
 import DeleteModal from "../components/interviews/DeleteModal";
 import { useQuery } from "react-query";
 import Pagination from "../components/Pagination";
 import { useNavigate } from "react-router-dom";
 import { useAxiosPrivate } from "../utils/axios";
+import AddModal from "../components/interviews/AddModal";
 
 export default function Interviews() {
   const navigate = useNavigate();
@@ -16,6 +17,9 @@ export default function Interviews() {
   const [page, setPage] = React.useState(1);
   const [search, setSearch] = React.useState("");
   const [order, setOrder] = React.useState("");
+  const [openAdd, setOpenAdd] = React.useState(false);
+  const [resolvedRows, setResolvedRows] = React.useState([]);
+
 
   const handleOpenDelete = (id) => {
     setOpenDelete(true);
@@ -23,40 +27,92 @@ export default function Interviews() {
   };
 
   const fetchInterviews = async () => {
-    return {
-      results: [
-        {
-          id: 1,
-          startDate: "2024-03-15 10:00",
-          duration: "45 minutes",
-          company: "TechCorp",
-          position: "Software Engineer",
-        },
-        {
-          id: 2,
-          startDate: "2024-03-16 14:30",
-          duration: "60 minutes",
-          company: "DataSystems",
-          position: "Data Analyst",
-        },
-        {
-          id: 3,
-          startDate: "2024-03-17 11:15",
-          duration: "30 minutes",
-          company: "WebSolutions",
-          position: "Frontend Developer",
-        },
-      ],
-      next: null,
-      previous: null,
-      total_pages: 1,
+    // Construct the query parameters based on state
+    const params = {
+      SearchTerm: search || undefined,
+      PageNumber: page,
+      PageSize: 10, // Adjust as needed
+      OrderBy: order || undefined,
     };
+    console.log("Fetching interviews with params:", params);
+    try {
+      const response = await axiosPrivate.get("/mockinterview", { params });
+      console.log("Interviews response:", response.data);
+      return {
+        results: response.data.items,
+        next: response.data.hasNext ? page + 1 : null,
+        previous: response.data.hasPrevious ? page - 1 : null,
+        total_pages: response.data.totalPages
+      };
+    } catch (error) {
+      console.error("Error fetching interviews:", error);
+      alert("Failed to load interview data. Please try again later.");
+      return {
+        results: [],
+        next: null,
+        previous: null,
+        total_pages: 0
+      };
+    }
   };
 
-  const { data: interviews, isLoading, refetch } = useQuery(
+   // fetch company name using either applicationId or companyId
+  const fetchCompanyNameUsingCompanyId = async (companyId) => {
+    try {
+      const response = await axiosPrivate.get(`/user-companies/${companyId}`);
+      return response.data.companyName || "Unknown Company";
+    } catch (error) {
+      console.error("Error fetching company name:", error);
+      return "Unknown Company";
+    }
+  };
+  const fetchCompanyNameUsingApplicationId = async (applicationId) => {
+    try {
+      const response = await axiosPrivate.get(`/applications/${applicationId}`);
+      return response.data.companyName || "Unknown Company";
+    } catch (error) {
+      console.error("Error fetching company name:", error);
+      return "Unknown Company";
+    }
+  };
+
+    const { data: interviews, isLoading, refetch } = useQuery(
     ["interviews", { search, page, order }],
     fetchInterviews
   );
+
+  useEffect(() => {
+    const resolveCompanyNames = async () => {
+    if (!interviews?.results) return;
+
+    const rows = await Promise.all(
+      interviews.results.map(async (interview) => {
+        let companyName = "Unknown Company";
+        if (interview.applicationId) {
+          companyName = await fetchCompanyNameUsingApplicationId(interview.applicationId);
+        } else if (interview.companyId) {
+          companyName = await fetchCompanyNameUsingCompanyId(interview.companyId);
+        }
+
+        return {
+          id: interview.interviewId,
+          startDate: new Date(interview.startDate).toUTCString(),
+          duration: interview.duration,
+          company: companyName,
+          position: interview.position,
+        };
+      })
+    );
+
+    setResolvedRows(rows);
+  };
+
+  resolveCompanyNames();
+  }, [interviews]);
+
+
+
+
 
   const table_head = [
     {
@@ -76,6 +132,16 @@ export default function Interviews() {
       key: "position",
     },
   ];
+  // const table_rows = interviews?.results?.map((interview) => {
+  //   return {
+  //     id: interview.interviewId,
+  //     startDate: new Date(interview.startDate).toLocaleDateString(),
+  //     duration: interview.duration,
+  //     company: companyName(interview),
+  //     position: interview.position
+  //   };
+  // });
+
 
   return (
     <Layout>
@@ -84,7 +150,7 @@ export default function Interviews() {
           <div className="flex items-center justify-between pb-4 border-b-2">
             <h1 className="text-2xl font-bold">Interviews</h1>
             <button
-              onClick={() => navigate("/interviews/start")}
+              onClick={() => setOpenAdd(true)}
               className="bg-primary hover:bg-primary/85 transition-all text-white py-2 px-4 rounded-lg flex items-center justify-center gap-2"
             >
               <Plus size={18} />
@@ -100,40 +166,32 @@ export default function Interviews() {
               setSearch={setSearch}
               table_head={table_head}
               selectedOrders={["startDate", "company", "position"]}
-              table_rows={interviews?.results.map(
-                ({ id, startDate, duration, company, position }) => {
-                  return {
-                    id,
-                    startDate,
-                    duration,
-                    company,
-                    position,
-                  };
-                }
-              )}
+              table_rows= {resolvedRows}
               handleOpenDelete={handleOpenDelete}
               handleOpenView={"interviews"}
               setOrder={setOrder}
-              handleOpenEdit={null}
+              // handleOpenEdit= {null}
             />
           </div>
         </div>
-        <div className="self-center">
-          <Pagination
-            currentPage={page}
-            totalPages={interviews?.total_pages}
-            onPageChange={setPage}
-            hasNext={interviews?.next !== null}
-            hasPrevious={interviews?.previous !== null}
-          />
-        </div>
+        {interviews?.results?.length > 0 && (
+          <div className="self-center">
+            <Pagination
+              page={page}
+              setPage={setPage}
+              totalPages={interviews?.total_pages}
+              nextPage={interviews?.next !== null}
+              prevPage={interviews?.previous !== null}
+            />
+          </div>
+        )}
         <DeleteModal
           id={id}
           openDelete={openDelete}
           setOpenDelete={setOpenDelete}
           refetch={refetch}
         />
-        
+        <AddModal open={openAdd} setOpen={setOpenAdd} refetch={refetch} />
       </div>
     </Layout>
   );

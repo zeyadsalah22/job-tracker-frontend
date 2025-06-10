@@ -18,8 +18,8 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
     initialValues: {
       name: "",
       location: "",
-      careersLink: "",
-      linkedinLink: "",
+      careersLink: null,
+      linkedinLink: null,
     },
 
     validationSchema: companySchema,

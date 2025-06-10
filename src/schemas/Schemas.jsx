@@ -90,3 +90,11 @@ export const todoSchema = Yup.object().shape({
   deadline: Yup.date().required("Required"),
   completed: Yup.boolean().optional(),
 });
+
+export const interviewSchema = Yup.object().shape({
+  userId : Yup.string().required("Required"),
+  applicationId: Yup.string(),
+  userCompanyId: Yup.string(),
+  position: Yup.string(),
+  jobDescription: Yup.string()
+});
