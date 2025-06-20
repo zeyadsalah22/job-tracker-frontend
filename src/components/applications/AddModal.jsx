@@ -464,7 +464,7 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
           <div className="flex flex-col gap-2">
             <div className="flex flex-col gap-2 w-full">
               <div className="text-sm text-gray-600">
-                Choose Employees<span className="text-red-500">*</span>
+                Choose Employees
               </div>
               <div className="relative" ref={employeeDropdownRef}>
                 <input
