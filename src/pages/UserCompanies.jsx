@@ -25,7 +25,8 @@ export default function UserCompanies() {
   // Mapping between display keys and API field names
   const fieldMapping = {
     name: "name",
-    location: "location"
+    location: "location",
+    last_updated: "CreatedAt"
   };
 
   const handleOpenEdit = (id) => {
@@ -88,6 +89,7 @@ export default function UserCompanies() {
           location: item.companyLocation,
           careers_link: item.companyCareersLink,
           linkedin_link: item.companyLinkedinLink,
+          last_updated: item.updatedAt.replace("T", " "),
           description: item.description
         })),
         next: response.data.hasNext ? page + 1 : null,
@@ -130,6 +132,10 @@ export default function UserCompanies() {
       key: "location",
     },
     {
+      name: "Last Updated",
+      key: "last_updated",
+    },
+    {
       name: "Careers Link",
       key: "careers_link",
     },
@@ -157,13 +163,14 @@ export default function UserCompanies() {
               search={search}
               setSearch={setSearch}
               table_head={table_head}
-              selectedOrders={["name", "location"]}
+              selectedOrders={["name", "location", "last_updated"]}
               table_rows={companies?.results?.map(
-                ({ id, name, careers_link, location }) => {
+                ({ id, name, careers_link, location, last_updated }) => {
                   return {
                     id,
                     name,
                     location,
+                    last_updated,
                     careers_link,
                   };
                 }

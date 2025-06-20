@@ -2,6 +2,7 @@ import { Plus } from "lucide-react";
 import Layout from "../components/Layout";
 import Table from "../components/Table";
 import React from "react";
+import { useState } from "react";
 import EditModal from "../components/applications/EditModal";
 import DeleteModal from "../components/applications/DeleteModal";
 import { useQuery } from "react-query";
@@ -15,9 +16,18 @@ export default function Applications() {
   const [id, setId] = React.useState(null);
   const [page, setPage] = React.useState(1);
   const [search, setSearch] = React.useState("");
+  const [sortField, setSortField] = useState(""); // This will hold the field to sort by
+  const [sortDirection, setSortDirection] = useState(false); // false = ascending, true = descending
   const [openAdd, setOpenAdd] = React.useState(false);
-  const [order, setOrder] = React.useState("");
   const axiosPrivate = useAxiosPrivate();
+
+  // Mapping between display keys and API field names
+  const fieldMapping = {
+    companyName: "company",
+    jobTitle: "jobtitle",
+    submissionDate: "submissiondate",
+    stage: "stage"
+  };
 
   const handleOpenEdit = (id) => {
     setOpenEdit(true);
@@ -29,6 +39,19 @@ export default function Applications() {
     setId(id);
   };
 
+  // This function will be passed to the Table component as setOrder
+  const handleSort = (field) => {
+    console.log("Sorting by field:", field, "-> mapped to:", fieldMapping[field] || field);
+    if (sortField === (fieldMapping[field] || field)) {
+      // If clicking the same field, toggle direction
+      setSortDirection(!sortDirection);
+    } else {
+      // If clicking a new field, set it as sort field and default to ascending
+      setSortField(fieldMapping[field] || field);
+      setSortDirection(false);
+    }
+  };
+
   const fetchApplications = async () => {
     try {
       // Build query parameters
@@ -36,15 +59,9 @@ export default function Applications() {
         PageNumber: page,
         PageSize: 10, // Default page size
         SearchTerm: search || undefined,
+        SortBy: sortField || undefined,
+        SortDescending: sortField ? sortDirection : undefined // Convert boolean to string
       };
-      
-      // Add sorting if specified
-      if (order) {
-        // Check if order starts with '-' to determine sort direction
-        const isDescending = order.startsWith('-');
-        params.SortBy = isDescending ? order.substring(1) : order;
-        params.SortDescending = isDescending;
-      }
       
       console.log("Applications request params:", params);
       const response = await axiosPrivate.get('/applications', { params });
@@ -73,7 +90,7 @@ export default function Applications() {
     refetch,
     error,
   } = useQuery(
-    ["applications", page, search, order],
+    ["applications", page, search, sortField, sortDirection],
     fetchApplications,
     {
       keepPreviousData: true, // Keep previous data while fetching new data
@@ -105,21 +122,21 @@ export default function Applications() {
       key: "submissionDate",
     },
     {
-      name: "Status",
-      key: "status",
+      name: "Stage",
+      key: "stage",
     },
   ];
 
   const table_rows = applications?.results?.map((application) => {
-    // Find the matching status name
-    const statusName = statusEnum.find(item => item.value === application.stage)?.name || application.stage;
+    // Find the matching stage name
+    const stageName = statusEnum.find(item => item.value === application.stage)?.name || application.stage;
     
     return {
       id: application.applicationId,
       companyName: application.companyName,
       jobTitle: application.jobTitle,
       submissionDate: application.submissionDate,
-      status: statusName,
+      stage: stageName,
     };
   });
 
@@ -145,7 +162,7 @@ export default function Applications() {
             <Table
               viewSearch
               actions
-              setOrder={setOrder}
+              setOrder={handleSort}
               isLoading={isLoading}
               search={search}
               setSearch={setSearch}
@@ -154,7 +171,7 @@ export default function Applications() {
               handleOpenDelete={handleOpenDelete}
               handleOpenEdit={handleOpenEdit}
               handleOpenView={"applications"}
-              selectedOrders={["jobTitle", "companyName", "submissionDate", "status"]}
+              selectedOrders={["jobTitle", "companyName", "submissionDate", "stage"]}
             />
           </div>
         </div>

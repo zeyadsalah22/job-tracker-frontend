@@ -311,6 +311,7 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
               error={errors.company_id || error?.response?.data?.company_id}
               touched={touched.company_id}
             />
+            
             {errors.company_id && touched.company_id && (
               <span className="mt-1 text-xs text-red-500">
                 {errors.company_id}
@@ -603,6 +604,7 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
             name="submission_date"
             placeHolder="Submission Date"
             type="date"
+            td={new Date().toISOString().split("T")[0]} // Set today's date as max
             required
             onChange={handleChange}
             value={values.submission_date}

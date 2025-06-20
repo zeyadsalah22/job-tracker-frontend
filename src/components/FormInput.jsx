@@ -4,6 +4,7 @@ export default function FormInput({
   name,
   type,
   onChange,
+  td = null,
   value,
   error,
   touched,
@@ -34,6 +35,7 @@ export default function FormInput({
           value={value}
           placeholder={placeHolder}
           disabled={disabled}
+          {...(type === "date" && td != null? { max: td } : {})}
           className={`${
             touched && error && "border-red-500 ring-red-500"
           } w-full rounded-md border px-4 py-2`}

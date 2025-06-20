@@ -17,13 +17,35 @@ export default function Interviews() {
   const [page, setPage] = React.useState(1);
   const [search, setSearch] = React.useState("");
   const [order, setOrder] = React.useState("");
+  const [sortField, setSortField] = React.useState("");
+  const [sortDirection, setSortDirection] = React.useState(false); // false = ascending, true = descending
   const [openAdd, setOpenAdd] = React.useState(false);
   const [resolvedRows, setResolvedRows] = React.useState([]);
 
+  // Mapping between display keys and API field names
+  const fieldMapping = {
+    startDate: "startdate",
+    duration: "duration",
+    company: "companyname",
+    position: "position",
+  };
 
   const handleOpenDelete = (id) => {
     setOpenDelete(true);
     setId(id);
+  };
+
+  // This function will be passed to the Table component as setOrder
+  const handleSort = (field) => {
+    console.log("Sorting by field:", field, "-> mapped to:", fieldMapping[field] || field);
+    if (sortField === (fieldMapping[field] || field)) {
+      // If clicking the same field, toggle direction
+      setSortDirection(!sortDirection);
+    } else {
+      // If clicking a new field, set it as sort field and default to ascending
+      setSortField(fieldMapping[field] || field);
+      setSortDirection(false);
+    }
   };
 
   const fetchInterviews = async () => {
@@ -32,7 +54,8 @@ export default function Interviews() {
       SearchTerm: search || undefined,
       PageNumber: page,
       PageSize: 10, // Adjust as needed
-      OrderBy: order || undefined,
+      SortBy: sortField || undefined,
+      SortDescending: sortField ? sortDirection : undefined
     };
     console.log("Fetching interviews with params:", params);
     try {
@@ -77,8 +100,11 @@ export default function Interviews() {
   };
 
     const { data: interviews, isLoading, refetch } = useQuery(
-    ["interviews", { search, page, order }],
-    fetchInterviews
+    ["interviews", { search, page, sortField, sortDirection }],
+    fetchInterviews,{
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      refetchOnWindowFocus: false
+    }
   );
 
   useEffect(() => {
@@ -109,10 +135,6 @@ export default function Interviews() {
 
   resolveCompanyNames();
   }, [interviews]);
-
-
-
-
 
   const table_head = [
     {
@@ -165,11 +187,11 @@ export default function Interviews() {
               search={search}
               setSearch={setSearch}
               table_head={table_head}
-              selectedOrders={["startDate", "company", "position"]}
+              selectedOrders={["startDate", "company", "position", "duration"]}
               table_rows= {resolvedRows}
               handleOpenDelete={handleOpenDelete}
               handleOpenView={"interviews"}
-              setOrder={setOrder}
+              setOrder={handleSort}
               // handleOpenEdit= {null}
             />
           </div>

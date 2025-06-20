@@ -11,6 +11,7 @@ import useUserStore from "../../store/user.store";
 import Dropdown from "../Dropdown";
 import AddModalCompanies from "../user-companies/AddModal";
 import { useAxiosPrivate } from "../../utils/axios";
+import { requestFormReset } from "react-dom";
 
 export default function AddModal({ refetch, openAdd, setOpenAdd }) {
   const token = localStorage.getItem("access");
@@ -79,20 +80,20 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
     refetch: company_refetch,
   } = useQuery(["user-companies", companySearch], fetchCompanies);
 
-  const { values, errors, handleSubmit, handleChange, touched, setFieldValue } =
+  const { values, errors, handleSubmit, handleChange, touched, setFieldValue, resetForm} =
     useFormik({
       initialValues: {
         userId: "",
         name: "",
-        linkedinLink: "",
-        email: "",
+        linkedinLink: undefined,
+        email: undefined,
         jobTitle: "",
         contacted: "",
         companyId: "",
       },
 
       validationSchema: employeeSchema,
-      onSubmit: async (values) => {
+      onSubmit: async (values, {resetForm}) => {
         setLoading(true);
         
         await axiosPrivate
@@ -101,6 +102,7 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
             setOpenAdd(false);
             setLoading(false);
             toast.success("Employee added successfully");
+            resetForm();
             refetch();
           })
           .catch((error) => {

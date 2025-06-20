@@ -2,6 +2,7 @@ import { Plus } from "lucide-react";
 import Layout from "../components/Layout";
 import Table from "../components/Table";
 import React from "react";
+import { useState } from "react";
 import EditModal from "../components/employees/EditModal";
 import DeleteModal from "../components/employees/DeleteModal";
 import { useQuery } from "react-query";
@@ -15,9 +16,18 @@ export default function Employees() {
   const [id, setId] = React.useState(null);
   const [page, setPage] = React.useState(1);
   const [openAdd, setOpenAdd] = React.useState(false);
+  const [sortField, setSortField] = useState("");
+  const [sortDirection, setSortDirection] = useState(false); // false = ascending, true = descending  
   const [search, setSearch] = React.useState("");
-  const [order, setOrder] = React.useState("");
   const axiosPrivate = useAxiosPrivate();
+
+  // Mapping between display keys and API field names
+  const fieldMapping = {
+    name: "name",
+    jobTitle: "jobtitle",
+    companyName: "companyname",
+    email: "email",
+  };
 
   const handleOpenEdit = (id) => {
     setOpenEdit(true);
@@ -29,6 +39,19 @@ export default function Employees() {
     setId(id);
   };
 
+  // This function will be passed to the Table component as setOrder
+  const handleSort = (field) => {
+    console.log("Sorting by field:", field, "-> mapped to:", fieldMapping[field] || field);
+    if (sortField === (fieldMapping[field] || field)) {
+      // If clicking the same field, toggle direction
+      setSortDirection(!sortDirection);
+    } else {
+      // If clicking a new field, set it as sort field and default to ascending
+      setSortField(fieldMapping[field] || field);
+      setSortDirection(false);
+    }
+  };
+
   const fetchEmployees = async () => {
     try {
       // Build query parameters
@@ -36,15 +59,17 @@ export default function Employees() {
         PageNumber: page,
         PageSize: 10, // Default page size
         SearchTerm: search || undefined,
+        SortBy: sortField || undefined,
+        SortDescending: sortField ? sortDirection : undefined,
       };
       
-      // Add sorting if specified
-      if (order) {
-        // Check if order starts with '-' to determine sort direction
-        const isDescending = order.startsWith('-');
-        params.SortBy = isDescending ? order.substring(1) : order;
-        params.SortDescending = isDescending;
-      }
+      // // Add sorting if specified
+      // if (order) {
+      //   // Check if order starts with '-' to determine sort direction
+      //   const isDescending = order.startsWith('-');
+      //   params.SortBy = isDescending ? order.substring(1) : order;
+      //   params.SortDescending = isDescending;
+      // }
       
       console.log("Employees request params:", params);
       const response = await axiosPrivate.get('/employees', { params });
@@ -73,10 +98,10 @@ export default function Employees() {
     refetch,
     error,
   } = useQuery(
-    ["employees", page, search, order],
+    ["employees", page, search, sortField, sortDirection],
     fetchEmployees,
     {
-      keepPreviousData: true, // Keep previous data while fetching new data
+      staleTime: 5 * 60 * 1000, // Data is fresh for 5 minutes
       refetchOnWindowFocus: false // Don't refetch when window regains focus
     }
   );
@@ -140,7 +165,7 @@ export default function Employees() {
               handleOpenDelete={handleOpenDelete}
               handleOpenEdit={handleOpenEdit}
               handleOpenView={"employees"}
-              setOrder={setOrder}
+              setOrder={handleSort}
               selectedOrders={["name", "jobTitle", "companyName", "email"]}
             />
           </div>

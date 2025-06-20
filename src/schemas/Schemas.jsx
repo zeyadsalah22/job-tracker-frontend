@@ -55,8 +55,8 @@ export const employeeSchema = Yup.object().shape({
       /^https?:\/\/(www\.)?linkedin\.com\/(in|pub|company)\/[a-zA-Z0-9_-]+\/?$/,
       "Enter correct url!"
     )
-    .optional(),
-  email: Yup.string().email("Invalid email").optional(),
+    .optional().nullable(),
+  email: Yup.string().email("Invalid email").optional().nullable(),
   jobTitle: Yup.string().required("Required"),
   contacted: Yup.string().required("Required"),
   companyId: Yup.string().required("Required"),

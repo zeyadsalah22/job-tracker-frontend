@@ -156,12 +156,11 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
             onChange={handleChange}
             error={errors.answer || error?.response?.data?.answer}
             touched={touched.answer}
-            required
           />
 
           <div className="flex flex-col gap-2 w-full">
             <p className="text-sm text-gray-600">
-              Choose Application<span className="text-red-500">*</span>
+              Choose Application
             </p>
             <Dropdown
               id={values.application_id}

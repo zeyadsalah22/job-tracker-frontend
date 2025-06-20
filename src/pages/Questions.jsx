@@ -17,13 +17,20 @@ export default function Questions() {
   const [openAdd, setOpenAdd] = React.useState(false);
   const [search, setSearch] = React.useState("");
   const [order, setOrder] = React.useState("");
+  const [sortField, setSortField] = React.useState("");
+  const [sortDirection, setSortDirection] = React.useState(false); // false = ascending, true = descending
   const [applicationFilter, setApplicationFilter] = React.useState("");
   const axiosPrivate = useAxiosPrivate();
 
+  // Mapping between display keys and API field names
+  const fieldMapping = {
+    question: "question",
+    answer: "answer",
+  };
   // Reset page when search or sorting changes
   React.useEffect(() => {
     setPage(1);
-  }, [search, order, applicationFilter]);
+  }, [search, sortField, sortDirection, applicationFilter]);
 
   const handleOpenEdit = (id) => {
     setOpenEdit(true);
@@ -35,6 +42,19 @@ export default function Questions() {
     setId(id);
   };
 
+  // This function will be passed to the Table component as setOrder
+  const handleSort = (field) => {
+    console.log("Sorting by field:", field, "-> mapped to:", fieldMapping[field] || field);
+    if (sortField === (fieldMapping[field] || field)) {
+      // If clicking the same field, toggle direction
+      setSortDirection(!sortDirection);
+    } else {
+      // If clicking a new field, set it as sort field and default to ascending
+      setSortField(fieldMapping[field] || field);
+      setSortDirection(false);
+    }
+  };
+
   const fetchquestions = async () => {
     try {
       const params = {
@@ -42,8 +62,8 @@ export default function Questions() {
         ApplicationId: applicationFilter || undefined,
         PageNumber: page,
         PageSize: 10,
-        SortBy: order || undefined,
-        SortDescending: false // You can make this dynamic if needed
+        SortBy: sortField || undefined,
+        SortDescending: sortField ? sortDirection : undefined
       };
       
       console.log("Fetching questions with params:", params);
@@ -84,7 +104,11 @@ export default function Questions() {
     isLoading,
     refetch,
     error,
-  } = useQuery(["questions", { search, page, applicationFilter, order }], fetchquestions);
+  } = useQuery(["questions", { search, page, applicationFilter, sortField, sortDirection }], 
+    fetchquestions,{
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      refetchOnWindowFocus: false
+    });
 
   const table_head = [
     {
@@ -132,7 +156,7 @@ export default function Questions() {
               isLoading={isLoading}
               search={search}
               setSearch={setSearch}
-              setOrder={setOrder}
+              setOrder={handleSort}
               selectedOrders={selectedOrders}
               table_head={table_head}
               table_rows={table_rows}
