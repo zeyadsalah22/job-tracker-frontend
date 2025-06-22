@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Layout from "../components/Layout";
 import Table from "../components/Table";
 import { Plus } from "lucide-react";
@@ -17,6 +17,8 @@ const ResumeMatching = () => {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [order, setOrder] = useState("");
+  const [sortField, setSortField] = useState("");
+  const [sortDirection, setSortDirection] = useState(false); // false = ascending, true = descending
   const axiosPrivate = useAxiosPrivate();
 
   const handleOpenDelete = (id) => {
@@ -28,53 +30,108 @@ const ResumeMatching = () => {
     setOpenRunTest(true);
   };
 
+  // Mapping between display keys and API field names
+  const fieldMapping = {
+    testDate: "testDate",
+    atsScore: "atsScore",
+  };
+
+  // Reset page when search or sorting changes
+  useEffect(() => {
+    setPage(1);
+  }, [search, sortField, sortDirection]);
+
+  // This function will be passed to the Table component as setOrder
+  const handleSort = (field) => {
+    console.log("Sorting by field:", field, "-> mapped to:", fieldMapping[field] || field);
+    if (sortField === (fieldMapping[field] || field)) {
+      // If clicking the same field, toggle direction
+      setSortDirection(!sortDirection);
+    } else {
+      // If clicking a new field, set it as sort field and default to ascending
+      setSortField(fieldMapping[field] || field);
+      setSortDirection(false);
+    }
+  };
+
+  // Fetch all CVs to get resume names
+  const fetchCvs = async () => {
+    try {
+      const response = await axiosPrivate.get('/cvs');
+      console.log('Fetched CVs:', response.data);
+      return response.data || [];
+    } catch (error) {
+      console.error('Error fetching CVs:', error);
+      return [];
+    }
+  };
+
+  const { data: cvs } = useQuery(["cvs"], fetchCvs);
+
   const fetchResumeTests = async () => {
-    return {
-      results: [
-        {
-          id: 1,
-          resumeLink: "https://example.com/resume1.pdf",
-          date: "2024-03-15",
-          score: "85%",
-          jobDescription: "We are looking for a skilled Frontend Developer with experience in React, TypeScript, and modern web development practices. The ideal candidate should have strong problem-solving skills and experience with state management libraries like Redux or Zustand. Knowledge of testing frameworks like Jest and React Testing Library is a plus.",
-          missingSkills: ["TypeScript", "Redux", "Jest", "React Testing Library"]
-        },
-        {
-          id: 2,
-          resumeLink: "https://example.com/resume2.pdf",
-          date: "2024-03-10",
-          score: "92%",
-          jobDescription: "We are looking for a skilled Frontend Developer with experience in React, TypeScript, and modern web development practices. The ideal candidate should have strong problem-solving skills and experience with state management libraries like Redux or Zustand. Knowledge of testing frameworks like Jest and React Testing Library is a plus.",
-          missingSkills: ["TypeScript", "Redux", "Jest", "React Testing Library"]
-        },
-        {
-          id: 3,
-          resumeLink: "https://example.com/resume3.pdf",
-          date: "2024-03-05",
-          score: "78%",
-          jobDescription: "We are looking for a skilled Frontend Developer with experience in React, TypeScript, and modern web development practices. The ideal candidate should have strong problem-solving skills and experience with state management libraries like Redux or Zustand. Knowledge of testing frameworks like Jest and React Testing Library is a plus.",
-          missingSkills: ["TypeScript", "Redux", "Jest", "React Testing Library"]
-        },
-      ],
-      next: null,
-      previous: null,
-      total_pages: 1,
-    };
+    try {
+      const params = {
+        PageNumber: page,
+        PageSize: 10,
+      };
+
+      // Add search term if provided
+      if (search.trim()) {
+        params.SearchTerm = search.trim();
+      }
+
+      // Add sorting if provided
+      if (sortField) {
+        params.SortBy = sortField;
+        params.SortDescending = sortDirection;
+      }
+
+      console.log('Fetching resume tests with params:', params);
+      const response = await axiosPrivate.get('/resumetest', { params });
+      console.log('Resume tests response:', response.data);
+
+      return {
+        results: response.data.items || [],
+        next: response.data.hasNext ? page + 1 : null,
+        previous: response.data.hasPrevious ? page - 1 : null,
+        total_pages: response.data.totalPages || 1,
+      };
+    } catch (error) {
+      console.error('Error fetching resume tests:', error);
+      return {
+        results: [],
+        next: null,
+        previous: null,
+        total_pages: 1,
+      };
+    }
   };
 
   const { data: resumeTests, isLoading, refetch } = useQuery(
-    ["resumeTests", { search, page, order }],
-    fetchResumeTests
+    ["resumeTests", { search, page, sortField, sortDirection }],
+    fetchResumeTests,
+    {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      refetchOnWindowFocus: false
+    }
   );
 
+  // Create a map of resumeId to resume data for quick lookup
+  const resumeMap = {};
+  if (cvs) {
+    cvs.forEach(cv => {
+      resumeMap[cv.resumeId] = cv;
+    });
+  }
+
   const table_head = [
-    { name: "Resume Link", key: "resumeLink" },
-    { name: "Date", key: "date" },
-    { name: "Score", key: "score" },
+    { name: "Resume", key: "resume" },
+    { name: "Date", key: "testDate" },
+    { name: "Score", key: "atsScore" },
   ];
 
   const table_rows = resumeTests?.results.map((test) => {
-    const score = parseInt(test.score);
+    const score = test.atsScore;
     let scoreColor = "";
     if (score >= 86) {
       scoreColor = "text-green-600";
@@ -84,20 +141,49 @@ const ResumeMatching = () => {
       scoreColor = "text-red-600";
     }
 
+    // Format date to be more readable
+    const formattedDate = new Date(test.testDate).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+
+    // Get resume data from the map
+    const resumeData = resumeMap[test.resumeId];
+    
+    // Create resume link
+    let resumeDisplay = `Resume ${test.resumeId}`;
+    if (resumeData && resumeData.resumeFile) {
+      try {
+        // Convert base64 to blob URL for viewing
+        const binaryString = atob(resumeData.resumeFile);
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+        const blob = new Blob([bytes], { type: 'application/pdf' });
+        const resumeUrl = URL.createObjectURL(blob);
+        
+        resumeDisplay = (
+          <a
+            href={resumeUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-600 hover:underline"
+          >
+            Resume {test.resumeId}
+          </a>
+        );
+      } catch (error) {
+        console.error(`Error creating URL for resume ${test.resumeId}:`, error);
+      }
+    }
+
     return {
-      id: test.id,
-      resumeLink: (
-        <a
-          href={test.resumeLink}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-blue-600 hover:underline"
-        >
-          View Resume
-        </a>
-      ),
-      date: test.date,
-      score: <span className={`font-semibold ${scoreColor}`}>{test.score}</span>,
+      id: test.testId,
+      resume: resumeDisplay,
+      testDate: formattedDate,
+      atsScore: <span className={`font-semibold ${scoreColor}`}>{test.atsScore}%</span>,
     };
   });
 
@@ -123,11 +209,11 @@ const ResumeMatching = () => {
               search={search}
               setSearch={setSearch}
               table_head={table_head}
-              selectedOrders={["date", "score"]}
+              selectedOrders={["testDate", "atsScore"]}
               table_rows={table_rows}
               handleOpenDelete={handleOpenDelete}
               handleOpenView={"resume-matching"}
-              setOrder={setOrder}
+              setOrder={handleSort}
             />
           </div>
         </div>
@@ -154,6 +240,7 @@ const ResumeMatching = () => {
           <RunTestModal
             openRunTest={openRunTest}
             setOpenRunTest={setOpenRunTest}
+            refetch={refetch}
           />
         )}
       </div>
