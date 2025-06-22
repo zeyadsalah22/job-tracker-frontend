@@ -1,5 +1,6 @@
 import useSideNavStore from "../store/sidenav.store";
 import SideNav from "./SideNav";
+import FloatingChatBot from "./chatbot";
 
 export default function Layout({ children }) {
   const isOpen = useSideNavStore((state) => state.isOpen);
@@ -14,6 +15,7 @@ export default function Layout({ children }) {
       >
         {children}
       </div>
+      <FloatingChatBot />
     </div>
   );
 }
