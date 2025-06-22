@@ -140,7 +140,7 @@ export default function InterviewRecording() {
       await axiosPrivate.patch(`/mockinterview/${interviewId}`, payload);
       navigate(`/interviews/${interviewId}`);
     } catch (error) {
-      console.error("❌ Failed to save interview answers", error);
+      console.error("Failed to save interview answers", error);
       alert("Failed to save interview. Check console for details.");
     } finally {
       setIsFinishing(false);

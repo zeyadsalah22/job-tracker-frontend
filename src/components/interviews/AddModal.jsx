@@ -135,7 +135,7 @@ export default function AddModal({ open, setOpen }) {
             <option value="">No Application Selected</option>
             {(Array.isArray(applications) ? applications : []).map((app) => (
               <option key={app.applicationId} value={app.applicationId}>
-                {app.title || app.jobTitle || "Untitled Application"}
+                {app.title || app.jobTitle || "Untitled Application"} @ {app.companyName}
               </option>
             ))}
           </select>
