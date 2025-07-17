@@ -1,5 +1,8 @@
 import { Routes, Route } from "react-router-dom";
+import Landing from "./pages/Landing";
 import Login from "./pages/Login";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfService from "./pages/TermsOfService";
 import Dashboard from "./pages/Dashboard";
 import Table from "./components/Table";
 import { ToastContainer } from "react-toastify";
@@ -37,6 +40,9 @@ export default function App() {
         />
         <Route path="/register" element={<Register />} />
         <Route path="/" element={<Login />} />
+        <Route path="/home" element={<Landing />} />
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="/terms-of-service" element={<TermsOfService />} />
         <Route
           path="/dashboard"
           element={

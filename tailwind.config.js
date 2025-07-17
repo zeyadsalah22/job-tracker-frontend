@@ -7,7 +7,12 @@ export default {
         primary: "#7571F9",
         secondry: "#F1F1F9",
       },
+      fontFamily: {
+        sans: ['Inter', 'Noto Sans', 'sans-serif'],
+      },
     },
   },
-  plugins: [require("@tailwindcss/forms")],
+  plugins: [
+    require("@tailwindcss/forms")
+  ],
 };
