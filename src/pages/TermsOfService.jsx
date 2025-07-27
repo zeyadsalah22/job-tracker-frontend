@@ -13,25 +13,25 @@ const TermsOfService = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#f9f8fc]" style={{ fontFamily: 'Inter, "Noto Sans", sans-serif' }}>
+    <div className="min-h-screen bg-[#eef0ff]" style={{ fontFamily: 'Inter, "Noto Sans", sans-serif' }}>
       {/* Header */}
-      <header className="flex items-center justify-between whitespace-nowrap border-b border-solid border-b-[#e9e6f4] px-10 py-3 bg-white">
-        <div className="flex items-center gap-4 text-[#100d1c]">
+      <header className="flex items-center justify-between whitespace-nowrap border-b border-solid border-b-[#e0e3ff] px-10 py-3 bg-white">
+        <div className="flex items-center gap-4 text-[#231a4c]">
           <div className="w-4 h-4">
             <img src="/logo2.png" alt="Job Lander Logo" className="w-full h-full object-contain" />
           </div>
-          <h2 className="text-[#100d1c] text-lg font-bold leading-tight tracking-[-0.015em]">Job Lander</h2>
+          <h2 className="text-[#231a4c] text-lg font-bold leading-tight tracking-[-0.015em]">Job Lander</h2>
         </div>
         <div className="flex gap-2">
           <button
             onClick={goBack}
-            className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-[#e9e6f4] text-[#100d1c] text-sm font-bold leading-normal tracking-[0.015em] hover:bg-[#d3cee9] transition-colors"
+            className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-[#e0e3ff] text-[#231a4c] text-sm font-bold leading-normal tracking-[0.015em] hover:bg-[#c6cbff] transition-colors"
           >
             <span className="truncate">Go Back</span>
           </button>
           <button
             onClick={goHome}
-            className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-[#7e5ffa] text-[#f9f8fc] text-sm font-bold leading-normal tracking-[0.015em] hover:bg-[#6d4ee6] transition-colors"
+            className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-[#7571f9] text-[#eef0ff] text-sm font-bold leading-normal tracking-[0.015em] hover:bg-[#6144e7] transition-colors"
           >
             <span className="truncate">Home</span>
           </button>
@@ -40,13 +40,13 @@ const TermsOfService = () => {
 
       {/* Content */}
       <div className="max-w-4xl mx-auto px-6 py-12">
-        <div className="bg-white rounded-xl shadow-sm border border-[#e9e6f4] p-8">
-          <h1 className="text-[#100d1c] text-4xl font-black leading-tight tracking-[-0.033em] mb-8">
+        <div className="bg-white rounded-xl shadow-sm border border-[#e0e3ff] p-8">
+          <h1 className="text-[#231a4c] text-4xl font-black leading-tight tracking-[-0.033em] mb-8">
             Terms of Service
           </h1>
           
-          <div className="prose prose-lg max-w-none text-[#100d1c]">
-            <p className="text-[#59479e] text-base mb-6">
+          <div className="prose prose-lg max-w-none text-[#231a4c]">
+            <p className="text-[#5336cc] text-base mb-6">
               <strong>Last updated:</strong> July, 2025
             </p>
 
@@ -55,14 +55,14 @@ const TermsOfService = () => {
             </p>
 
             <section className="mb-8">
-              <h2 className="text-2xl font-bold mb-4 text-[#100d1c]">1. Eligibility</h2>
+              <h2 className="text-2xl font-bold mb-4 text-[#231a4c]">1. Eligibility</h2>
               <p className="text-base leading-relaxed">
                 You must be at least 16 years old to use our services. By using the platform, you confirm you meet this requirement.
               </p>
             </section>
 
             <section className="mb-8">
-              <h2 className="text-2xl font-bold mb-4 text-[#100d1c]">2. Use of the Service</h2>
+              <h2 className="text-2xl font-bold mb-4 text-[#231a4c]">2. Use of the Service</h2>
               <ul className="list-disc pl-6 space-y-2 text-base">
                 <li>You agree to use the platform for lawful job-seeking purposes only.</li>
                 <li>You are responsible for maintaining the confidentiality of your account.</li>
@@ -71,7 +71,7 @@ const TermsOfService = () => {
             </section>
 
             <section className="mb-8">
-              <h2 className="text-2xl font-bold mb-4 text-[#100d1c]">3. AI-Generated Content</h2>
+              <h2 className="text-2xl font-bold mb-4 text-[#231a4c]">3. AI-Generated Content</h2>
               <ul className="list-disc pl-6 space-y-2 text-base">
                 <li>The platform provides AI-generated suggestions (e.g., interview questions, resume analysis).</li>
                 <li>These are for guidance only and do not guarantee job outcomes.</li>
@@ -80,7 +80,7 @@ const TermsOfService = () => {
             </section>
 
             <section className="mb-8">
-              <h2 className="text-2xl font-bold mb-4 text-[#100d1c]">4. User-Generated Content</h2>
+              <h2 className="text-2xl font-bold mb-4 text-[#231a4c]">4. User-Generated Content</h2>
               <ul className="list-disc pl-6 space-y-2 text-base">
                 <li>You retain ownership of the content you upload (e.g., resumes, interview notes).</li>
                 <li>You grant us a license to store and use this data to provide the service to you.</li>
@@ -88,7 +88,7 @@ const TermsOfService = () => {
             </section>
 
             <section className="mb-8">
-              <h2 className="text-2xl font-bold mb-4 text-[#100d1c]">5. Account Termination</h2>
+              <h2 className="text-2xl font-bold mb-4 text-[#231a4c]">5. Account Termination</h2>
               <p className="text-base leading-relaxed mb-4">We reserve the right to suspend or terminate your account if:</p>
               <ul className="list-disc pl-6 space-y-2 text-base">
                 <li>You violate these terms</li>
@@ -97,21 +97,21 @@ const TermsOfService = () => {
             </section>
 
             <section className="mb-8">
-              <h2 className="text-2xl font-bold mb-4 text-[#100d1c]">6. Limitation of Liability</h2>
+              <h2 className="text-2xl font-bold mb-4 text-[#231a4c]">6. Limitation of Liability</h2>
               <p className="text-base leading-relaxed">
                 Job Lander is provided "as-is". We are not liable for any job losses, missed opportunities, or issues resulting from platform use.
               </p>
             </section>
 
             <section className="mb-8">
-              <h2 className="text-2xl font-bold mb-4 text-[#100d1c]">7. Modifications</h2>
+              <h2 className="text-2xl font-bold mb-4 text-[#231a4c]">7. Modifications</h2>
               <p className="text-base leading-relaxed">
                 We may update these terms periodically. Continued use of the platform after changes means you accept the revised terms.
               </p>
             </section>
 
             <section className="mb-8">
-              <h2 className="text-2xl font-bold mb-4 text-[#100d1c]">8. Contact</h2>
+              <h2 className="text-2xl font-bold mb-4 text-[#231a4c]">8. Contact</h2>
               <p className="text-base leading-relaxed">
                 If you have any questions, please contact us at [your email address].
               </p>
