@@ -101,6 +101,11 @@ export default function Login() {
           error={errors.password}
           touched={touched.password}
         />
+        <div className="flex justify-end -mt-3">
+          <Link to="/forgot-password" className="text-sm underline text-primary">
+            Forgot password?
+          </Link>
+        </div>
         {loading ? (
           <button
             disabled
