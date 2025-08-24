@@ -1,8 +1,8 @@
-import Modal from "./Modal";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/Dialog";
 import { useFormik } from "formik";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import FormInput from "./FormInput";
+import FormField from "./ui/FormField";
 import ReactLoading from "react-loading";
 import { todoSchema } from "../schemas/Schemas";
 import useUserStore from "../store/user.store";
@@ -79,11 +79,14 @@ export default function AddTodoModal({ refetch, openAdd, setOpenAdd }) {
   }, [openAdd, resetForm]);
 
   return (
-    <Modal open={openAdd} setOpen={setOpenAdd} width="600px">
-      <div className="flex flex-col gap-4">
-        <h1 className="font-semibold text-lg">Add Task</h1>
+    <Dialog open={openAdd} onOpenChange={setOpenAdd}>
+      <DialogContent className="max-w-[600px]">
+        <DialogHeader>
+          <DialogTitle>Add Task</DialogTitle>
+        </DialogHeader>
+        <div className="flex flex-col gap-4">
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-          <FormInput
+          <FormField
             name="applicationTitle"
             label="Task Title"
             type="text"
@@ -97,7 +100,7 @@ export default function AddTodoModal({ refetch, openAdd, setOpenAdd }) {
             touched={touched.applicationTitle}
             required
           />
-          <FormInput
+          <FormField
             name="applicationLink"
             label="Link (Optional)"
             type="text"
@@ -109,7 +112,7 @@ export default function AddTodoModal({ refetch, openAdd, setOpenAdd }) {
             }
             touched={touched.applicationLink}
           />
-          <FormInput
+          <FormField
             name="deadline"
             label="Deadline"
             type="date"
@@ -144,7 +147,8 @@ export default function AddTodoModal({ refetch, openAdd, setOpenAdd }) {
             </button>
           )}
         </form>
-      </div>
-    </Modal>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }

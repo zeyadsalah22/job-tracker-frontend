@@ -1,10 +1,10 @@
-import Modal from "../Modal";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/Dialog";
 import { toast } from "react-toastify";
 import React, { useState } from "react";
 import { useAxiosPrivate } from "../../utils/axios";
 import ReactLoading from "react-loading";
 
-export default function DeleteModal({ id, openDelete, setOpenDelete, refetch }) {
+export default function DeleteDialog({ id, openDelete, setOpenDelete, refetch }) {
   const [loading, setLoading] = useState(false);
   const axiosPrivate = useAxiosPrivate();
 
@@ -29,9 +29,12 @@ export default function DeleteModal({ id, openDelete, setOpenDelete, refetch }) 
   };
 
   return (
-    <Modal open={openDelete} setOpen={setOpenDelete} width="400px">
-      <div className="flex flex-col gap-4 p-4">
-        <h1 className="text-lg font-semibold text-gray-800">Delete Interview</h1>
+    <Dialog open={openDelete} onOpenChange={setOpenDelete}>
+      <DialogContent className="max-w-[400px]">
+        <DialogHeader>
+          <DialogTitle>Delete Interview</DialogTitle>
+        </DialogHeader>
+        <div className="flex flex-col gap-4">
         <p className="text-gray-600">Are you sure you want to delete this interview?</p>
         <div className="flex justify-end gap-4 mt-4">
           <button
@@ -53,7 +56,8 @@ export default function DeleteModal({ id, openDelete, setOpenDelete, refetch }) 
             )}
           </button>
         </div>
-      </div>
-    </Modal>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }

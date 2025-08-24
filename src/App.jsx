@@ -24,9 +24,10 @@ import Question from "./components/questions/ViewModal";
 import ProtectedRoute from "./utils/ProtectedRoute";
 import Interviews from "./pages/Interviews";
 import Interview from "./components/interviews/ViewModal";
-import InterviewRecording from "./pages/InterviewRecording";
+
 import ResumeMatching from "./pages/ResumeMatching";
 import ResumeTestDetails from "./components/resume-matching/ViewModal";
+import { AppLayout } from "./components/layout/AppLayout";
 
 export default function App() {
   return (
@@ -36,7 +37,9 @@ export default function App() {
           path="/profile"
           element={
             <ProtectedRoute>
-              <Profile />
+              <AppLayout>
+                <Profile />
+              </AppLayout>
             </ProtectedRoute>
           }
         />
@@ -51,7 +54,9 @@ export default function App() {
           path="/dashboard"
           element={
             <ProtectedRoute>
-              <Dashboard />
+              <AppLayout>
+                <Dashboard />
+              </AppLayout>
             </ProtectedRoute>
           }
         />
@@ -59,7 +64,9 @@ export default function App() {
           path="/applications"
           element={
             <ProtectedRoute>
-              <Applications />
+              <AppLayout>
+                <Applications />
+              </AppLayout>
             </ProtectedRoute>
           }
         />
@@ -67,7 +74,9 @@ export default function App() {
           path="/applications/:id"
           element={
             <ProtectedRoute>
-              <Apllication />
+              <AppLayout>
+                <Apllication />
+              </AppLayout>
             </ProtectedRoute>
           }
         />
@@ -75,7 +84,9 @@ export default function App() {
           path="/user-companies"
           element={
             <ProtectedRoute>
-              <UserCompanies />
+              <AppLayout>
+                <UserCompanies />
+              </AppLayout>
             </ProtectedRoute>
           }
         />
@@ -83,7 +94,9 @@ export default function App() {
           path="/user-companies/:id"
           element={
             <ProtectedRoute>
-              <UserCompany />
+              <AppLayout>
+                <UserCompany />
+              </AppLayout>
             </ProtectedRoute>
           }
         />
@@ -91,7 +104,9 @@ export default function App() {
           path="/companies"
           element={
             <ProtectedRoute>
-              <Companies />
+              <AppLayout>
+                <Companies />
+              </AppLayout>
             </ProtectedRoute>
           }
         />
@@ -99,7 +114,9 @@ export default function App() {
           path="/companies/:id"
           element={
             <ProtectedRoute>
-              <Company />
+              <AppLayout>
+                <Company />
+              </AppLayout>
             </ProtectedRoute>
           }
         />
@@ -107,7 +124,9 @@ export default function App() {
           path="/employees"
           element={
             <ProtectedRoute>
-              <Employees />
+              <AppLayout>
+                <Employees />
+              </AppLayout>
             </ProtectedRoute>
           }
         />
@@ -115,7 +134,9 @@ export default function App() {
           path="/employees/:id"
           element={
             <ProtectedRoute>
-              <Employee />
+              <AppLayout>
+                <Employee />
+              </AppLayout>
             </ProtectedRoute>
           }
         />
@@ -123,7 +144,9 @@ export default function App() {
           path="/questions"
           element={
             <ProtectedRoute>
-              <Questions />
+              <AppLayout>
+                <Questions />
+              </AppLayout>
             </ProtectedRoute>
           }
         />
@@ -131,7 +154,9 @@ export default function App() {
           path="/questions/:id"
           element={
             <ProtectedRoute>
-              <Question />
+              <AppLayout>
+                <Question />
+              </AppLayout>
             </ProtectedRoute>
           }
         />
@@ -139,31 +164,20 @@ export default function App() {
           path="/interviews"
           element={
             <ProtectedRoute>
-              <Interviews />
+              <AppLayout>
+                <Interviews />
+              </AppLayout>
             </ProtectedRoute>
           }
         />
-        <Route
-          path="/interviews/recording"
-          element={
-            <ProtectedRoute>
-              <InterviewRecording />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/interviews/recording/:interviewId"
-          element={
-            <ProtectedRoute>
-              <InterviewRecording />
-            </ProtectedRoute>
-          }
-        />
+
         <Route
           path="/interviews/:id"
           element={
             <ProtectedRoute>
-              <Interview />
+              <AppLayout>
+                <Interview />
+              </AppLayout>
             </ProtectedRoute>
           }
         />
@@ -171,7 +185,9 @@ export default function App() {
           path="/resume-matching"
           element={
             <ProtectedRoute>
-              <ResumeMatching />
+              <AppLayout>
+                <ResumeMatching />
+              </AppLayout>
             </ProtectedRoute>
           }
         />
@@ -179,7 +195,9 @@ export default function App() {
           path="/resume-matching/:id"
           element={
             <ProtectedRoute>
-              <ResumeTestDetails />
+              <AppLayout>
+                <ResumeTestDetails />
+              </AppLayout>
             </ProtectedRoute>
           }
         />
@@ -187,7 +205,9 @@ export default function App() {
           path="/table"
           element={
             <ProtectedRoute>
-              <Table />
+              <AppLayout>
+                <Table />
+              </AppLayout>
             </ProtectedRoute>
           }
         />

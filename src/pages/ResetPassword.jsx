@@ -5,7 +5,7 @@ import * as Yup from "yup";
 import ReactLoading from "react-loading";
 import { toast } from "react-toastify";
 import axios from "../utils/axios";
-import FormInput from "../components/FormInput";
+import FormField from "../components/ui/FormField";
 
 const passwordSchema = Yup.string()
   .required("Password is required")
@@ -86,7 +86,7 @@ export default function ResetPassword() {
       <img src="/logo.png" alt="logo" className="w-32 h-24" />
       <form onSubmit={handleSubmit} className="flex flex-col w-full max-w-md gap-5">
         <div className="relative">
-          <FormInput
+          <FormField
             name="newPassword"
             type={showNew ? "text" : "password"}
             placeHolder="New password"
@@ -105,7 +105,7 @@ export default function ResetPassword() {
         </div>
 
         <div className="relative">
-          <FormInput
+          <FormField
             name="confirmPassword"
             type={showConfirm ? "text" : "password"}
             placeHolder="Confirm new password"

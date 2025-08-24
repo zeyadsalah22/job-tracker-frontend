@@ -1,9 +1,9 @@
-import Modal from "../Modal";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/Dialog";
 import { toast } from "react-toastify";
 import { useState } from "react";
 import ReactLoading from "react-loading";
 import { useFormik } from "formik";
-import FormInput from "../FormInput";
+import FormField from "../ui/FormField";
 import * as Yup from "yup";
 import { useAxiosPrivate } from "../../utils/axios";
 
@@ -72,12 +72,14 @@ export default function ChangePass({ open, setOpen }) {
   });
 
   return (
-    <Modal open={open} setOpen={setOpen} width="600px">
-      <div className="flex flex-col gap-4">
-        <h1 className="font-semibold text-lg">Change Password</h1>
-        <div className="flex flex-col gap-3">
-          <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
-            <FormInput
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogContent className="max-w-[500px]">
+        <DialogHeader>
+          <DialogTitle>Change Password</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <form className="space-y-4" onSubmit={handleSubmit}>
+            <FormField
               type="password"
               name="currentPassword"
               placeHolder="Enter your current password"
@@ -87,7 +89,7 @@ export default function ChangePass({ open, setOpen }) {
               error={errors.currentPassword || error?.response?.data?.currentPassword}
               touched={touched.currentPassword}
             />
-            <FormInput
+            <FormField
               type="password"
               name="newPassword"
               placeHolder="Enter your new password"
@@ -97,7 +99,7 @@ export default function ChangePass({ open, setOpen }) {
               error={errors.newPassword || error?.response?.data?.newPassword}
               touched={touched.newPassword}
             />
-            <FormInput
+            <FormField
               type="password"
               name="newPasswordConfirm"
               placeHolder="Confirm your new password"
@@ -107,38 +109,35 @@ export default function ChangePass({ open, setOpen }) {
               error={errors.newPasswordConfirm || error?.response?.data?.newPasswordConfirm}
               touched={touched.newPasswordConfirm}
             />
-            <div className="flex gap-2 justify-end">
+            <div className="flex gap-3 justify-end">
+              <button
+                type="button"
+                onClick={() => setOpen(false)}
+                disabled={loading}
+                className="px-4 py-2 rounded border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
               {loading ? (
                 <button
                   disabled
-                  className="rounded-md cursor-not-allowed flex items-center justify-center bg-primary px-2 py-1 text-white transition h-10"
+                  className="px-4 py-2 rounded bg-primary text-white cursor-not-allowed flex items-center gap-2"
                 >
-                  <ReactLoading
-                    type="bubbles"
-                    color="#ffffff"
-                    height={25}
-                    width={25}
-                  />
+                  <ReactLoading type="spin" color="#fff" height={16} width={16} />
+                  Updating...
                 </button>
               ) : (
                 <button
                   type="submit"
-                  className="rounded-md bg-primary px-2 py-1 text-white transition hover:bg-primary/85 h-10"
+                  className="px-4 py-2 rounded bg-primary text-white hover:bg-primary/80 transition-colors"
                 >
-                  Update
+                  Update Password
                 </button>
               )}
-              <button
-                type="button"
-                onClick={() => setOpen(false)}
-                className="bg-gray-200 text-gray-800 px-2 py-1 text-sm rounded-md hover:bg-gray-300 transition-all h-10"
-              >
-                Cancel
-              </button>
             </div>
           </form>
         </div>
-      </div>
-    </Modal>
+      </DialogContent>
+    </Dialog>
   );
 }

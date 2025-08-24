@@ -1,9 +1,9 @@
 import { useFormik } from "formik";
-import Layout from "../components/Layout";
+
 import useUserStore from "../store/user.store";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import FormInput from "../components/FormInput";
+import FormField from "../components/ui/FormField";
 import ReactLoading from "react-loading";
 import DeleteModal from "../components/user/DeleteModal";
 import { useNavigate } from "react-router-dom";
@@ -102,16 +102,13 @@ export default function Profile() {
 
   if (isLoading) {
     return (
-      <Layout>
         <div className="bg-white rounded-lg h-full flex items-center justify-center">
           <ReactLoading type="spinningBubbles" color="#7571F9" height={50} width={50} />
         </div>
-      </Layout>
     );
   }
 
   return (
-    <Layout>
       <div className="bg-white rounded-lg h-full flex flex-col p-4 justify-between">
         <div className="flex flex-col">
           <div className="flex items-center pb-4 border-b-2 justify-between">
@@ -129,7 +126,7 @@ export default function Profile() {
               onSubmit={handleSubmit}
               className="flex flex-col w-[50%] gap-5 my-8"
             >
-              <FormInput
+              <FormField
                 type="text"
                 name="fname"
                 placeHolder="First Name"
@@ -139,7 +136,7 @@ export default function Profile() {
                 error={errors.fname || error?.response?.data?.fname}
                 touched={touched.fname}
               />
-              <FormInput
+              <FormField
                 type="text"
                 name="lname"
                 placeHolder="Last Name"
@@ -149,7 +146,7 @@ export default function Profile() {
                 error={errors.lname || error?.response?.data?.lname}
                 touched={touched.lname}
               />
-              <FormInput
+              <FormField
                 type="email"
                 name="email"
                 placeHolder="Email"
@@ -159,7 +156,7 @@ export default function Profile() {
                 error={errors.email || error?.response?.data?.email}
                 touched={touched.email}
               />
-              <FormInput
+              <FormField
                 type="text"
                 name="address"
                 placeHolder="Address"
@@ -237,6 +234,5 @@ export default function Profile() {
         <DeleteModal openDelete={deleteModal} setOpenDelete={setDeleteModal} />
         <ChangePass open={changePassword} setOpen={setChangePassword} />
       </div>
-    </Layout>
   );
 }

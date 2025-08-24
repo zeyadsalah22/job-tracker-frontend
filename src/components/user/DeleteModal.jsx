@@ -1,10 +1,10 @@
-import Modal from "../Modal";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/Dialog";
 import { toast } from "react-toastify";
 import { useState } from "react";
 import ReactLoading from "react-loading";
 import { useFormik } from "formik";
 import { useNavigate } from "react-router-dom";
-import FormInput from "../FormInput";
+import FormField from "../ui/FormField";
 import * as Yup from "yup";
 import { useAxiosPrivate } from "../../utils/axios";
 import useUserStore from "../../store/user.store";
@@ -84,15 +84,17 @@ export default function DeleteModal({ openDelete, setOpenDelete }) {
   });
 
   return (
-    <Modal open={openDelete} setOpen={setOpenDelete} width="600px">
-      <div className="flex flex-col gap-4">
-        <h1 className="font-semibold text-lg">Delete User</h1>
-        <p className="text-gray-600">
-          This action cannot be undone. Please enter your password to confirm.
-        </p>
-        <div className="flex flex-col gap-3">
-          <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
-            <FormInput
+    <Dialog open={openDelete} onOpenChange={setOpenDelete}>
+      <DialogContent className="max-w-[500px]">
+        <DialogHeader>
+          <DialogTitle>Delete User Account</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <p className="text-gray-600">
+            This action cannot be undone. Please enter your password to confirm.
+          </p>
+          <form className="space-y-4" onSubmit={handleSubmit}>
+            <FormField
               name="password"
               type="password"
               placeHolder="Enter your password"
@@ -101,38 +103,35 @@ export default function DeleteModal({ openDelete, setOpenDelete }) {
               touched={touched.password}
               onChange={handleChange}
             />
-            <div className="flex gap-2 justify-end">
+            <div className="flex gap-3 justify-end">
+              <button
+                type="button"
+                onClick={() => setOpenDelete(false)}
+                disabled={loading}
+                className="px-4 py-2 rounded border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
               {loading ? (
                 <button
                   disabled
-                  className="rounded-md cursor-not-allowed flex items-center justify-center bg-red-500 px-2 py-1 text-white transition h-10"
+                  className="px-4 py-2 rounded bg-red-500 text-white cursor-not-allowed flex items-center gap-2"
                 >
-                  <ReactLoading
-                    type="bubbles"
-                    color="#ffffff"
-                    height={25}
-                    width={25}
-                  />
+                  <ReactLoading type="spin" color="#fff" height={16} width={16} />
+                  Deleting...
                 </button>
               ) : (
                 <button
                   type="submit"
-                  className="rounded-md bg-red-500 px-2 py-1 text-white transition hover:bg-red-600 h-10"
+                  className="px-4 py-2 rounded bg-red-500 text-white hover:bg-red-600 transition-colors"
                 >
-                  Delete
+                  Delete Account
                 </button>
               )}
-              <button
-                type="button"
-                onClick={() => setOpenDelete(false)}
-                className="bg-gray-200 text-gray-800 px-2 py-1 text-sm rounded-md hover:bg-gray-300 transition-all h-10"
-              >
-                Cancel
-              </button>
             </div>
           </form>
         </div>
-      </div>
-    </Modal>
+      </DialogContent>
+    </Dialog>
   );
 }

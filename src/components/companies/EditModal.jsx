@@ -1,9 +1,9 @@
-import Modal from "../Modal";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/Dialog";
 import { useFormik } from "formik";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { companySchema } from "../../schemas/Schemas";
-import FormInput from "../FormInput";
+import FormField from "../ui/FormField";
 import ReactLoading from "react-loading";
 import { useQuery } from "react-query";
 import useUserStore from "../../store/user.store";
@@ -73,7 +73,7 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
       <div className="flex flex-col gap-4">
         <h1 className="font-semibold text-lg">Update Company</h1>
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-          <FormInput
+          <FormField
             name="name"
             type="text"
             placeHolder="Name"
@@ -84,7 +84,7 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
             required
           />
 
-          <FormInput
+          <FormField
             name="location"
             type="text"
             placeHolder="Location"
@@ -95,7 +95,7 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
             required
           />
 
-          <FormInput
+          <FormField
             name="careersLink"
             type="text"
             placeHolder="Careers Link"
@@ -105,7 +105,7 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
             touched={touched.careersLink}
           />
 
-          <FormInput
+          <FormField
             name="linkedinLink"
             type="text"
             placeHolder="LinkedIn Link"

@@ -1,19 +1,24 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useFormik } from "formik";
-import FormInput from "../components/FormInput";
+import FormField from "../components/ui/FormField";
 import { loginSchema } from "../schemas/Schemas";
 import ReactLoading from "react-loading";
 import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
 import useUserStore from "../store/user.store";
 import axios, { useAxiosPrivate } from "../utils/axios";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/Card";
+import { CheckboxWithLabel } from "../components/ui/Checkbox";
+import Button from "../components/ui/Button";
+import { Briefcase, Loader2 } from "lucide-react";
 
 export default function Login() {
   const token = localStorage.getItem("access");
   const navigate = useNavigate();
   const setUser = useUserStore((state) => state.setUser);
   const [loading, setLoading] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const axiosPrivate = useAxiosPrivate();
 
   const { values, errors, handleSubmit, handleChange, touched } = useFormik({
@@ -80,59 +85,85 @@ export default function Login() {
   }, [token, navigate]);
 
   return (
-    <div className="h-screen flex flex-col justify-center items-center gap-4">
-      <img src="/logo.png" alt="logo" className="w-32 h-24" />
-      <form onSubmit={handleSubmit} className="flex flex-col w-[500px] gap-5">
-        <FormInput
-          name="email"
-          type="text"
-          placeHolder="Email"
-          value={values.email}
-          onChange={handleChange}
-          error={errors.email}
-          touched={touched.email}
-        />
-        <FormInput
-          name="password"
-          type="password"
-          placeHolder="Password"
-          value={values.password}
-          onChange={handleChange}
-          error={errors.password}
-          touched={touched.password}
-        />
-        <div className="flex justify-end -mt-3">
-          <Link to="/forgot-password" className="text-sm underline text-primary">
-            Forgot password?
-          </Link>
-        </div>
-        {loading ? (
-          <button
-            disabled
-            className="rounded cursor-not-allowed flex items-center justify-center bg-primary px-8 py-2 text-white transition h-12"
-          >
-            <ReactLoading
-              type="bubbles"
-              color="#ffffff"
-              height={25}
-              width={25}
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 p-4">
+      <Card className="w-full max-w-md shadow-xl border-0 glass">
+        <CardHeader className="text-center">
+          <div className="flex items-center justify-center space-x-2 mb-4">
+            <div className="w-10 h-10 bg-gradient-primary rounded-lg flex items-center justify-center">
+              <Briefcase className="w-6 h-6 text-white" />
+            </div>
+            <span className="text-2xl font-bold gradient-text">Job Lander</span>
+          </div>
+          <CardTitle className="text-2xl font-bold">Welcome Back</CardTitle>
+          <CardDescription>
+            Sign in to your account to continue your job search journey
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <FormField
+              name="email"
+              type="text"
+              placeHolder="Enter your email"
+              label="Email"
+              value={values.email}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              error={errors.email}
+              touched={touched.email}
             />
-          </button>
-        ) : (
-          <button
-            type="submit"
-            className="rounded bg-primary px-8 py-2 text-white transition hover:bg-primary/80 h-12"
-          >
-            Login
-          </button>
-        )}
-        <div className="flex gap-1">
-          <p className="text-sm">{"Don't have an account?"}</p>
-          <Link to="/register" className="text-sm underline text-primary">
-            Register here
-          </Link>
-        </div>
-      </form>
+            <FormField
+              name="password"
+              type="password"
+              placeHolder="Enter your password"
+              label="Password"
+              value={values.password}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              error={errors.password}
+              touched={touched.password}
+            />
+            <div className="flex items-center justify-between">
+              <CheckboxWithLabel
+                id="remember"
+                checked={rememberMe}
+                onCheckedChange={setRememberMe}
+              >
+                Remember me
+              </CheckboxWithLabel>
+              <Link
+                to="/forgot-password"
+                className="text-sm text-primary hover:underline"
+              >
+                Forgot password?
+              </Link>
+            </div>
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={loading}
+              variant="hero"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Signing in...
+                </>
+              ) : (
+                "Sign In"
+              )}
+            </Button>
+          </form>
+          <div className="mt-6 text-center">
+            <p className="text-sm text-muted-foreground">
+              Don't have an account?{" "}
+              <Link to="/register" className="text-primary hover:underline font-medium">
+                Sign up
+              </Link>
+            </p>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

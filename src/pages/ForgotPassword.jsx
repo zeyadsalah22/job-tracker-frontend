@@ -1,16 +1,20 @@
 import { useEffect, useRef, useState } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import ReactLoading from "react-loading";
 import { toast } from "react-toastify";
 import axios from "../utils/axios";
-import FormInput from "../components/FormInput";
+import Input from "../components/ui/Input";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/Card";
+import Button from "../components/ui/Button";
+import { Briefcase, Loader2 } from "lucide-react";
 
 export default function ForgotPassword() {
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const successRef = useRef(null);
+  const navigate = useNavigate();
 
   const { values, errors, touched, handleChange, handleSubmit, isValid, dirty } =
     useFormik({
@@ -42,66 +46,103 @@ export default function ForgotPassword() {
 
   if (submitted) {
     return (
-      <div className="h-screen flex flex-col justify-center items-center gap-6 p-4">
-        <img src="/logo.png" alt="logo" className="w-32 h-24" />
-        <div
-          ref={successRef}
-          tabIndex={-1}
-          className="max-w-md w-full rounded-md border p-6 text-center focus:outline-none"
-          aria-live="polite"
-        >
-          <h2 className="text-xl font-semibold mb-2">Check your inbox</h2>
-          <p className="text-gray-600">
-            If the email exists, a reset link has been sent. Please check your inbox.
-          </p>
-          <div className="mt-6">
-            <Link to="/" className="text-primary underline">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 p-4">
+        <Card className="w-full max-w-md shadow-xl border-0 glass">
+          <CardHeader className="text-center">
+            <div className="flex items-center justify-center space-x-2 mb-4">
+              <div className="w-10 h-10 bg-gradient-primary rounded-lg flex items-center justify-center">
+                <Briefcase className="w-6 h-6 text-white" />
+              </div>
+              <span className="text-2xl font-bold gradient-text">Job Lander</span>
+            </div>
+            <CardTitle className="text-2xl font-bold">Check your inbox</CardTitle>
+            <CardDescription>
+              If the email exists, a reset link has been sent
+            </CardDescription>
+          </CardHeader>
+          <CardContent
+            ref={successRef}
+            tabIndex={-1}
+            className="text-center focus:outline-none"
+            aria-live="polite"
+          >
+            <p className="text-muted-foreground mb-6">
+              Please check your inbox and follow the instructions in the email to reset your password.
+            </p>
+            <Button 
+              variant="hero"
+              onClick={() => navigate('/')}
+            >
               Back to sign in
-            </Link>
-          </div>
-        </div>
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
   return (
-    <div className="h-screen flex flex-col justify-center items-center gap-4 p-4">
-      <img src="/logo.png" alt="logo" className="w-32 h-24" />
-      <form onSubmit={handleSubmit} className="flex flex-col w-full max-w-md gap-5">
-        <FormInput
-          name="email"
-          type="email"
-          placeHolder="Email"
-          value={values.email}
-          onChange={handleChange}
-          error={errors.email}
-          touched={touched.email}
-        />
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 p-4">
+      <Card className="w-full max-w-md shadow-xl border-0 glass">
+        <CardHeader className="text-center">
+          <div className="flex items-center justify-center space-x-2 mb-4">
+            <div className="w-10 h-10 bg-gradient-primary rounded-lg flex items-center justify-center">
+              <Briefcase className="w-6 h-6 text-white" />
+            </div>
+            <span className="text-2xl font-bold gradient-text">Job Lander</span>
+          </div>
+          <CardTitle className="text-2xl font-bold">Forgot Password</CardTitle>
+          <CardDescription>
+            Enter your email address and we'll send you a reset link
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <label htmlFor="email" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                Email
+              </label>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                placeholder="Enter your email"
+                value={values.email}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                className={touched.email && errors.email ? "border-red-500" : ""}
+              />
+              {touched.email && errors.email && (
+                <div className="text-red-500 text-sm">{errors.email}</div>
+              )}
+            </div>
 
-        {loading ? (
-          <button
-            disabled
-            className="rounded cursor-not-allowed flex items-center justify-center bg-primary px-8 py-2 text-white transition h-12"
-          >
-            <ReactLoading type="bubbles" color="#ffffff" height={25} width={25} />
-          </button>
-        ) : (
-          <button
-            type="submit"
-            disabled={!isValid || !dirty}
-            className="rounded bg-primary px-8 py-2 text-white transition hover:bg-primary/80 h-12 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Send reset link
-          </button>
-        )}
-
-        <div className="flex gap-1 text-sm">
-          <span>Remembered your password?</span>
-          <Link to="/" className="underline text-primary">
-            Back to sign in
-          </Link>
-        </div>
-      </form>
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={!isValid || !dirty || loading}
+              variant="hero"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Sending reset link...
+                </>
+              ) : (
+                "Send reset link"
+              )}
+            </Button>
+          </form>
+          <div className="mt-6 text-center">
+            <p className="text-sm text-muted-foreground">
+              Remembered your password?{" "}
+              <Link to="/" className="text-primary hover:underline font-medium">
+                Back to sign in
+              </Link>
+            </p>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

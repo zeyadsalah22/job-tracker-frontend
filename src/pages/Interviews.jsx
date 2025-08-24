@@ -1,85 +1,52 @@
-import { Plus } from "lucide-react";
-import Layout from "../components/Layout";
-import Table from "../components/Table";
-import React, { useEffect } from "react";
-import DeleteModal from "../components/interviews/DeleteModal";
+import React, { useState, useEffect } from "react";
 import { useQuery } from "react-query";
-import Pagination from "../components/Pagination";
-import { useNavigate } from "react-router-dom";
 import { useAxiosPrivate } from "../utils/axios";
+import { 
+  Plus,
+  Search,
+  Calendar,
+  Building2,
+  Clock,
+  Play,
+  FileAudio,
+  Eye
+} from "lucide-react";
+import Button from "../components/ui/Button";
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/Card";
+import { Badge } from "../components/ui/Badge";
+import {CheckCircle} from "lucide-react";
+import Input from "../components/ui/Input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/Tabs";
+import Table from "../components/Table";
 import AddModal from "../components/interviews/AddModal";
+import ViewModal from "../components/interviews/ViewModal";
+import DeleteModal from "../components/interviews/DeleteModal";
+import InterviewRecordingModal from "../components/interviews/InterviewRecordingModal";
 
 export default function Interviews() {
-  const navigate = useNavigate();
   const axiosPrivate = useAxiosPrivate();
-  const [openDelete, setOpenDelete] = React.useState(false);
-  const [id, setId] = React.useState(null);
-  const [page, setPage] = React.useState(1);
-  const [search, setSearch] = React.useState("");
-  const [order, setOrder] = React.useState("");
-  const [sortField, setSortField] = React.useState("");
-  const [sortDirection, setSortDirection] = React.useState(false); // false = ascending, true = descending
-  const [openAdd, setOpenAdd] = React.useState(false);
-  const [resolvedRows, setResolvedRows] = React.useState([]);
+  
+  // Modal states
+  const [openAdd, setOpenAdd] = useState(false);
+  const [openView, setOpenView] = useState(false);
+  const [openDelete, setOpenDelete] = useState(false);
+  const [openRecording, setOpenRecording] = useState(false);
+  const [selectedInterview, setSelectedInterview] = useState(null);
+  const [recordingInterviewId, setRecordingInterviewId] = useState(null);
+  
+  // Table states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortBy, setSortBy] = useState("");
+  const [sortOrder, setSortOrder] = useState("asc");
+  
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, sortBy, sortOrder]);
 
-  // Mapping between display keys and API field names
-  const fieldMapping = {
-    startDate: "startdate",
-    duration: "duration",
-    company: "companyname",
-    position: "position",
-  };
-
-  const handleOpenDelete = (id) => {
-    setOpenDelete(true);
-    setId(id);
-  };
-
-  // This function will be passed to the Table component as setOrder
-  const handleSort = (field) => {
-    console.log("Sorting by field:", field, "-> mapped to:", fieldMapping[field] || field);
-    if (sortField === (fieldMapping[field] || field)) {
-      // If clicking the same field, toggle direction
-      setSortDirection(!sortDirection);
-    } else {
-      // If clicking a new field, set it as sort field and default to ascending
-      setSortField(fieldMapping[field] || field);
-      setSortDirection(false);
-    }
-  };
-
-  const fetchInterviews = async () => {
-    // Construct the query parameters based on state
-    const params = {
-      SearchTerm: search || undefined,
-      PageNumber: page,
-      PageSize: 10, // Adjust as needed
-      SortBy: sortField || undefined,
-      SortDescending: sortField ? sortDirection : undefined
-    };
-    console.log("Fetching interviews with params:", params);
-    try {
-      const response = await axiosPrivate.get("/mockinterview", { params });
-      console.log("Interviews response:", response.data);
-      return {
-        results: response.data.items,
-        next: response.data.hasNext ? page + 1 : null,
-        previous: response.data.hasPrevious ? page - 1 : null,
-        total_pages: response.data.totalPages
-      };
-    } catch (error) {
-      console.error("Error fetching interviews:", error);
-      alert("Failed to load interview data. Please try again later.");
-      return {
-        results: [],
-        next: null,
-        previous: null,
-        total_pages: 0
-      };
-    }
-  };
-
-   // fetch company name using either applicationId or companyId
+  // Fetch company name using either applicationId or companyId
   const fetchCompanyNameUsingCompanyId = async (companyId) => {
     try {
       const response = await axiosPrivate.get(`/user-companies/${companyId}`);
@@ -89,6 +56,7 @@ export default function Interviews() {
       return "Unknown Company";
     }
   };
+
   const fetchCompanyNameUsingApplicationId = async (applicationId) => {
     try {
       const response = await axiosPrivate.get(`/applications/${applicationId}`);
@@ -99,122 +67,269 @@ export default function Interviews() {
     }
   };
 
-    const { data: interviews, isLoading, refetch } = useQuery(
-    ["interviews", { search, page, sortField, sortDirection }],
-    fetchInterviews,{
-      staleTime: 5 * 60 * 1000, // 5 minutes
+  // Fetch interviews
+  const fetchInterviews = async () => {
+    try {
+      const params = {
+        PageNumber: currentPage,
+        PageSize: itemsPerPage,
+      };
+
+      if (searchTerm.trim()) {
+        params.SearchTerm = searchTerm.trim();
+      }
+
+      if (sortBy) {
+        params.SortBy = sortBy;
+        params.SortDescending = sortOrder === 'desc';
+      }
+
+      const response = await axiosPrivate.get("/mockinterview", { params });
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching interviews:", error);
+      return {
+        items: [],
+        totalCount: 0,
+        totalPages: 1,
+        currentPage: 1,
+        hasNext: false,
+        hasPrevious: false
+      };
+    }
+  };
+
+  const { data: interviewsData, isLoading, refetch } = useQuery(
+    ["interviews", { currentPage, itemsPerPage, searchTerm, sortBy, sortOrder }],
+    fetchInterviews,
+    {
+      staleTime: 5 * 60 * 1000,
       refetchOnWindowFocus: false
     }
   );
 
+  // Resolve company names for each interview
+  const [resolvedInterviews, setResolvedInterviews] = useState([]);
+
   useEffect(() => {
     const resolveCompanyNames = async () => {
-    if (!interviews?.results) return;
+      if (!interviewsData?.items) {
+        setResolvedInterviews([]);
+        return;
+      }
 
-    const rows = await Promise.all(
-      interviews.results.map(async (interview) => {
-        let companyName = "Unknown Company";
-        if (interview.applicationId) {
-          companyName = await fetchCompanyNameUsingApplicationId(interview.applicationId);
-        } else if (interview.companyId) {
-          companyName = await fetchCompanyNameUsingCompanyId(interview.companyId);
-        }
+      const resolved = await Promise.all(
+        interviewsData.items.map(async (interview) => {
+          let companyName = "Unknown Company";
+          
+          if (interview.applicationId) {
+            companyName = await fetchCompanyNameUsingApplicationId(interview.applicationId);
+          } else if (interview.companyId) {
+            companyName = await fetchCompanyNameUsingCompanyId(interview.companyId);
+          }
 
-        return {
-          id: interview.interviewId,
-          startDate: new Date(interview.startDate).toUTCString(),
-          duration: interview.duration,
-          company: companyName,
-          position: interview.position,
-        };
-      })
-    );
+          return {
+            ...interview,
+            resolvedCompanyName: companyName
+          };
+        })
+      );
 
-    setResolvedRows(rows);
+      setResolvedInterviews(resolved);
+    };
+
+    resolveCompanyNames();
+  }, [interviewsData?.items]);
+
+  // Helper functions
+  const formatDateTime = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
 
-  resolveCompanyNames();
-  }, [interviews]);
 
-  const table_head = [
-    {
-      name: "Start Date",
-      key: "startDate",
-    },
-    {
-      name: "Duration",
-      key: "duration",
-    },
-    {
-      name: "Company",
-      key: "company",
-    },
-    {
-      name: "Position",
-      key: "position",
-    },
+  // Table configuration
+  const tableHead = [
+    { name: "Date & Time", key: "startDate" },
+    { name: "Company & Position", key: "company" },
+    { name: "Duration", key: "duration" },
+    { name: "Questions Completed", key: "questionsCompleted" }
   ];
-  // const table_rows = interviews?.results?.map((interview) => {
-  //   return {
-  //     id: interview.interviewId,
-  //     startDate: new Date(interview.startDate).toLocaleDateString(),
-  //     duration: interview.duration,
-  //     company: companyName(interview),
-  //     position: interview.position
-  //   };
-  // });
 
-
-  return (
-    <Layout>
-      <div className="bg-white rounded-lg h-full flex flex-col p-4 justify-between">
-        <div className="flex flex-col">
-          <div className="flex items-center justify-between pb-4 border-b-2">
-            <h1 className="text-2xl font-bold">Interviews</h1>
-            <button
-              onClick={() => setOpenAdd(true)}
-              className="bg-primary hover:bg-primary/85 transition-all text-white py-2 px-4 rounded-lg flex items-center justify-center gap-2"
-            >
-              <Plus size={18} />
-              Start New Interview
-            </button>
-          </div>
-          <div className="mt-2">
-            <Table
-              actions
-              viewSearch
-              isLoading={isLoading}
-              search={search}
-              setSearch={setSearch}
-              table_head={table_head}
-              selectedOrders={["startDate", "company", "position", "duration"]}
-              table_rows= {resolvedRows}
-              handleOpenDelete={handleOpenDelete}
-              handleOpenView={"interviews"}
-              setOrder={handleSort}
-              // handleOpenEdit= {null}
-            />
+  const tableData = resolvedInterviews.map((interview) => {
+    
+    return {
+      id: interview.interviewId,
+      startDate: formatDateTime(interview.startDate),
+      company: (
+        <div className="flex items-center gap-2">
+          <Building2 className="h-4 w-4 text-muted-foreground" />
+          <div>
+            <p className="font-medium">{interview.resolvedCompanyName}</p>
+            <p className="text-sm text-muted-foreground">{interview.position}</p>
           </div>
         </div>
-        {interviews?.results?.length > 0 && (
-          <div className="self-center">
-            <Pagination
-              page={page}
-              setPage={setPage}
-              totalPages={interviews?.total_pages}
-              nextPage={interviews?.next !== null}
-              prevPage={interviews?.previous !== null}
-            />
-          </div>
-        )}
+      ),
+      duration: (
+        <div className="flex items-center gap-1">
+          <Clock className="h-4 w-4 text-muted-foreground" />
+          <span>{interview.duration} min</span>
+        </div>
+      ),
+      questionsCompleted: (
+        <div className="flex items-center gap-1">
+          <CheckCircle className="h-4 w-4 text-muted-foreground" />
+          <span>
+            {interview.interviewQuestions 
+              ? `${interview.interviewQuestions.filter(q => q.answer && q.answer.trim()).length}/${interview.interviewQuestions.length}`
+              : '0/0'
+            }
+          </span>
+        </div>
+      ),
+      _originalData: interview
+    };
+  });
+
+  // Event handlers
+  const handleView = (row) => {
+    const interview = row._originalData || row;
+    setSelectedInterview(interview);
+    setOpenView(true);
+  };
+
+  const handleDelete = (row) => {
+    const interview = row._originalData || row;
+    setSelectedInterview(interview);
+    setOpenDelete(true);
+  };
+
+  const handleStartRecording = (interviewId) => {
+    setRecordingInterviewId(interviewId);
+    setOpenRecording(true);
+  };
+
+  const handleSort = (field) => {
+    // Map display field to API field
+    const fieldMapping = {
+      startDate: "startdate",
+      duration: "duration",
+      company: "companyname",
+      position: "position",
+    };
+
+    const apiField = fieldMapping[field] || field;
+    
+    if (sortBy === apiField) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(apiField);
+      setSortOrder('asc');
+    }
+  };
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
+
+  const handleItemsPerPageChange = (newItemsPerPage) => {
+    setItemsPerPage(newItemsPerPage);
+    setCurrentPage(1);
+  };
+
+  // Filters for the table
+  const filters = [
+    <div key="search" className="relative">
+      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+      <Input
+        placeholder="Search interviews, companies, positions..."
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        className="pl-10 w-full sm:w-64"
+      />
+    </div>
+  ];
+
+  return (
+    <div className="space-y-6">
+
+  <Table
+      useModernUI={true}
+      title="Interview Sessions"
+      description={`${interviewsData?.totalCount || 0} total interviews`}
+      headerActions={[
+        <Button key="start-interview" onClick={() => setOpenAdd(true)}>
+          <Plus className="w-4 h-4 mr-2" />
+          Start New Interview
+        </Button>
+      ]}
+      filters={filters}
+      table_head={tableHead}
+      table_rows={tableData}
+      actions={true}
+      handleOpenView={handleView}
+      handleOpenDelete={handleDelete}
+      isLoading={isLoading}
+      
+      // Built-in pagination
+      currentPage={currentPage}
+      totalPages={interviewsData?.totalPages || 1}
+      totalCount={interviewsData?.totalCount || 0}
+      itemsPerPage={itemsPerPage}
+      onPageChange={handlePageChange}
+      onItemsPerPageChange={handleItemsPerPageChange}
+      
+      // Built-in sorting
+      sortBy={sortBy}
+      sortOrder={sortOrder}
+      onSort={handleSort}
+      sortableColumns={['startDate', 'duration']}
+      
+      emptyState="No interviews found. Start your first mock interview to begin practicing."
+    />
+
+      {/* Modals */}
+      {openAdd && (
+        <AddModal
+          open={openAdd}
+          setOpen={setOpenAdd}
+          refetch={refetch}
+          onStartRecording={handleStartRecording}
+        />
+      )}
+
+      {openView && (
+        <ViewModal
+          interview={selectedInterview}
+          open={openView}
+          setOpen={setOpenView}
+          onStartRecording={handleStartRecording}
+        />
+      )}
+
+      {openDelete && (
         <DeleteModal
-          id={id}
+          id={selectedInterview?.interviewId}
           openDelete={openDelete}
           setOpenDelete={setOpenDelete}
           refetch={refetch}
         />
-        <AddModal open={openAdd} setOpen={setOpenAdd} refetch={refetch} />
-      </div>
-    </Layout>
+      )}
+
+      {openRecording && (
+        <InterviewRecordingModal
+          open={openRecording}
+          setOpen={setOpenRecording}
+          interviewId={recordingInterviewId}
+          refetch={refetch}
+        />
+      )}
+    </div>
   );
-} 
+}

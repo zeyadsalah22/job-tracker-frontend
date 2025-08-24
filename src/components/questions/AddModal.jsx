@@ -1,206 +1,415 @@
-import Modal from "../Modal";
-import { useFormik } from "formik";
-import { useEffect, useState } from "react";
-import { toast } from "react-toastify";
-import { questionSchema } from "../../schemas/Schemas";
-import FormInput from "../FormInput";
-import ReactLoading from "react-loading";
+import React, { useState, useEffect } from "react";
 import { useQuery } from "react-query";
-import useUserStore from "../../store/user.store";
-import Dropdown from "../Dropdown";
 import { useAxiosPrivate } from "../../utils/axios";
-import React from "react";
+import { toast } from "react-toastify";
+import useUserStore from "../../store/user.store";
+import { X, Star, Loader2 } from "lucide-react";
+import Button from "../ui/Button";
+import Input from "../ui/Input";
+import Label from "../ui/Label";
+import Textarea from "../ui/Textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/Select";
+import { Badge } from "../ui/Badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "../ui/Dialog";
 
-export default function AddModal({ refetch, openAdd, setOpenAdd }) {
-  const [error, setError] = useState(null);
+export default function AddModal({ openAdd, setOpenAdd, refetch }) {
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState({});
   const [applicationSearch, setApplicationSearch] = useState("");
+  const [newTag, setNewTag] = useState("");
+  
   const axiosPrivate = useAxiosPrivate();
   const user = useUserStore((state) => state.user);
 
+  const [formData, setFormData] = useState({
+    applicationId: "",
+    companyName: "",
+    jobTitle: "",
+    applicationStatus: "",
+    questionText: "",
+    questionType: "",
+    difficulty: 1,
+    myAnswer: "",
+    answerStatus: "NotStarted",
+    tags: [],
+    notes: "",
+    isFavorite: false,
+  });
+
+  // Reset form when modal opens
+  useEffect(() => {
+    if (openAdd) {
+      setFormData({
+        applicationId: "",
+        companyName: "",
+        jobTitle: "",
+        applicationStatus: "",
+        questionText: "",
+        questionType: "",
+        difficulty: 1,
+        myAnswer: "",
+        answerStatus: "NotStarted",
+        tags: [],
+        notes: "",
+        isFavorite: false,
+      });
+      setErrors({});
+      setNewTag("");
+    }
+  }, [openAdd]);
+
+  // Fetch applications for dropdown
   const fetchApplications = async () => {
     try {
       const params = {
         SearchTerm: applicationSearch || undefined,
-        PageSize: 100 // Ensure we get a good number of results
+        PageSize: 100
       };
       
-      console.log("Fetching applications with params:", params);
       const response = await axiosPrivate.get('/applications', { params });
-      console.log("Applications response:", response.data);
-      
-      // Map the API response to match what the dropdown expects
-      const items = response.data.items || [];
-      return {
-        results: items.map(application => ({
-          id: application.applicationId,
-          name: `${application.jobTitle} at ${application.companyName}`,
-          value: application.applicationId,
-          jobTitle: application.jobTitle,
-          companyName: application.companyName
-        }))
-      };
+      return response.data?.items || [];
     } catch (error) {
       console.error("Error fetching applications:", error);
-      return {
-        results: []
-      };
+      return [];
     }
   };
 
-  const {
-    data: applications,
-    isLoading: applications_Loading,
-  } = useQuery(["applications", applicationSearch], fetchApplications);
+  const { data: applications = [], isLoading: applicationsLoading } = useQuery(
+    ["applications-for-questions", applicationSearch],
+    fetchApplications,
+    {
+      staleTime: 5 * 60 * 1000,
+    }
+  );
 
-  const { values, errors, handleSubmit, handleChange, touched, setFieldValue } =
-    useFormik({
-      initialValues: {
-        user_id: "",
-        question: "",
-        answer: "",
-        application_id: "",
-      },
+  // Handle application selection
+  const handleApplicationSelect = (applicationId) => {
+    const selectedApp = applications.find(app => app.applicationId.toString() === applicationId);
+    if (selectedApp) {
+      setFormData({
+        ...formData,
+        applicationId: selectedApp.applicationId,
+        companyName: selectedApp.companyName,
+        jobTitle: selectedApp.jobTitle,
+        applicationStatus: selectedApp.status,
+      });
+    }
+  };
 
-      validationSchema: questionSchema,
-      onSubmit: async (values) => {
-        setLoading(true);
-        setError(null);
-        
-        console.log("Form values:", values);
-        console.log("Validation errors:", errors);
-        
-        // Validate required fields
-        if (!values.application_id) {
-          toast.error("Please select an application");
-          setLoading(false);
-          return;
-        }
-        
-        // Transform form values to match backend API format
-        const questionData = {
-          question1: values.question,
-          answer: values.answer,
-          applicationId: parseInt(values.application_id, 10)
-        };
+  // Handle tag management
+  const handleAddTag = () => {
+    if (newTag.trim() && !formData.tags.includes(newTag.trim())) {
+      setFormData({
+        ...formData,
+        tags: [...formData.tags, newTag.trim()]
+      });
+      setNewTag("");
+    }
+  };
 
-        console.log("Submitting question data:", questionData);
-        
-        try {
-          const response = await axiosPrivate.post("/questions", questionData);
-          console.log("Question created successfully:", response.data);
-          setOpenAdd(false);
-          setLoading(false);
-          toast.success("Question added successfully");
-          refetch();
-        } catch (error) {
-          console.error("Error adding question:", error);
-          setLoading(false);
-          setError(error);
-          
-          let errorMessage = "An error occurred. Please try again";
-          if (error.response?.data) {
-            // Try to extract error message from different possible formats
-            if (typeof error.response.data === 'string') {
-              errorMessage = error.response.data;
-            } else if (error.response.data.message) {
-              errorMessage = error.response.data.message;
-            } else if (error.response.data.error) {
-              errorMessage = error.response.data.error;
-            } else if (error.response.data.title) {
-              errorMessage = error.response.data.title;
-            } else if (error.response.data.errors) {
-              errorMessage = Object.values(error.response.data.errors).flat().join(", ");
-            }
-          }
-          
-          toast.error(errorMessage);
-        }
-      },
+  const handleRemoveTag = (tagToRemove) => {
+    setFormData({
+      ...formData,
+      tags: formData.tags.filter(tag => tag !== tagToRemove)
     });
-
-  const setApplicationId = (id) => {
-    setFieldValue("application_id", id);
   };
 
-  // Set user_id when component mounts
-  React.useEffect(() => {
-    if (user?.userId) {
-      setFieldValue("user_id", user.userId);
+  // Render star rating
+  const renderStarRating = () => {
+    return (
+      <div className="flex items-center gap-1">
+        {Array.from({ length: 5 }, (_, i) => (
+          <Star
+            key={i}
+            className={`h-5 w-5 cursor-pointer ${
+              i < formData.difficulty 
+                ? 'text-yellow-500 fill-yellow-500' 
+                : 'text-gray-300 hover:text-yellow-400'
+            }`}
+            onClick={() => setFormData({...formData, difficulty: i + 1})}
+          />
+        ))}
+        <span className="ml-2 text-sm text-muted-foreground">
+          ({formData.difficulty}/5)
+        </span>
+      </div>
+    );
+  };
+
+  // Handle form submission
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setErrors({});
+
+    // Validation
+    const newErrors = {};
+    if (!formData.applicationId) newErrors.applicationId = "Please select an application";
+    if (!formData.questionText.trim()) newErrors.questionText = "Question text is required";
+    if (!formData.questionType) newErrors.questionType = "Please select a question type";
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      setLoading(false);
+      return;
     }
-  }, [user, setFieldValue]);
+
+    // Prepare data for API
+    const questionData = {
+      question1: formData.questionText,
+      answer: formData.myAnswer || "",
+      applicationId: parseInt(formData.applicationId, 10),
+      type: formData.questionType,
+      answerStatus: formData.answerStatus,
+      difficulty: formData.difficulty,
+      preparationNote: formData.notes || "",
+      favorite: formData.isFavorite,
+      tags: formData.tags
+    };
+
+    try {
+      await axiosPrivate.post("/questions", questionData);
+      toast.success("Question added successfully");
+      setOpenAdd(false);
+      refetch();
+    } catch (error) {
+      console.error("Error adding question:", error);
+      
+      let errorMessage = "An error occurred. Please try again";
+      if (error.response?.data) {
+        if (typeof error.response.data === 'string') {
+          errorMessage = error.response.data;
+        } else if (error.response.data.message) {
+          errorMessage = error.response.data.message;
+        } else if (error.response.data.errors) {
+          errorMessage = Object.values(error.response.data.errors).flat().join(", ");
+        }
+      }
+      
+      toast.error(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <Modal open={openAdd} setOpen={setOpenAdd} width="600px">
-      <div className="flex flex-col gap-4">
-        <h1 className="font-semibold text-lg">Add Question</h1>
-        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-          <FormInput
-            label="Question"
-            name="question"
-            placeHolder="Enter your question"
-            textArea={true}
-            value={values.question}
-            onChange={handleChange}
-            error={errors.question || error?.response?.data?.question}
-            touched={touched.question}
-            required
-          />
-          
-          <FormInput
-            label="Answer"
-            name="answer"
-            placeHolder="Enter the answer"
-            textArea={true}
-            value={values.answer}
-            onChange={handleChange}
-            error={errors.answer || error?.response?.data?.answer}
-            touched={touched.answer}
-          />
+    <Dialog open={openAdd} onOpenChange={setOpenAdd}>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Add Interview Question</DialogTitle>
+        </DialogHeader>
+        
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Left Column */}
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="application">Related Application *</Label>
+                <Select
+                  value={formData.applicationId.toString()}
+                  onValueChange={handleApplicationSelect}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select an application">
+                      {formData.companyName && (
+                        <span>{formData.companyName} - {formData.jobTitle} - {formData.applicationStatus}</span>
+                      )}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <div className="p-2">
+                      <Input
+                        placeholder="Search applications..."
+                        value={applicationSearch}
+                        onChange={(e) => setApplicationSearch(e.target.value)}
+                        className="mb-2"
+                      />
+                    </div>
+                    {applications.map(app => (
+                      <SelectItem key={app.applicationId} value={app.applicationId.toString()}>
+                        {app.companyName} - {app.jobTitle} - {app.status}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {errors.applicationId && (
+                  <p className="text-sm text-destructive">{errors.applicationId}</p>
+                )}
+              </div>
 
-          <div className="flex flex-col gap-2 w-full">
-            <p className="text-sm text-gray-600">
-              Choose Application
-            </p>
-            <Dropdown
-              id={values.application_id}
-              options={applications?.results}
-              query={applicationSearch}
-              setQuery={setApplicationSearch}
-              setValue={setApplicationId}
-              isLoading={applications_Loading}
-              error={errors.application_id || error?.response?.data?.application_id}
-              touched={touched.application_id}
-            />
-            {errors.application_id && touched.application_id && (
-              <span className="mt-1 text-xs text-red-500">
-                {errors.application_id}
-              </span>
-            )}
+              <div className="space-y-2">
+                <Label htmlFor="questionType">Question Type *</Label>
+                <Select
+                  value={formData.questionType}
+                  onValueChange={(value) => setFormData({...formData, questionType: value})}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select question type">
+                      {formData.questionType && (
+                        <span>
+                          {formData.questionType === 'CompanySpecific' ? 'Company-Specific' :
+                           formData.questionType === 'CulturalFit' ? 'Cultural Fit' :
+                           formData.questionType === 'ApplicationForm' ? 'Application Form' :
+                           formData.questionType}
+                        </span>
+                      )}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Technical">Technical</SelectItem>
+                    <SelectItem value="Behavioral">Behavioral</SelectItem>
+                    <SelectItem value="CompanySpecific">Company-Specific</SelectItem>
+                    <SelectItem value="CulturalFit">Cultural Fit</SelectItem>
+                    <SelectItem value="ApplicationForm">Application Form</SelectItem>
+                  </SelectContent>
+                </Select>
+                {errors.questionType && (
+                  <p className="text-sm text-destructive">{errors.questionType}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label>Difficulty Level</Label>
+                {renderStarRating()}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="answerStatus">Answer Status</Label>
+                <Select
+                  value={formData.answerStatus}
+                  onValueChange={(value) => setFormData({...formData, answerStatus: value})}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select answer status">
+                      {formData.answerStatus && (
+                        <span>
+                          {formData.answerStatus === 'NotStarted' ? 'Not Started' :
+                           formData.answerStatus === 'InProgress' ? 'In Progress' :
+                           formData.answerStatus}
+                        </span>
+                      )}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="NotStarted">Not Started</SelectItem>
+                    <SelectItem value="InProgress">In Progress</SelectItem>
+                    <SelectItem value="Completed">Completed</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="favorite"
+                  checked={formData.isFavorite}
+                  onChange={(e) => setFormData({...formData, isFavorite: e.target.checked})}
+                  className="rounded border-gray-300"
+                />
+                <Label htmlFor="favorite" className="text-sm font-medium">
+                  ⭐ Mark as favorite
+                </Label>
+              </div>
+            </div>
+
+            {/* Right Column */}
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="questionText">Question Text *</Label>
+                <Textarea
+                  id="questionText"
+                  value={formData.questionText}
+                  onChange={(e) => setFormData({...formData, questionText: e.target.value})}
+                  placeholder="Enter the interview question..."
+                  rows={4}
+                  maxLength={1000}
+                />
+                <div className="text-sm text-muted-foreground">
+                  {formData.questionText.length}/1000 characters
+                </div>
+                {errors.questionText && (
+                  <p className="text-sm text-destructive">{errors.questionText}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label>Tags</Label>
+                <div className="flex gap-2">
+                  <Input
+                    value={newTag}
+                    onChange={(e) => setNewTag(e.target.value)}
+                    placeholder="Add a tag"
+                    onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTag())}
+                  />
+                  <Button type="button" onClick={handleAddTag} variant="outline">
+                    Add
+                  </Button>
+                </div>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {formData.tags.map((tag, index) => (
+                    <Badge key={index} variant="secondary" className="flex items-center gap-1">
+                      {tag}
+                      <X
+                        className="h-3 w-3 cursor-pointer"
+                        onClick={() => handleRemoveTag(tag)}
+                      />
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
 
-          {loading ? (
-            <button
-              disabled
-              className="rounded cursor-not-allowed flex items-center justify-center bg-primary px-8 py-2 text-white transition h-10"
-            >
-              <ReactLoading
-                type="bubbles"
-                color="#ffffff"
-                height={25}
-                width={25}
+          {/* Full Width Fields */}
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="myAnswer">My Answer</Label>
+              <Textarea
+                id="myAnswer"
+                value={formData.myAnswer}
+                onChange={(e) => setFormData({...formData, myAnswer: e.target.value})}
+                placeholder="Write your answer here... Use the STAR method for behavioral questions."
+                rows={6}
               />
-            </button>
-          ) : (
-            <button
-              type="submit"
-              className="rounded bg-primary px-8 py-2 text-white transition hover:bg-primary/80 h-10"
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="notes">Preparation Notes</Label>
+              <Textarea
+                id="notes"
+                value={formData.notes}
+                onChange={(e) => setFormData({...formData, notes: e.target.value})}
+                placeholder="Additional notes for preparation..."
+                rows={3}
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-end space-x-2 pt-4 border-t">
+            <Button type="button" variant="outline" onClick={() => setOpenAdd(false)}>
+              Cancel
+            </Button>
+            <Button 
+              type="submit" 
+              disabled={loading || !formData.applicationId || !formData.questionText || !formData.questionType}
             >
-              Submit
-            </button>
-          )}
+              {loading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Adding...
+                </>
+              ) : (
+                "Add Question"
+              )}
+            </Button>
+          </div>
         </form>
-      </div>
-    </Modal>
+      </DialogContent>
+    </Dialog>
   );
 }

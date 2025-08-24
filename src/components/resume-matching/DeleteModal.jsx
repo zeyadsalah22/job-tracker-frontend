@@ -2,6 +2,7 @@ import { useState } from "react";
 import { toast } from "react-toastify";
 import ReactLoading from "react-loading";
 import { useAxiosPrivate } from "../../utils/axios";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/Dialog";
 
 const DeleteModal = ({ id, openDelete, setOpenDelete, refetch }) => {
   const [loading, setLoading] = useState(false);
@@ -48,42 +49,44 @@ const DeleteModal = ({ id, openDelete, setOpenDelete, refetch }) => {
     }
   };
 
-  if (!openDelete) return null;
-
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-        <h2 className="text-xl font-semibold mb-4">Delete Resume Test</h2>
-        <p className="text-gray-600 mb-6">
-          Are you sure you want to delete this resume test? This action cannot be undone.
-        </p>
-        <div className="flex justify-end gap-4">
-          <button
-            onClick={() => setOpenDelete(false)}
-            className="px-4 py-2 text-gray-600 hover:text-gray-900 rounded-lg hover:bg-gray-100 transition-all"
-            disabled={loading}
-          >
-            Cancel
-          </button>
-          {loading ? (
+    <Dialog open={openDelete} onOpenChange={setOpenDelete}>
+      <DialogContent className="max-w-[400px]">
+        <DialogHeader>
+          <DialogTitle>Delete Resume Test</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <p className="text-gray-600">
+            Are you sure you want to delete this resume test? This action cannot be undone.
+          </p>
+          <div className="flex gap-3 justify-end">
             <button
-              disabled
-              className="px-4 py-2 bg-red-600 text-white rounded-lg cursor-not-allowed flex items-center gap-2"
+              onClick={() => setOpenDelete(false)}
+              disabled={loading}
+              className="px-4 py-2 rounded border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
             >
-              <ReactLoading type="bubbles" color="#ffffff" height={18} width={18} />
-              Deleting...
+              Cancel
             </button>
-          ) : (
-            <button
-              onClick={handleDelete}
-              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all"
-            >
-              Delete
-            </button>
-          )}
+            {loading ? (
+              <button
+                disabled
+                className="px-4 py-2 rounded bg-red-500 text-white cursor-not-allowed flex items-center gap-2"
+              >
+                <ReactLoading type="spin" color="#fff" height={16} width={16} />
+                Deleting...
+              </button>
+            ) : (
+              <button
+                onClick={handleDelete}
+                className="px-4 py-2 rounded bg-red-500 text-white hover:bg-red-600 transition-colors"
+              >
+                Delete
+              </button>
+            )}
+          </div>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 };
 

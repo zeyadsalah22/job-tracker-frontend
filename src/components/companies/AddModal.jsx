@@ -1,9 +1,9 @@
-import Modal from "../Modal";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/Dialog";
 import { useFormik } from "formik";
 import { useState } from "react";
 import { toast } from "react-toastify";
 import { companySchema } from "../../schemas/Schemas";
-import FormInput from "../FormInput";
+import FormField from "../ui/FormField";
 import ReactLoading from "react-loading";
 import useUserStore from "../../store/user.store";
 import { useAxiosPrivate } from "../../utils/axios";
@@ -49,7 +49,7 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
       <div className="flex flex-col gap-4">
         <h1 className="font-semibold text-lg">Add Company</h1>
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-          <FormInput
+          <FormField
             name="name"
             type="text"
             placeHolder="Name"
@@ -60,7 +60,7 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
             required
           />
 
-          <FormInput
+          <FormField
             name="location"
             type="text"
             placeHolder="Location"
@@ -71,7 +71,7 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
             required
           />
 
-          <FormInput
+          <FormField
             name="careersLink"
             type="text"
             placeHolder="Careers Link"
@@ -81,7 +81,7 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
             touched={touched.careersLink}
           />
 
-          <FormInput
+          <FormField
             name="linkedinLink"
             type="text"
             placeHolder="LinkedIn Link"

@@ -1,267 +1,398 @@
-import Modal from "../Modal";
-import axios from "axios";
-import { useFormik } from "formik";
-import { useEffect, useState } from "react";
-import { toast } from "react-toastify";
-import { employeeSchema } from "../../schemas/Schemas";
-import FormInput from "../FormInput";
-import ReactLoading from "react-loading";
-import { useQuery } from "react-query";
-import useUserStore from "../../store/user.store";
-import Dropdown from "../Dropdown";
-import AddModalCompanies from "../user-companies/AddModal";
+import React, { useState, useEffect } from "react";
+import { useMutation, useQuery, useQueryClient } from "react-query";
 import { useAxiosPrivate } from "../../utils/axios";
-import { requestFormReset } from "react-dom";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/Dialog";
+import Button from "../ui/Button";
+import Input from "../ui/Input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/Select";
+import Label from "../ui/Label";
+import { toast } from "react-toastify";
+import { X, Loader2, User, Building2, Mail, Phone, Linkedin, Briefcase } from 'lucide-react';
+import useUserStore from "../../store/user.store";
 
 export default function AddModal({ refetch, openAdd, setOpenAdd }) {
-  const token = localStorage.getItem("access");
-  const [error, setError] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const user = useUserStore((state) => state.user);
-  const [companySearch, setCompanySearch] = useState("");
-  const [addCompany, setAddCompany] = useState(false);
+  const [formData, setFormData] = useState({
+    name: '',
+    linkedinLink: '',
+    email: '',
+    jobTitle: '',
+    contacted: '',
+    phone: '',
+    department: '',
+    companyId: null,
+  });
+  const [companySearch, setCompanySearch] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const axiosPrivate = useAxiosPrivate();
+  const queryClient = useQueryClient();
+  const user = useUserStore((state) => state.user);
 
-  const contacted = [
-    {
-      name: "Sent",
-      value: "SENT",
-    },
-    {
-      name: "Accepted",
-      value: "ACCEPTED",
-    },
-    {
-      name: "Messaged",
-      value: "MESSAGED",
-    },
-    {
-      name: "Replied",
-      value: "REPLIED",
-    },
-    {
-      name: "Established Connection",
-      value: "STRONG_CONNECTION",
-    },
-  ];
-
+  // Fetch companies for selection
   const fetchCompanies = async () => {
     try {
-      const params = {
-        SearchTerm: companySearch || undefined,
-        PageSize: 100 // Ensure we get a good number of results
-      };
+      const response = await axiosPrivate.get('/companies', {
+        params: {
+          SearchTerm: companySearch || undefined,
+          PageSize: 100,
+        }
+      });
       
-      console.log("Fetching user companies with params:", params);
-      const response = await axiosPrivate.get('/user-companies', { params });
-      console.log("User companies response:", response.data);
+      let companies = [];
+      if (Array.isArray(response.data)) {
+        companies = response.data;
+      } else if (response.data && Array.isArray(response.data.items)) {
+        companies = response.data.items;
+      }
       
-      // Map the API response to match what the dropdown expects
-      const items = response.data.items || [];
-      return {
-        results: items.map(company => ({
-          id: company.companyId,
-          name: company.companyName || company.name, // Handle different possible API formats
-          value: company.companyId,
-          location: company.companyLocation || company.location
-        }))
-      };
+      return companies;
     } catch (error) {
-      console.error("Error fetching user companies:", error);
-      return {
-        results: []
+      console.error("Error fetching companies:", error);
+      return [];
+    }
+  };
+
+  const { data: companies = [], isLoading: companiesLoading } = useQuery(
+    ["companies-for-employee", companySearch],
+    fetchCompanies,
+    {
+      staleTime: 5 * 60 * 1000,
+    }
+  );
+
+  // Add employee mutation
+  const addEmployeeMutation = useMutation(
+    async (employeeData) => {
+      const submitData = {
+        userId: user?.userId || formData.userId,
+        companyId: employeeData.companyId,
+        name: employeeData.name,
+        linkedinLink: employeeData.linkedinLink || undefined,
+        email: employeeData.email || undefined,
+        jobTitle: employeeData.jobTitle,
+        contacted: employeeData.contacted || undefined,
+        phone: employeeData.phone || undefined,
+        department: employeeData.department || undefined,
       };
+      
+      console.log("Submitting employee data:", submitData);
+      return await axiosPrivate.post("/employees", submitData);
+    },
+    {
+      onSuccess: () => {
+        toast.success("Employee added successfully!");
+        setOpenAdd(false);
+        refetch();
+        resetForm();
+        queryClient.invalidateQueries(["employees"]);
+      },
+      onError: (error) => {
+        console.error("Error adding employee:", error);
+        const errorMessage = error.response?.data?.message || 
+                           error.response?.data?.title ||
+                           "Failed to add employee. Please try again.";
+        toast.error(errorMessage);
+      },
+    }
+  );
+
+  const handleInputChange = (field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    // Basic validation
+    if (!formData.name.trim()) {
+      toast.error("Employee name is required");
+      return;
+    }
+    if (!formData.jobTitle.trim()) {
+      toast.error("Job title is required");
+      return;
+    }
+    if (!formData.companyId) {
+      toast.error("Please select a company");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await addEmployeeMutation.mutateAsync(formData);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const {
-    data: companies,
-    isLoading: companyies_Loading,
-    refetch: company_refetch,
-  } = useQuery(["user-companies", companySearch], fetchCompanies);
-
-  const { values, errors, handleSubmit, handleChange, touched, setFieldValue, resetForm} =
-    useFormik({
-      initialValues: {
-        userId: "",
-        name: "",
-        linkedinLink: undefined,
-        email: undefined,
-        jobTitle: "",
-        contacted: "",
-        companyId: "",
-      },
-
-      validationSchema: employeeSchema,
-      onSubmit: async (values, {resetForm}) => {
-        setLoading(true);
-        
-        await axiosPrivate
-          .post("/employees", values)
-          .then(() => {
-            setOpenAdd(false);
-            setLoading(false);
-            toast.success("Employee added successfully");
-            resetForm();
-            refetch();
-          })
-          .catch((error) => {
-            setLoading(false);
-            setError(error);
-            toast.error(
-              error.response.data.name.map((error) => error) ||
-                "An error occurred. Please try again"
-            );
-          });
-      },
+  const resetForm = () => {
+    setFormData({
+      name: '',
+      linkedinLink: '',
+      email: '',
+      jobTitle: '',
+      contacted: '',
+      phone: '',
+      department: '',
+      companyId: null,
     });
-
-  useEffect(() => {
-    if (user) {
-      values.userId = user.userId;
-    }
-  }, [user, values]);
-
-  const setCompanyId = (id) => {
-    if (id === "add-company") {
-      setAddCompany(true);
-    }
-    setFieldValue("companyId", id);
+    setCompanySearch('');
   };
+
+  // Set userId when user data becomes available
+  useEffect(() => {
+    if (user?.userId) {
+      setFormData(prev => ({
+        ...prev,
+        userId: user.userId
+      }));
+    }
+  }, [user?.userId]);
+
+  // Reset form when modal closes
+  useEffect(() => {
+    if (!openAdd) {
+      resetForm();
+    }
+  }, [openAdd]);
+
+  const contactStatusOptions = [
+    { value: "yes", label: "Contacted" },
+    { value: "no", label: "Not Contacted" },
+    { value: "pending", label: "Pending Response" },
+  ];
+
+  const departmentOptions = [
+    "Engineering",
+    "HR",
+    "Sales", 
+    "Marketing",
+    "Finance",
+    "Operations",
+    "Product",
+    "Design",
+    "Legal",
+    "Other"
+  ];
 
   return (
-    <Modal open={openAdd} setOpen={setOpenAdd} width="600px">
-      <div className="flex flex-col gap-4">
-        <h1 className="font-semibold text-lg">Add Employee</h1>
-        <div className="z-[100]">
-          {addCompany && (
-            <AddModalCompanies
-              openAdd={addCompany}
-              setOpenAdd={setAddCompany}
-              refetch={company_refetch}
-            />
-          )}
-        </div>
-        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-          <FormInput
-            name="name"
-            type="text"
-            placeHolder="Employee Name"
-            value={values.name}
-            onChange={handleChange}
-            error={errors.name || error?.response?.data?.name}
-            touched={touched.name}
-            required
-          />
-
-          <FormInput
-            name="linkedinLink"
-            type="text"
-            placeHolder="Linkedin Link"
-            value={values.linkedinLink}
-            onChange={handleChange}
-            error={errors.linkedinLink || error?.response?.data?.linkedinLink}
-            touched={touched.linkedinLink}
-          />
-
-          <FormInput
-            name="email"
-            type="email"
-            placeHolder="Email"
-            value={values.email}
-            onChange={handleChange}
-            error={errors.email || error?.response?.data?.email}
-            touched={touched.email}
-          />
-
-          <FormInput
-            name="jobTitle"
-            type="text"
-            placeHolder="Job Title"
-            value={values.jobTitle}
-            onChange={handleChange}
-            error={errors.jobTitle || error?.response?.data?.jobTitle}
-            touched={touched.jobTitle}
-            required
-          />
-
-          <div className="flex gap-6 w-full">
-            <div className="flex flex-col gap-2 w-full">
-              <p className="text-sm text-gray-600">
-                Choose Status<span className="text-red-500">*</span>
-              </p>
-              <select
-                name="contacted"
-                value={values.contacted}
-                onChange={handleChange}
-                className={`${
-                  touched.contacted && errors.contacted && "border-red-500"
-                } w-full rounded-md border px-4 py-2 focus:border-primary focus:outline-none focus:ring-primary`}
-              >
-                <option value="" disabled>
-                  Select Contact Status
-                </option>
-                {contacted.map((status) => (
-                  <option key={status.value} value={status.value}>
-                    {status.name}
-                  </option>
-                ))}
-              </select>
-              {errors.contacted && touched.contacted && (
-                <span className="mt-1 text-xs text-red-500">
-                  {errors.contacted || error?.response?.data?.contacted}
-                </span>
-              )}
+    <Dialog open={openAdd} onOpenChange={setOpenAdd}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <User className="w-5 h-5" />
+              Add New Employee
             </div>
+            <button
+              onClick={() => setOpenAdd(false)}
+              className="rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+            >
+              <X className="h-4 w-4" />
+              <span className="sr-only">Close</span>
+            </button>
+          </DialogTitle>
+        </DialogHeader>
 
-            <div className="flex flex-col gap-2 w-full">
-              <p className="text-sm text-gray-600">
-                Choose Company<span className="text-red-500">*</span>
-              </p>
-              <Dropdown
-                add={{
-                  name: "Add Company",
-                  value: "add-company",
-                }}
-                id={values.companyId}
-                options={companies?.results}
-                query={companySearch}
-                setQuery={setCompanySearch}
-                setValue={setCompanyId}
-                isLoading={companyies_Loading}
-                error={errors.companyId || error?.response?.data?.companyId}
-                touched={touched.companyId}
-              />
-              {errors.companyId && touched.companyId && (
-                <span className="mt-1 text-xs text-red-500">
-                  {errors.companyId || error?.response?.data?.companyId}
-                </span>
-              )}
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Personal Information Section */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium flex items-center gap-2">
+              <User className="w-4 h-4" />
+              Personal Information
+            </h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Full Name *</Label>
+                <Input
+                  placeholder="Enter employee name"
+                  value={formData.name}
+                  onChange={(e) => handleInputChange('name', e.target.value)}
+                  required
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label>Job Title *</Label>
+                <Input
+                  placeholder="e.g., Software Engineer"
+                  value={formData.jobTitle}
+                  onChange={(e) => handleInputChange('jobTitle', e.target.value)}
+                  required
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label>Department</Label>
+                <Select value={formData.department} onValueChange={(value) => handleInputChange('department', value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select department" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {departmentOptions.map((dept) => (
+                      <SelectItem key={dept} value={dept}>
+                        {dept}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <Label>Contact Status</Label>
+                <Select value={formData.contacted} onValueChange={(value) => handleInputChange('contacted', value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select contact status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {contactStatusOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
 
-          {loading ? (
-            <button
-              disabled
-              className="rounded cursor-not-allowed flex items-center justify-center bg-primary px-8 py-2 text-white transition h-10"
+          {/* Contact Information Section */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium flex items-center gap-2">
+              <Mail className="w-4 h-4" />
+              Contact Information
+            </h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Email</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                  <Input
+                    type="email"
+                    placeholder="employee@company.com"
+                    value={formData.email}
+                    onChange={(e) => handleInputChange('email', e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <Label>Phone</Label>
+                <div className="relative">
+                  <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                  <Input
+                    type="tel"
+                    placeholder="+1 (555) 123-4567"
+                    value={formData.phone}
+                    onChange={(e) => handleInputChange('phone', e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+              
+              <div className="space-y-2 md:col-span-2">
+                <Label>LinkedIn Profile</Label>
+                <div className="relative">
+                  <Linkedin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-600 w-4 h-4" />
+                  <Input
+                    type="url"
+                    placeholder="https://linkedin.com/in/employee-name"
+                    value={formData.linkedinLink}
+                    onChange={(e) => handleInputChange('linkedinLink', e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Company Information Section */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium flex items-center gap-2">
+              <Building2 className="w-4 h-4" />
+              Company Information
+            </h3>
+            
+            <div className="space-y-2">
+              <Label>Company *</Label>
+              <Select 
+                value={formData.companyId?.toString() || ''} 
+                onValueChange={(value) => handleInputChange('companyId', parseInt(value))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a company">
+                    {formData.companyId && companies.find(c => c.companyId === formData.companyId)?.name}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  <div className="p-2">
+                    <Input
+                      placeholder="Search companies..."
+                      value={companySearch}
+                      onChange={(e) => setCompanySearch(e.target.value)}
+                      className="mb-2"
+                    />
+                  </div>
+                  {companiesLoading ? (
+                    <div className="flex items-center justify-center py-4">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    </div>
+                  ) : companies.length > 0 ? (
+                    companies.map((company) => (
+                      <SelectItem key={company.companyId} value={company.companyId.toString()}>
+                        <div className="flex flex-col">
+                          <span className="font-medium">{company.name}</span>
+                          {company.location && (
+                            <span className="text-xs text-muted-foreground">{company.location}</span>
+                          )}
+                        </div>
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <div className="py-4 text-center text-sm text-muted-foreground">
+                      No companies found
+                    </div>
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Submit Button */}
+          <div className="flex justify-end gap-3 pt-4 border-t">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setOpenAdd(false)}
+              disabled={isSubmitting}
             >
-              <ReactLoading
-                type="bubbles"
-                color="#ffffff"
-                height={25}
-                width={25}
-              />
-            </button>
-          ) : (
-            <button
+              Cancel
+            </Button>
+            <Button
               type="submit"
-              className="rounded bg-primary px-8 py-2 text-white transition hover:bg-primary/80 h-10"
+              disabled={isSubmitting}
             >
-              Submit
-            </button>
-          )}
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Adding Employee...
+                </>
+              ) : (
+                <>
+                  <User className="w-4 h-4 mr-2" />
+                  Add Employee
+                </>
+              )}
+            </Button>
+          </div>
         </form>
-      </div>
-    </Modal>
+      </DialogContent>
+    </Dialog>
   );
 }

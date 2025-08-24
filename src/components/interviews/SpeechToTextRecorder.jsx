@@ -1,7 +1,7 @@
 // components/interviews/SpeechToTextRecorder.jsx
 import { useEffect, useRef, useImperativeHandle, forwardRef, useState } from "react";
 
-const SpeechToTextRecorder = forwardRef(({ onTranscriptComplete }, ref) => {
+const SpeechToTextRecorder = forwardRef(({ onTranscriptComplete, onTranscriptUpdate }, ref) => {
   const [transcript, setTranscript] = useState("");
   const recognitionRef = useRef(null);
 
@@ -18,12 +18,24 @@ const SpeechToTextRecorder = forwardRef(({ onTranscriptComplete }, ref) => {
 
     recognition.onresult = (event) => {
       let finalTranscript = "";
-      for (let i = event.resultIndex; i < event.results.length; ++i) {
+      let interimTranscript = "";
+      
+      // Get all final results from the beginning
+      for (let i = 0; i < event.results.length; ++i) {
         if (event.results[i].isFinal) {
           finalTranscript += event.results[i][0].transcript;
+        } else {
+          interimTranscript += event.results[i][0].transcript;
         }
       }
-      setTranscript(finalTranscript);
+      
+      const fullTranscript = finalTranscript + interimTranscript;
+      setTranscript(fullTranscript);
+      
+      // Call live update callback with the full accumulated transcript
+      if (onTranscriptUpdate && fullTranscript.trim()) {
+        onTranscriptUpdate(fullTranscript.trim());
+      }
     };
 
     recognition.onerror = (e) => {
@@ -34,6 +46,9 @@ const SpeechToTextRecorder = forwardRef(({ onTranscriptComplete }, ref) => {
   }, []);
 
   useImperativeHandle(ref, () => ({
+    get transcript() {
+      return transcript;
+    },
     startListening() {
       setTranscript("");
       recognitionRef.current.start();

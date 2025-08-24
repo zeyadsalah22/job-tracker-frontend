@@ -1,259 +1,353 @@
+import React from "react";
 import { useQuery } from "react-query";
-import { Link, redirect, useParams } from "react-router-dom";
-import Layout from "../Layout";
+import { useAxiosPrivate } from "../../utils/axios";
 import {
-  ArrowLeft,
   Building2,
-  NotebookPen,
-  CalendarCheck,
   Clock,
+  Calendar,
   FileText,
   MessageSquare,
-  SquareArrowOutUpRight,
-  Linkedin,
+  Play,
+  User,
+  MapPin,
+  X
 } from "lucide-react";
-import Table from "../Table";
-import React from "react";
-import { useAxiosPrivate } from "../../utils/axios";
+import { Badge } from "../ui/Badge";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/Card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "../ui/Dialog";
+import Button from "../ui/Button";
 
-export default function ViewModal() {
-  const { id } = useParams();
+export default function ViewModal({ interview, open, setOpen, onStartRecording }) {
   const axiosPrivate = useAxiosPrivate();
 
-  const fetchInterview = async () => {
-    const response = await axiosPrivate.get(`/mockinterview/${id}`);
-    try{
-      return response.data;
-    } catch (error) {
-      console.error("Error fetching interview data:", error);
-      alert("Failed to load interview details. Please try again later.");
-      redirect("/interviews");
-      return null;
-    }
-  };
-
-  // Fetch application data if exists using applicationId in interview
-  const fetchApplication = async (applicationId) => {
-    if (!applicationId) return null; // Return null if no applicationId is provided
-    const response = await axiosPrivate.get(`/applications/${applicationId}`);
+  // Fetch application data if exists
+  const fetchApplication = async () => {
+    if (!interview?.applicationId) return null;
     try {
+      const response = await axiosPrivate.get(`/applications/${interview.applicationId}`);
       return response.data;
     } catch (error) {
-      console.error("Error fetching application data:", error);
-      alert("Failed to load application details. Please try again later.");
+      console.error("Error fetching application:", error);
       return null;
     }
   };
 
-  // Fetch company data if exists using companyId in interview
-  const fetchCompany = async (companyId) => {
-    if (!companyId) return null; // Return null if no companyId is provided
-    const response = await axiosPrivate.get(`/user-companies/${companyId}`);
+  // Fetch company data if exists
+  const fetchCompany = async () => {
+    if (!interview?.companyId) return null;
     try {
+      const response = await axiosPrivate.get(`/user-companies/${interview.companyId}`);
       return response.data;
     } catch (error) {
-      console.error("Error fetching company data:", error);
-      alert("Failed to load company details. Please try again later.");
+      console.error("Error fetching company:", error);
       return null;
     }
   };
 
-  const { data: interview, isLoading: isLoadingInterview } = useQuery(
-    ["interview", { id }],
-    fetchInterview,
+  const { data: application } = useQuery(
+    ["application-for-interview", interview?.applicationId],
+    fetchApplication,
     {
-      enabled: !!id,
+      enabled: !!interview?.applicationId && open,
     }
   );
 
-  // Fetch application and company data if interview exists
-  const { data: application, isLoading: isLoadingApplication } = useQuery(
-    ["application", { applicationId: interview?.applicationId }],
-    () => fetchApplication(interview?.applicationId),
+  const { data: company } = useQuery(
+    ["company-for-interview", interview?.companyId],
+    fetchCompany,
     {
-      enabled: !!interview?.applicationId,
+      enabled: !!interview?.companyId && open,
     }
   );
 
-  const { data: company, isLoading: isLoadingCompany } = useQuery(
-    ["company", { companyId: interview?.companyId }],
-    () => fetchCompany(interview?.companyId),
-    {
-      enabled: !!interview?.companyId,
+  // Helper functions
+  const formatDateTime = (dateString) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const getInterviewStatus = (interview) => {
+    const startDate = new Date(interview.startDate);
+    const now = new Date();
+    const diffMinutes = (now - startDate) / (1000 * 60);
+    
+    if (diffMinutes > (interview.duration || 60)) {
+      return { label: "Completed", color: "bg-green-100 text-green-800" };
+    } else if (diffMinutes > 0) {
+      return { label: "In Progress", color: "bg-yellow-100 text-yellow-800" };
+    } else {
+      return { label: "Scheduled", color: "bg-blue-100 text-blue-800" };
     }
-  );
+  };
 
-  // wait for company and application data to be fetched before proceeding
-  if (isLoadingApplication || isLoadingCompany || isLoadingInterview) {
-    return <p>Loading interview details...</p>;
-  }
+  if (!interview) return null;
 
-  const table_head = [
-    {
-      name: "Question",
-      key: "question",
-    },
-    {
-      name: "Answer",
-      key: "answer",
-    },
-  ];
+  const status = getInterviewStatus(interview);
+  const companyName = company?.companyName || company?.name || 
+                     application?.companyName || "Unknown Company";
 
   return (
-    <Layout>
-      <div className="bg-white rounded-lg h-full flex flex-col p-4 justify-between">
-        <div className="flex flex-col gap-4">
-          <div className="flex items-center gap-2 pb-4 border-b-2">
-            <Link
-              to={`/interviews`}
-              className="py-2 px-4 hover:bg-[#f1f1f1] transition-all w-fit rounded-lg flex items-center gap-2"
-            >
-              <ArrowLeft size={19} />
-            </Link>
-            <h1 className="text-lg font-semibold">Interview Details</h1>
-          </div>
-          {isLoadingInterview ? (
-            <p>Loading...</p>
-          ) : (
-            <div className="flex flex-col gap-4">
-              <div className="flex gap-4">
-                <div className="flex shadow rounded-md p-4 gap-8 w-fit">
-                  <div className="flex gap-4">
-                    <div className="border rounded-md p-2 h-fit text-primary">
-                      <NotebookPen size={40} />
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <button
+          onClick={() => setOpen(false)}
+          className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 z-10"
+        >
+          <X className="h-4 w-4" />
+          <span className="sr-only">Close</span>
+        </button>
+        
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-3">
+            <MessageSquare className="h-6 w-6" />
+            <div>
+              <div className="flex items-center gap-2">
+                <span>Interview Details</span>
+                <Badge variant="outline" className={status.color}>
+                  {status.label}
+                </Badge>
+              </div>
+              <div className="text-sm text-muted-foreground font-normal">
+                {companyName} • {interview.position}
+              </div>
+            </div>
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-6">
+          {/* Interview Overview */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <MessageSquare className="h-5 w-5" />
+                Interview Overview
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">Start Date</p>
+                      <p className="font-medium">{formatDateTime(interview.startDate)}</p>
                     </div>
-                    <div className="flex flex-col gap-2">
-                      <div className="gap-1 flex">
-                        <span className="text-gray-600">Interview ID:</span>
-                        {id}
-                      </div>
-                      <div className="gap-1 flex">
-                        <span className="text-gray-600">Position:</span>
-                        {interview.position ? interview.position : application.jobTitle}
-                      </div>
-                      <div className="gap-1 flex">
-                        <span className="text-gray-600">Start Date:</span>
-                        {interview.startDate}
-                      </div>
-                      <div className="gap-1 flex">
-                        <span className="text-gray-600">Duration:</span>
-                        {interview.duration}
-                      </div>
-                      <div className="gap-1 flex">
-                        <span className="text-gray-600">Job Description:</span>
-                        <div className="w-96">{interview.jobDescription ? interview.jobDescription : application.description}</div>
-                      </div>
-                      <div className="gap-1 flex">
-                        <span className="text-gray-600">Feedback:</span>
-                        <div className="w-96">{interview.feedback}</div>
-                      </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-4 w-4 text-muted-foreground" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">Duration</p>
+                      <p className="font-medium">{interview.duration} minutes</p>
                     </div>
                   </div>
                 </div>
 
-                <div className="flex flex-col gap-4">
-                  {company && (
-                    <div className="flex rounded-md p-4 gap-8 shadow w-fit h-fit">
-                      <div className="flex gap-4">
-                        <div className="border rounded-md w-fit p-2 self-start text-primary">
-                          <Building2 size={40} />
-                        </div>
-                        <div className="flex flex-col gap-2">
-                          {company.name && (
-                            <div className="gap-1 flex">
-                              <span className="text-gray-600">Company:</span>
-                              {company.name}
-                            </div>
-                          )}
-                          {company.location && (
-                            <div className="gap-1 flex">
-                              <span className="text-gray-600">Location:</span>
-                              {company.location}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex gap-2">
-                        {company.careers_link && (
-                          <a
-                            className="text-primary hover:text-blue-800 transition-all flex items-center gap-1"
-                            href={company.careers_link}
-                            target="_blank"
-                          >
-                            <SquareArrowOutUpRight size={20} />
-                          </a>
-                        )}
-                        {company.linkedin_link && (
-                          <a
-                            className="text-primary hover:text-blue-800 transition-all flex items-center gap-1"
-                            href={company.linkedin_link}
-                            target="_blank"
-                          >
-                            <Linkedin size={20} />
-                          </a>
-                        )}
-                      </div>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Building2 className="h-4 w-4 text-muted-foreground" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">Company</p>
+                      <p className="font-medium">{companyName}</p>
                     </div>
-                  )}
-
-                  {application && (
-                    <div className="flex rounded-md p-4 gap-8 shadow w-fit h-fit">
-                      <div className="flex gap-4">
-                        <div className="border rounded-md w-fit p-2 self-start text-primary">
-                          <FileText size={40} />
-                        </div>
-                        <div className="flex flex-col gap-2">
-                          {application.jobTitle && (
-                            <div className="gap-1 flex">
-                              <span className="text-gray-600">Job Title:</span>
-                              {application.jobTitle}
-                            </div>
-                          )}
-                          {application.jobType && (
-                            <div className="gap-1 flex">
-                              <span className="text-gray-600">Job Type:</span>
-                              {application.jobType.toLowerCase()}
-                            </div>
-                          )}
-                          {application.submissionDate && (
-                            <div className="gap-1 flex">
-                              <span className="text-gray-600">Submission Date:</span>
-                              {application.submissionDate}
-                            </div>
-                          )}
-                          {application.status && (
-                            <div className="gap-1 flex">
-                              <span className="text-gray-600">Status:</span>
-                              {application.status.toLowerCase()}
-                            </div>
-                          )}
-                          {application.stage && (
-                            <div className="gap-1 flex">
-                              <span className="text-gray-600">Stage:</span>
-                              {application.stage.toLowerCase()}
-                            </div>
-                          )}
-                        </div>
-                      </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <User className="h-4 w-4 text-muted-foreground" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">Position</p>
+                      <p className="font-medium">{interview.position}</p>
                     </div>
-                  )}
+                  </div>
                 </div>
               </div>
+            </CardContent>
+          </Card>
 
-              <div className="flex flex-col mt-4">
-                <p className="font-semibold text-gray-500">Interview Questions</p>
-                <Table
-                  table_head={table_head}
-                  table_rows={(interview?.interviewQuestions || []).map((q) => ({
-                    question: q.question,
-                    answer: q.answer,
-                  }))}
-                />
-              </div>
-            </div>
+          {/* Job Description */}
+          {(interview.jobDescription || application?.description) && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="h-5 w-5" />
+                  Job Description
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="bg-muted/50 p-4 rounded-lg">
+                  <p className="leading-relaxed whitespace-pre-line">
+                    {interview.jobDescription || application?.description}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
           )}
+
+          {/* Company Information */}
+          {(company || application) && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Building2 className="h-5 w-5" />
+                  Company Information
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="bg-muted/50 p-4 rounded-lg">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <h4 className="font-medium mb-2">{companyName}</h4>
+                      {(company?.location || application?.location) && (
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <MapPin className="h-4 w-4" />
+                          <span>{company?.location || application?.location}</span>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {application && (
+                      <div className="space-y-2">
+                        {application.jobType && (
+                          <div>
+                            <span className="text-sm text-muted-foreground">Job Type: </span>
+                            <Badge variant="outline">{application.jobType}</Badge>
+                          </div>
+                        )}
+                        {application.status && (
+                          <div>
+                            <span className="text-sm text-muted-foreground">Application Status: </span>
+                            <Badge variant="outline">{application.status}</Badge>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Interview Questions */}
+          {interview.interviewQuestions && interview.interviewQuestions.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MessageSquare className="h-5 w-5" />
+                  Interview Questions ({interview.interviewQuestions.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {interview.interviewQuestions.map((q, index) => (
+                    <div key={index} className="bg-muted/50 p-4 rounded-lg">
+                      <div className="space-y-3">
+                        <div>
+                          <h4 className="font-medium text-sm text-muted-foreground mb-1">
+                            Question {index + 1}
+                          </h4>
+                          <p className="font-medium">{q.question}</p>
+                        </div>
+                        
+                        {q.answer && (
+                          <div>
+                            <h4 className="font-medium text-sm text-muted-foreground mb-1">
+                              Answer
+                            </h4>
+                            <p className="text-sm leading-relaxed whitespace-pre-line">
+                              {q.answer}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Notes */}
+          {interview.notes && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="h-5 w-5" />
+                  Interview Notes
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="bg-muted/50 p-4 rounded-lg">
+                  <p className="leading-relaxed whitespace-pre-line">
+                    {interview.notes}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Feedback */}
+          {interview.feedback && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MessageSquare className="h-5 w-5" />
+                  Feedback
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="bg-muted/50 p-4 rounded-lg">
+                  <p className="leading-relaxed whitespace-pre-line">
+                    {interview.feedback}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Interview Metadata */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Calendar className="h-5 w-5" />
+                Interview Information
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span className="text-muted-foreground">Interview ID:</span>
+                  <span className="ml-2 font-medium">{interview.interviewId}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Status:</span>
+                  <Badge variant="outline" className={`ml-2 ${status.color}`}>
+                    {status.label}
+                  </Badge>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Start Date:</span>
+                  <span className="ml-2 font-medium">{formatDateTime(interview.startDate)}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Duration:</span>
+                  <span className="ml-2 font-medium">{interview.duration} minutes</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
         </div>
-      </div>
-    </Layout>
+      </DialogContent>
+    </Dialog>
   );
 }

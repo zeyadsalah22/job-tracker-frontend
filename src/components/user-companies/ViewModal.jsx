@@ -1,248 +1,219 @@
+import React from 'react';
 import { useQuery } from "react-query";
-import { Link, useParams } from "react-router-dom";
-import Layout from "../Layout";
-import {
-  ArrowLeft,
-  Building2,
-  MapPin,
-  Link as Career,
-  Linkedin,
-  SquareArrowOutUpRight,
-} from "lucide-react";
-import Table from "../Table";
-import React from "react";
-import EditModal from "../employees/EditModal";
-import DeleteModal from "../employees/DeleteModal";
-import Pagination from "../Pagination";
 import { useAxiosPrivate } from "../../utils/axios";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/Dialog";
+import { Badge } from "../ui/Badge";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/Card";
+import { ExternalLink, Building2, MapPin, Briefcase, X, Calendar, Star, Heart } from 'lucide-react';
 
-export default function ViewModal() {
-  const { id } = useParams();
-  const [openEdit, setOpenEdit] = React.useState(false);
-  const [openDelete, setOpenDelete] = React.useState(false);
-  const [page, setPage] = React.useState(1);
-  const [search, setSearch] = React.useState("");
-  const [employeeId, setEmployeeId] = React.useState(null);
+export default function ViewModal({ userCompany, open, setOpen }) {
   const axiosPrivate = useAxiosPrivate();
 
-  const handleOpenEdit = (id) => {
-    setOpenEdit(true);
-    setEmployeeId(id);
+  // Fetch detailed user company data
+  const fetchUserCompanyDetails = async () => {
+    if (!userCompany?.companyId) return null;
+    const { data } = await axiosPrivate.get(`/user-companies/${userCompany.companyId}`);
+    return data;
   };
 
-  const handleOpenDelete = (id) => {
-    setOpenDelete(true);
-    setEmployeeId(id);
-  };
-
-  const fetchCompany = async () => {
-    try {
-      const response = await axiosPrivate.get(`/user-companies/${id}`);
-      console.log("Company data:", response.data);
-      return response.data;
-    } catch (error) {
-      console.error("Error fetching company:", error);
-      throw error;
-    }
-  };
-
-  const fetchEmployees = async () => {
-    return {
-      results: [
-        {
-          id: 1,
-          name: "John Doe",
-          job_title: "Senior Software Engineer"
-        },
-        {
-          id: 2,
-          name: "Jane Smith",
-          job_title: "Technical Recruiter"
-        }
-      ],
-      next: null,
-      previous: null,
-      total_pages: 1
-    };
-  };
-
-  const { data: employees, refetch, isLoading: isEmployeesLoading } = useQuery(
-    ["employees", { id, search, page }],
-    fetchEmployees,
+  const { data: detailedUserCompany, isLoading } = useQuery(
+    ["user-company-details", userCompany?.companyId],
+    fetchUserCompanyDetails,
     {
-      enabled: !!id,
+      enabled: !!userCompany?.companyId && open,
     }
   );
 
-  const { data: company, isLoading: isCompanyLoading } = useQuery(
-    ["company", { id }],
-    fetchCompany,
-    {
-      enabled: !!id,
+  // Use detailed user company data if available, otherwise use the passed data
+  const displayUserCompany = detailedUserCompany || userCompany;
+
+  if (!displayUserCompany) return null;
+
+  const getInterestBadgeColor = (level) => {
+    switch (level) {
+      case "High": return "bg-red-100 text-red-800 border-red-200";
+      case "Medium": return "bg-yellow-100 text-yellow-800 border-yellow-200";
+      case "Low": return "bg-green-100 text-green-800 border-green-200";
+      default: return "bg-gray-100 text-gray-800 border-gray-200";
     }
-  );
+  };
 
-  const isLoading = isCompanyLoading || isEmployeesLoading;
-
-  const table_head = [
-    {
-      name: "Name",
-      key: "name",
-    },
-    {
-      name: "Job Title",
-      key: "job_title",
-    },
-  ];
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleDateString();
+  };
 
   return (
-    <Layout>
-      <div className="bg-white rounded-lg h-full flex flex-col p-4 justify-between">
-        <div className="flex flex-col gap-4">
-          <div className="flex items-center gap-2 pb-4 border-b-2">
-            <Link
-              to={`/user-companies`}
-              className="py-2 px-4 hover:bg-[#f1f1f1] transition-all w-fit rounded-lg flex items-center gap-2"
-            >
-              <ArrowLeft size={19} />
-            </Link>
-            <h1 className="text-lg font-semibold">Company Details</h1>
-          </div>
-          {isLoading ? (
-            <p>Loading...</p>
-          ) : (
-            <div className="flex flex-col gap-4">
-              <div className="flex shadow rounded-md p-4 gap-8 w-fit">
-                <div className="flex gap-4">
-                  <div className="border rounded-md w-fit p-2 text-primary">
-                    <Building2 size={40} />
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    {!company.companyName ? (
-                      <div className="gap-1 flex">
-                        <span className="text-gray-600">Company:</span>
-                        <span className="text-gray-400">Not specified</span>
-                      </div>
-                    ) : (
-                      <div className="gap-1 flex">
-                        <span className="text-gray-600">Company:</span>
-                        {company.companyName}
-                      </div>
-                    )}
-                    {!company.companyLocation ? (
-                      <div className="gap-1 flex">
-                        <span className="text-gray-600">Location:</span>
-                        <span className="text-gray-400">Not specified</span>
-                      </div>
-                    ) : (
-                      <div className="gap-1 flex">
-                        <span className="text-gray-600">Location:</span>
-                        {company.companyLocation}
-                      </div>
-                    )}
-                    {!company.description ? (
-                      <div className="gap-1 flex">
-                        <span className="text-gray-600">Description:</span>
-                        <span className="text-gray-400">Not specified</span>
-                      </div>
-                    ) : (
-                      <div className="gap-1 flex">
-                        <span className="text-gray-600">Description:</span>
-                        {company.description}
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <p>
-                    {!company.companyCareersLink ? (
-                      ""
-                    ) : (
-                      <a
-                        className="text-primary hover:text-blue-800 transition-all flex items-center gap-1"
-                        href={company.companyCareersLink}
-                        target="_blank"
-                        title="Careers Page"
-                      >
-                        <Career size={20} />
-                        <span>Careers</span>
-                      </a>
-                    )}
-                  </p>
-                  <p>
-                    {!company.companyLinkedinLink ? (
-                      ""
-                    ) : (
-                      <a
-                        className="text-primary hover:text-blue-800 transition-all flex items-center gap-1"
-                        href={company.companyLinkedinLink}
-                        target="_blank"
-                        title="LinkedIn Profile"
-                      >
-                        <Linkedin size={20} />
-                        <span>LinkedIn</span>
-                      </a>
-                    )}
-                  </p>
-                </div>
-              </div>
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <button
+          onClick={() => setOpen(false)}
+          className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 z-10"
+        >
+          <X className="h-4 w-4" />
+          <span className="sr-only">Close</span>
+        </button>
 
-              <div className="flex flex-col gap-2">
-                <p className="font-semibold text-gray-500">Employees</p>
-                <Table
-                  actions
-                  isLoading={isEmployeesLoading}
-                  search={search}
-                  viewSearch
-                  setSearch={setSearch}
-                  table_head={table_head}
-                  table_rows={employees?.results?.map(
-                    ({ id, name, job_title }) => {
-                      return {
-                        id,
-                        name,
-                        job_title,
-                      };
-                    }
-                  )}
-                  handleOpenDelete={handleOpenDelete}
-                  handleOpenEdit={handleOpenEdit}
-                  handleOpenView={"employees"}
-                />
-                {employees?.results?.length !== 0 && (
-                  <div className="self-center">
-                    <Pagination
-                      nextPage={employees?.next}
-                      prevPage={employees?.previous}
-                      page={page}
-                      setPage={setPage}
-                      totalPages={employees?.total_pages}
-                    />
+        <DialogHeader>
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center text-lg">
+              🏢
+            </div>
+            <div>
+              <DialogTitle className="text-2xl flex items-center gap-2">
+                {displayUserCompany.companyName}
+                {displayUserCompany.favorite && (
+                  <Star className="h-5 w-5 text-yellow-500 fill-yellow-500" />
+                )}
+              </DialogTitle>
+              <div className="flex items-center gap-2 mt-1">
+                <Badge variant="outline" className={getInterestBadgeColor(displayUserCompany.interestLevel)}>
+                  {displayUserCompany.interestLevel} Interest
+                </Badge>
+                <span className="text-muted-foreground">•</span>
+                <span className="text-muted-foreground">{displayUserCompany.companyLocation}</span>
+              </div>
+            </div>
+          </div>
+        </DialogHeader>
+
+        {isLoading ? (
+          <div className="flex justify-center items-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {/* Personal Information */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Heart className="w-5 h-5" />
+                  My Interest & Notes
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">Interest Level</label>
+                    <div className="mt-1">
+                      <Badge variant="outline" className={getInterestBadgeColor(displayUserCompany.interestLevel)}>
+                        {displayUserCompany.interestLevel}
+                      </Badge>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">Favorite</label>
+                    <div className="flex items-center gap-2 mt-1">
+                      {displayUserCompany.favorite ? (
+                        <>
+                          <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+                          <span>Yes, this is a favorite company</span>
+                        </>
+                      ) : (
+                        <span className="text-muted-foreground">Not marked as favorite</span>
+                      )}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">Date Added</label>
+                    <div className="flex items-center gap-2 mt-1">
+                      <Calendar className="w-4 h-4 text-muted-foreground" />
+                      <span>{formatDate(displayUserCompany.createdAt)}</span>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">Last Updated</label>
+                    <div className="flex items-center gap-2 mt-1">
+                      <Calendar className="w-4 h-4 text-muted-foreground" />
+                      <span>{formatDate(displayUserCompany.updatedAt)}</span>
+                    </div>
+                  </div>
+                </div>
+                
+                {displayUserCompany.personalNotes && (
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">Personal Notes</label>
+                    <p className="mt-1 text-sm bg-muted/50 p-3 rounded-md">{displayUserCompany.personalNotes}</p>
                   </div>
                 )}
-              </div>
 
-              {openEdit && (
-                <EditModal
-                  id={employeeId}
-                  openEdit={openEdit}
-                  setOpenEdit={setOpenEdit}
-                  refetch={refetch}
-                />
-              )}
+                {displayUserCompany.tags && displayUserCompany.tags.length > 0 && (
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">Tags</label>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {displayUserCompany.tags.map((tag, index) => (
+                        <Badge key={index} variant="secondary">
+                          {tag}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
 
-              {openDelete && (
-                <DeleteModal
-                  id={employeeId}
-                  openDelete={openDelete}
-                  setOpenDelete={setOpenDelete}
-                  refetch={refetch}
-                />
-              )}
-            </div>
-          )}
-        </div>
-      </div>
-    </Layout>
+            {/* Company Information */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Building2 className="w-5 h-5" />
+                  Company Information
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">Company Name</label>
+                    <div className="mt-1">
+                      <span className="font-medium">{displayUserCompany.companyName}</span>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">Location</label>
+                    <div className="flex items-center gap-2 mt-1">
+                      <MapPin className="w-4 h-4 text-muted-foreground" />
+                      <span>{displayUserCompany.companyLocation || 'Not provided'}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="border-t pt-4">
+                  <label className="text-sm font-medium text-muted-foreground">External Links</label>
+                  <div className="flex gap-4 mt-2">
+                    {displayUserCompany.companyCareersLink ? (
+                      <a 
+                        href={displayUserCompany.companyCareersLink} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-primary hover:underline flex items-center gap-1"
+                      >
+                        Visit Careers Page
+                        <ExternalLink className="w-3 h-3" />
+                      </a>
+                    ) : (
+                      <span className="text-muted-foreground text-sm">No careers link</span>
+                    )}
+                    
+                    {displayUserCompany.companyLinkedinLink ? (
+                      <a 
+                        href={displayUserCompany.companyLinkedinLink} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-primary hover:underline flex items-center gap-1"
+                      >
+                        Visit LinkedIn
+                        <ExternalLink className="w-3 h-3" />
+                      </a>
+                    ) : (
+                      <span className="text-muted-foreground text-sm">No LinkedIn link</span>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
   );
 }
