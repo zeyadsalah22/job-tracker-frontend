@@ -108,7 +108,7 @@ export default function Login() {
               label="Email"
               value={values.email}
               onChange={handleChange}
-              onBlur={handleBlur}
+              // onBlur={handleBlur}
               error={errors.email}
               touched={touched.email}
             />
@@ -119,7 +119,7 @@ export default function Login() {
               label="Password"
               value={values.password}
               onChange={handleChange}
-              onBlur={handleBlur}
+              // onBlur={handleBlur}
               error={errors.password}
               touched={touched.password}
             />
