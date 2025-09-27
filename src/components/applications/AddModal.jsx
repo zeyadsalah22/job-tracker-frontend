@@ -46,7 +46,7 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
     contactedEmployeeIds: []
   });
 
-  // Fetch companies for dropdown
+  // Fetch user companies for dropdown
   const fetchCompanies = async () => {
     try {
       const params = {
@@ -54,7 +54,7 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
         PageSize: 100
       };
       
-      const response = await axiosPrivate.get('/companies', { params });
+      const response = await axiosPrivate.get('/user-companies', { params });
       
       let companies = [];
       if (Array.isArray(response.data)) {
@@ -65,7 +65,7 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
       
       return companies;
     } catch (error) {
-      console.error("Error fetching companies:", error);
+      console.error("Error fetching user companies:", error);
       return [];
     }
   };
@@ -268,7 +268,7 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select company">
-                    {formData.companyId && companies.find(c => c.companyId.toString() === formData.companyId)?.name}
+                    {formData.companyId && companies.find(c => c.companyId.toString() === formData.companyId)?.companyName}
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
@@ -288,9 +288,9 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
                     companies.map((company) => (
                       <SelectItem key={company.companyId} value={company.companyId.toString()}>
                         <div className="flex flex-col">
-                          <span className="font-medium">{company.name}</span>
-                          {company.location && (
-                            <span className="text-xs text-muted-foreground">{company.location}</span>
+                          <span className="font-medium">{company.companyName}</span>
+                          {company.companyLocation && (
+                            <span className="text-xs text-muted-foreground">{company.companyLocation}</span>
                           )}
                         </div>
                       </SelectItem>
