@@ -56,8 +56,20 @@ export default function ViewModal({ userCompany, open, setOpen }) {
 
         <DialogHeader>
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center text-lg">
-              🏢
+            <div className="w-16 h-16 bg-primary/10 rounded-lg flex items-center justify-center overflow-hidden">
+              {displayUserCompany.companyLogoUrl && (displayUserCompany.companyLogoUrl.startsWith('http://') || displayUserCompany.companyLogoUrl.startsWith('https://')) ? (
+                <img 
+                  src={displayUserCompany.companyLogoUrl} 
+                  alt={`${displayUserCompany.companyName} logo`}
+                  className="w-full h-full object-contain"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    e.target.parentElement.innerHTML = '<span class="text-2xl">🏢</span>';
+                  }}
+                />
+              ) : (
+                <span className="text-2xl">🏢</span>
+              )}
             </div>
             <div>
               <DialogTitle className="text-2xl flex items-center gap-2">
