@@ -18,6 +18,7 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
     initialValues: {
       name: "",
       location: "",
+      logoUrl: "",
       careersLink: null,
       linkedinLink: null,
     },
@@ -45,9 +46,11 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
   });
 
   return (
-    <Modal open={openAdd} setOpen={setOpenAdd} width="600px">
-      <div className="flex flex-col gap-4">
-        <h1 className="font-semibold text-lg">Add Company</h1>
+    <Dialog open={openAdd} onOpenChange={setOpenAdd}>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>Add Company</DialogTitle>
+        </DialogHeader>
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
           <FormField
             name="name"
@@ -69,6 +72,16 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
             error={errors.location || error?.response?.data?.location}
             touched={touched.location}
             required
+          />
+
+          <FormField
+            name="logoUrl"
+            type="text"
+            placeHolder="Logo URL"
+            value={values.logoUrl}
+            onChange={handleChange}
+            error={errors.logoUrl || error?.response?.data?.logoUrl}
+            touched={touched.logoUrl}
           />
 
           <FormField
@@ -112,7 +125,7 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
             </button>
           )}
         </form>
-      </div>
-    </Modal>
+      </DialogContent>
+    </Dialog>
   );
 } 

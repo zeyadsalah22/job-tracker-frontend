@@ -155,6 +155,7 @@ export default function UserCompanies() {
     company: {
       name: userCompany.companyName,
       location: userCompany.companyLocation,
+      logoUrl: userCompany.companyLogoUrl,
       favorite: userCompany.favorite
     },
     interestLevel: userCompany.interestLevel,
@@ -176,8 +177,20 @@ export default function UserCompanies() {
   const customRenderers = {
     company: (value) => (
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 bg-muted rounded-full flex items-center justify-center text-lg">
-          🏢
+        <div className="w-10 h-10 bg-muted rounded-full flex items-center justify-center overflow-hidden">
+          {value.logoUrl && (value.logoUrl.startsWith('http://') || value.logoUrl.startsWith('https://')) ? (
+            <img 
+              src={value.logoUrl} 
+              alt={`${value.name} logo`}
+              className="w-full h-full object-contain"
+              onError={(e) => {
+                e.target.style.display = 'none';
+                e.target.parentElement.innerHTML = '<span class="text-lg">🏢</span>';
+              }}
+            />
+          ) : (
+            <span className="text-lg">🏢</span>
+          )}
         </div>
         <div>
           <div className="flex items-center gap-2">

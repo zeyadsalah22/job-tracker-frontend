@@ -207,7 +207,7 @@ export default function Companies() {
   // Prepare data for Table component
   const tableData = paginatedCompanies.map(company => ({
     id: company.companyId,
-    logo: company.logo || '🏢',
+    logo: company.logoUrl || '🏢',
     name: company.name,
     industry: company.industry?.name || 'N/A',
     location: company.location,
@@ -228,8 +228,20 @@ export default function Companies() {
   // Custom renderers for special columns
   const customRenderers = {
     logo: (value) => (
-      <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center text-sm">
-        {value}
+      <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center overflow-hidden">
+        {value && value !== '🏢' && (value.startsWith('http://') || value.startsWith('https://')) ? (
+          <img 
+            src={value} 
+            alt="Company logo" 
+            className="w-full h-full object-contain"
+            onError={(e) => {
+              e.target.style.display = 'none';
+              e.target.parentElement.innerHTML = '<span class="text-sm">🏢</span>';
+            }}
+          />
+        ) : (
+          <span className="text-sm">{value}</span>
+        )}
       </div>
     ),
     name: (value) => <span className="font-medium">{value}</span>,

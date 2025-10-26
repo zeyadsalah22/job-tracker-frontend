@@ -33,6 +33,7 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
       initialValues: {
         name: "",
         location: "",
+        logoUrl: "",
         careersLink: "",
         linkedinLink: "",
       },
@@ -63,15 +64,18 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
     if (company) {
       setFieldValue("name", company.name);
       setFieldValue("location", company.location);
+      setFieldValue("logoUrl", company.logoUrl || "");
       setFieldValue("careersLink", company.careersLink);
       setFieldValue("linkedinLink", company.linkedinLink);
     }
   }, [company, setFieldValue]);
 
   return (
-    <Modal open={openEdit} setOpen={setOpenEdit} width="600px">
-      <div className="flex flex-col gap-4">
-        <h1 className="font-semibold text-lg">Update Company</h1>
+    <Dialog open={openEdit} onOpenChange={setOpenEdit}>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>Update Company</DialogTitle>
+        </DialogHeader>
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
           <FormField
             name="name"
@@ -93,6 +97,16 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
             error={errors.location || error?.response?.data?.location}
             touched={touched.location}
             required
+          />
+
+          <FormField
+            name="logoUrl"
+            type="text"
+            placeHolder="Logo URL"
+            value={values.logoUrl}
+            onChange={handleChange}
+            error={errors.logoUrl || error?.response?.data?.logoUrl}
+            touched={touched.logoUrl}
           />
 
           <FormField
@@ -136,7 +150,7 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
             </button>
           )}
         </form>
-      </div>
-    </Modal>
+      </DialogContent>
+    </Dialog>
   );
 } 
