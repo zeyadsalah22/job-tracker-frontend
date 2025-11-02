@@ -10,6 +10,7 @@ import { useNavigate } from "react-router-dom";
 import { LogOut, Trash2 } from "lucide-react";
 import ChangePass from "../components/user/ChangePass";
 import ManageCv from "../components/user/ManageCv";
+import GmailIntegration from "../components/user/GmailIntegration";
 import { useAxiosPrivate } from "../utils/axios";
 
 export default function Profile() {
@@ -229,6 +230,11 @@ export default function Profile() {
             >
               Change password
             </button>
+          </div>
+          
+          {/* Gmail Integration Section */}
+          <div className="mt-8 pt-8 border-t-2">
+            <GmailIntegration />
           </div>
         </div>
         <DeleteModal openDelete={deleteModal} setOpenDelete={setDeleteModal} />
