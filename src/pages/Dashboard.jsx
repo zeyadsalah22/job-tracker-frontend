@@ -447,64 +447,53 @@ export default function Dashboard() {
     fetchTimeseries
   );
 
-  // Static data for Recent Applications
-  const recentApplications = [
-    {
-      id: 1,
-      company: "Google",
-      position: "Senior Software Engineer",
-      appliedDate: "2024-01-15",
-      status: "Interview",
-      logo: "https://logo.clearbit.com/google.com"
-    },
-    {
-      id: 2,
-      company: "Microsoft",
-      position: "Full Stack Developer",
-      appliedDate: "2024-01-12",
-      status: "Applied",
-      logo: "https://logo.clearbit.com/microsoft.com"
-    },
-    {
-      id: 3,
-      company: "Meta",
-      position: "Frontend Engineer",
-      appliedDate: "2024-01-10",
-      status: "Phone Screen",
-      logo: "https://logo.clearbit.com/meta.com"
-    },
-    {
-      id: 4,
-      company: "Netflix",
-      position: "Software Engineer",
-      appliedDate: "2024-01-08",
-      status: "Assessment",
-      logo: "https://logo.clearbit.com/netflix.com"
-    },
-    {
-      id: 5,
-      company: "Apple",
-      position: "iOS Developer",
-      appliedDate: "2024-01-05",
-      status: "Rejected",
-      logo: "https://logo.clearbit.com/apple.com"
+  const fetchRecentApplications = async () => {
+    try {
+      const params = new URLSearchParams({
+        PageNumber: '1',
+        PageSize: '5',
+        SortBy: 'submissionDate',
+        SortDescending: 'true',
+      });
+      
+      const response = await axiosPrivate.get(`/applications?${params}`);
+      console.log("Recent applications response:", response.data);
+      return response.data?.items || [];
+    } catch (error) {
+      console.error("Error fetching recent applications:", error);
+      return [];
     }
-  ];
+  };
+
+  const { data: recentApplications = [], isLoading: recentApplicationsLoading } = useQuery(
+    ["recentApplications"],
+    fetchRecentApplications
+  );
 
   const getStatusColor = (status) => {
-    switch (status) {
+    switch (status?.toLowerCase()) {
+      case "pending":
+        return "bg-yellow-500 text-white";
+      case "accepted":
+        return "bg-green-500 text-white";
+      case "rejected":
+        return "bg-red-500 text-white";
+      default:
+        return "bg-gray-500 text-white";
+    }
+  };
+
+  const getStageColor = (stage) => {
+    switch (stage) {
       case "Applied":
         return "bg-blue-500 text-white";
-      case "Under Review":
-        return "bg-yellow-500 text-white";
-      case "Phone Screen":
+      case "PhoneScreen":
         return "bg-yellow-500 text-white";
       case "Assessment":
         return "bg-yellow-500 text-white";
-      case "Interview":
+      case "HrInterview":
+      case "TechnicalInterview":
         return "bg-green-500 text-white";
-      case "Rejected":
-        return "bg-red-500 text-white";
       case "Offer":
         return "bg-green-600 text-white";
       default:
@@ -807,31 +796,61 @@ export default function Dashboard() {
               <CardDescription className="text-sm">Your latest job applications</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3 sm:space-y-4">
-                {recentApplications.map((application) => (
-                  <div
-                    key={application.id}
-                    className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3 border rounded-lg hover:bg-muted/50 transition-colors"
-                  >
-                    <div className="flex items-center space-x-3 sm:space-x-4 min-w-0 flex-1">
-                      <div className="w-8 h-8 sm:w-10 sm:h-10 bg-muted rounded-lg flex items-center justify-center flex-shrink-0">
-                        <Building2 className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <h4 className="font-medium text-sm sm:text-base truncate">{application.company}</h4>
-                        <p className="text-xs sm:text-sm text-muted-foreground truncate">{application.position}</p>
-                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                          <Clock className="w-3 h-3 flex-shrink-0" />
-                          <span className="truncate">Applied {new Date(application.appliedDate).toLocaleDateString()}</span>
+              {recentApplicationsLoading ? (
+                <div className="flex justify-center items-center py-8">
+                  <ReactLoading
+                    type="bubbles"
+                    color="#7571F9"
+                    height={50}
+                    width={50}
+                  />
+                </div>
+              ) : recentApplications.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <p>No applications yet. Start applying!</p>
+                </div>
+              ) : (
+                <div className="space-y-3 sm:space-y-4">
+                  {recentApplications.map((application) => (
+                    <div
+                      key={application.applicationId}
+                      className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3 border rounded-lg hover:bg-muted/50 transition-colors"
+                    >
+                      <div className="flex items-center space-x-3 sm:space-x-4 min-w-0 flex-1">
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 bg-muted rounded-lg flex items-center justify-center flex-shrink-0">
+                          <Building2 className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <h4 className="font-medium text-sm sm:text-base truncate">{application.companyName || 'N/A'}</h4>
+                          <p className="text-xs sm:text-sm text-muted-foreground truncate">{application.jobTitle || 'N/A'}</p>
+                          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                            <Clock className="w-3 h-3 flex-shrink-0" />
+                            <span className="truncate">Applied {application.submissionDate ? new Date(application.submissionDate).toLocaleDateString() : 'N/A'}</span>
+                          </div>
                         </div>
                       </div>
+                      <div className="flex flex-col sm:flex-row gap-2">
+                        {/* Show status badge if Rejected or Accepted */}
+                        {(application.status?.toLowerCase() === 'rejected' || application.status?.toLowerCase() === 'accepted') && (
+                          <Badge className={`${getStatusColor(application.status)} text-xs flex-shrink-0`}>
+                            {application.status}
+                          </Badge>
+                        )}
+                        
+                        {/* Show stage badge if status is Pending */}
+                        {application.status?.toLowerCase() === 'pending' && application.stage && (
+                          <Badge className={`${getStageColor(application.stage)} text-xs flex-shrink-0`}>
+                            {application.stage === "PhoneScreen" ? "Phone Screen" :
+                             application.stage === "HrInterview" ? "HR Interview" :
+                             application.stage === "TechnicalInterview" ? "Technical Interview" :
+                             application.stage}
+                          </Badge>
+                        )}
+                      </div>
                     </div>
-                    <Badge className={`${getStatusColor(application.status)} text-xs sm:text-sm flex-shrink-0`}>
-                      {application.status}
-                    </Badge>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
