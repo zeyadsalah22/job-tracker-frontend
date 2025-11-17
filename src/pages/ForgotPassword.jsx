@@ -109,7 +109,7 @@ export default function ForgotPassword() {
                 placeholder="Enter your email"
                 value={values.email}
                 onChange={handleChange}
-                onBlur={handleBlur}
+                // onBlur={handleBlur}
                 className={touched.email && errors.email ? "border-red-500" : ""}
               />
               {touched.email && errors.email && (

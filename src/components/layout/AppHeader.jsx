@@ -1,4 +1,4 @@
-import { Bell, Search, User, LogOut, Settings } from "lucide-react";
+import { Search, User, LogOut, Settings } from "lucide-react";
 import Button from "../ui/Button";
 import {
   DropdownMenu,
@@ -9,9 +9,8 @@ import {
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
 import Input from "../ui/Input";
-
-import { Badge } from "../ui/Badge";
 import { SidebarTrigger } from "../ui/sidebar";
+import { NotificationPanel } from "../notifications";
 import useUserStore from "../../store/user.store";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -29,9 +28,13 @@ export function AppHeader() {
     localStorage.removeItem("fullName");
     localStorage.removeItem("role");
     localStorage.removeItem("expiresAt");
-    userLogout();
+    logout();
     navigate("/");
     toast.success("Logout successful");
+  };
+
+  const handleViewAllNotifications = () => {
+    navigate("/notifications");
   };
 
   return (
@@ -53,47 +56,11 @@ export function AppHeader() {
         {/* Right side */}
         <div className="flex items-center space-x-2">
           {/* Notifications */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="relative">
-                <Bell className="h-4 w-4" />
-                <Badge 
-                  variant="destructive" 
-                  className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
-                >
-                  3
-                </Badge>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-80">
-              <DropdownMenuLabel>Notifications</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium">New job match found!</p>
-                  <p className="text-xs text-muted-foreground">
-                    Senior React Developer at TechCorp matches your profile
-                  </p>
-                </div>
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium">Interview scheduled</p>
-                  <p className="text-xs text-muted-foreground">
-                    Tomorrow at 2:00 PM with Google
-                  </p>
-                </div>
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium">Application update</p>
-                  <p className="text-xs text-muted-foreground">
-                    Your application to Meta has been reviewed
-                  </p>
-                </div>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <NotificationPanel 
+            onViewAll={handleViewAllNotifications}
+            showMarkAllAsRead={true}
+            showViewAll={true}
+          />
 
           {/* User Profile */}
           <DropdownMenu>

@@ -98,3 +98,42 @@ export const interviewSchema = Yup.object().shape({
   position: Yup.string(),
   jobDescription: Yup.string()
 });
+
+export const notificationCreateSchema = Yup.object().shape({
+  userId: Yup.number()
+    .integer("User ID must be an integer")
+    .optional(),
+  actorId: Yup.number()
+    .integer("Actor ID must be an integer")
+    .optional(),
+  type: Yup.string()
+    .oneOf(
+      ['SystemAnnouncement', 'Application', 'ToList', 'Post', 'Comment', 'React'],
+      'Invalid notification type'
+    )
+    .optional(),
+  entityTargetedId: Yup.number()
+    .integer("Entity targeted ID must be an integer")
+    .nullable()
+    .optional(),
+  message: Yup.string()
+    .required("Message is required")
+    .max(1000, "Message cannot be longer than 1000 characters")
+});
+
+export const notificationFilterSchema = Yup.object().shape({
+  pageNumber: Yup.number()
+    .integer("Page number must be an integer")
+    .min(1, "Page number must be at least 1")
+    .max(2147483647, "Page number is too large")
+    .optional(),
+  pageSize: Yup.number()
+    .integer("Page size must be an integer")
+    .min(1, "Page size must be at least 1")
+    .max(500, "Page size cannot exceed 500")
+    .optional(),
+  sortBy: Yup.string()
+    .optional(),
+  sortDescending: Yup.boolean()
+    .optional()
+});
