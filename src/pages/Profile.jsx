@@ -11,6 +11,7 @@ import { LogOut, Trash2 } from "lucide-react";
 import ChangePass from "../components/user/ChangePass";
 import ManageCv from "../components/user/ManageCv";
 import GmailIntegration from "../components/user/GmailIntegration";
+import NotificationPreferences from "../components/user/NotificationPreferences";
 import { useAxiosPrivate } from "../utils/axios";
 
 export default function Profile() {
@@ -236,6 +237,9 @@ export default function Profile() {
           <div className="mt-8 pt-8 border-t-2">
             <GmailIntegration />
           </div>
+          
+          {/* Notification Preferences Section */}
+          <NotificationPreferences user={user} />
         </div>
         <DeleteModal openDelete={deleteModal} setOpenDelete={setDeleteModal} />
         <ChangePass open={changePassword} setOpen={setChangePassword} />
