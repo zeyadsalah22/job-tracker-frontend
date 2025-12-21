@@ -11,6 +11,7 @@ import {
   Target,
   Calendar,
   Briefcase,
+  Bell,
   MessageCircle,
   Bookmark,
 } from "lucide-react";
@@ -48,6 +49,7 @@ const mainItems = [
   { title: "Companies", url: "/companies", icon: Building2 },
   { title: "Resume Matching", url: "/resume-matching", icon: Target },
   { title: "Interviews", url: "/interviews", icon: Calendar },
+  { title: "Notifications", url: "/notifications", icon: Bell },
 ];
 
 export function AppSidebar() {

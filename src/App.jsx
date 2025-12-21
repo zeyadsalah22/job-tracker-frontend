@@ -24,6 +24,7 @@ import Question from "./components/questions/ViewModal";
 import ProtectedRoute from "./utils/ProtectedRoute";
 import Interviews from "./pages/Interviews";
 import Interview from "./components/interviews/ViewModal";
+import Notifications from "./pages/Notifications";
 
 import ResumeMatching from "./pages/ResumeMatching";
 import ResumeTestDetails from "./components/resume-matching/ViewModal";
@@ -187,6 +188,16 @@ export default function App() {
             <ProtectedRoute>
               <AppLayout>
                 <Interview />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/notifications"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <Notifications />
               </AppLayout>
             </ProtectedRoute>
           }
