@@ -28,11 +28,15 @@ import Interview from "./components/interviews/ViewModal";
 import ResumeMatching from "./pages/ResumeMatching";
 import ResumeTestDetails from "./components/resume-matching/ViewModal";
 import { AppLayout } from "./components/layout/AppLayout";
+
 import Community from "./pages/Community";
 import PostDetail from "./pages/PostDetail";
 import SavedPosts from "./pages/SavedPosts";
 import DraftedPosts from "./pages/DraftedPosts";
 import InterviewQuestions from "./pages/InterviewQuestions";
+
+import GmailCallback from "./pages/GmailCallback";
+
 
 export default function App() {
   return (
@@ -43,6 +47,7 @@ export default function App() {
         <Route path="/home" element={<Landing />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/gmail/callback" element={<GmailCallback />} />
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         <Route path="/terms-of-service" element={<TermsOfService />} />
         <Route

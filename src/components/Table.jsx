@@ -239,7 +239,19 @@ export default function Table({
                     ) : !Array.isArray(table_rows) || table_rows.length === 0 ? (
                       <tr>
                         <td colSpan={table_head.length + (bulkActions ? 1 : 0) + (actions ? 1 : 0)} className="text-center py-8 text-muted-foreground">
-                          {emptyState || "No data found"}
+                          {emptyState && typeof emptyState === 'object' && emptyState.title ? (
+                            <div className="flex flex-col items-center gap-4">
+                              <div className="space-y-2">
+                                <p className="text-lg font-semibold text-foreground">{emptyState.title}</p>
+                                {emptyState.description && (
+                                  <p className="text-sm text-muted-foreground">{emptyState.description}</p>
+                                )}
+                              </div>
+                              {emptyState.action && <div>{emptyState.action}</div>}
+                            </div>
+                          ) : (
+                            emptyState || "No data found"
+                          )}
                         </td>
                       </tr>
                     ) : (
