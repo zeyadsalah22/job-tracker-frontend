@@ -12,6 +12,8 @@ import {
   Calendar,
   Briefcase,
   Bell,
+  MessageCircle,
+  Bookmark,
 } from "lucide-react";
 import {
   Sidebar,
@@ -36,6 +38,13 @@ const trackerItems = [
   { title: "Questions", url: "/questions", icon: HelpCircle },
 ];
 
+const communityItems = [
+  { title: "Community", url: "/community", icon: MessageCircle },
+  { title: "Saved Posts", url: "/community/saved", icon: Bookmark },
+  { title: "Drafted Posts", url: "/community/drafts", icon: FileText },
+  { title: "Interview Questions", url: "/community/interview-questions", icon: HelpCircle },
+];
+
 const mainItems = [
   { title: "Companies", url: "/companies", icon: Building2 },
   { title: "Resume Matching", url: "/resume-matching", icon: Target },
@@ -49,6 +58,9 @@ export function AppSidebar() {
   const currentPath = location.pathname;
   const [isTrackerOpen, setIsTrackerOpen] = useState(
     trackerItems.some((item) => currentPath === item.url)
+  );
+  const [isCommunityOpen, setIsCommunityOpen] = useState(
+    communityItems.some((item) => currentPath === item.url)
   );
 
   const isCollapsed = state === "collapsed";
@@ -96,6 +108,45 @@ export function AppSidebar() {
                 {isTrackerOpen && !isCollapsed && (
                   <SidebarMenuSub>
                     {trackerItems.map((item) => (
+                      <SidebarMenuSubItem key={item.title}>
+                        <SidebarMenuSubButton asChild>
+                          <Link
+                            to={item.url}
+                            className={isActive(item.url) ? "bg-primary/10 text-primary font-medium" : "text-gray-900 hover:bg-muted/50 hover:text-foreground"}
+                          >
+                            <item.icon className="mr-2 h-4 w-4" />
+                            <span>{item.title}</span>
+                          </Link>
+                        </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                    ))}
+                  </SidebarMenuSub>
+                )}
+              </SidebarMenuItem>
+
+              {/* Community Section */}
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  onClick={() => setIsCommunityOpen(!isCommunityOpen)}
+                  className={`flex items-center justify-between ${communityItems.some(item => isActive(item.url)) ? 'bg-primary/10 text-primary font-medium' : 'text-gray-900 hover:bg-muted/50'}`}
+                  asChild={false}
+                  tooltip={isCollapsed ? "Community" : undefined}
+                >
+                  <div className="flex items-center">
+                    <MessageCircle className="mr-2 h-4 w-4" />
+                    {!isCollapsed && <span>Community</span>}
+                  </div>
+                  {!isCollapsed && (
+                    isCommunityOpen ? (
+                      <ChevronDown className="h-4 w-4" />
+                    ) : (
+                      <ChevronRight className="h-4 w-4" />
+                    )
+                  )}
+                </SidebarMenuButton>
+                {isCommunityOpen && !isCollapsed && (
+                  <SidebarMenuSub>
+                    {communityItems.map((item) => (
                       <SidebarMenuSubItem key={item.title}>
                         <SidebarMenuSubButton asChild>
                           <Link

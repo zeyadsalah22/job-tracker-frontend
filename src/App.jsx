@@ -29,12 +29,28 @@ import Notifications from "./pages/Notifications";
 import ResumeMatching from "./pages/ResumeMatching";
 import ResumeTestDetails from "./components/resume-matching/ViewModal";
 import { AppLayout } from "./components/layout/AppLayout";
+
+import Community from "./pages/Community";
+import PostDetail from "./pages/PostDetail";
+import SavedPosts from "./pages/SavedPosts";
+import DraftedPosts from "./pages/DraftedPosts";
+import InterviewQuestions from "./pages/InterviewQuestions";
+
 import GmailCallback from "./pages/GmailCallback";
+
 
 export default function App() {
   return (
     <>
       <Routes>
+        <Route path="/" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/home" element={<Landing />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/gmail/callback" element={<GmailCallback />} />
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="/terms-of-service" element={<TermsOfService />} />
         <Route
           path="/profile"
           element={
@@ -45,14 +61,6 @@ export default function App() {
             </ProtectedRoute>
           }
         />
-        <Route path="/register" element={<Register />} />
-        <Route path="/" element={<Login />} />
-        <Route path="/home" element={<Landing />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/reset-password" element={<ResetPassword />} />
-        <Route path="/gmail/callback" element={<GmailCallback />} />
-        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-        <Route path="/terms-of-service" element={<TermsOfService />} />
         <Route
           path="/dashboard"
           element={
@@ -210,6 +218,56 @@ export default function App() {
             <ProtectedRoute>
               <AppLayout>
                 <ResumeTestDetails />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/community"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <Community />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/community/posts/:id"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <PostDetail />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/community/saved"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <SavedPosts />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/community/drafts"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <DraftedPosts />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/community/interview-questions"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <InterviewQuestions />
               </AppLayout>
             </ProtectedRoute>
           }
