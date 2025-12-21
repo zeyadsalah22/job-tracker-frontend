@@ -7,10 +7,12 @@ import FormField from "../components/ui/FormField";
 import ReactLoading from "react-loading";
 import DeleteModal from "../components/user/DeleteModal";
 import { useNavigate } from "react-router-dom";
-import { LogOut, Trash2 } from "lucide-react";
+import { LogOut, Trash2, Camera, Upload, X } from "lucide-react";
 import ChangePass from "../components/user/ChangePass";
 import ManageCv from "../components/user/ManageCv";
 import { useAxiosPrivate } from "../utils/axios";
+import Avatar from "../components/ui/Avatar";
+import Button from "../components/ui/Button";
 
 export default function Profile() {
   const user = useUserStore((state) => state.user);
@@ -23,6 +25,9 @@ export default function Profile() {
   const [changePassword, setChangePassword] = useState(false);
   const axiosPrivate = useAxiosPrivate();
   const [isLoading, setIsLoading] = useState(true);
+  const [profilePicture, setProfilePicture] = useState(null);
+  const [profilePicturePreview, setProfilePicturePreview] = useState(null);
+  const [isUploadingPicture, setIsUploadingPicture] = useState(false);
 
   // Fetch user data
   useEffect(() => {
@@ -84,8 +89,65 @@ export default function Profile() {
       setFieldValue("email", user.email || "");
       setFieldValue("address", user.address || "");
       setFieldValue("birthDate", user.birthDate ? user.birthDate.split('T')[0] : "");
+      setProfilePicturePreview(user.profilePictureUrl || null);
     }
   }, [user, setFieldValue]);
+
+  const handleProfilePictureChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        toast.error("Please select an image file");
+        return;
+      }
+      
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error("Image size must be less than 5MB");
+        return;
+      }
+      
+      setProfilePicture(file);
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setProfilePicturePreview(e.target.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleRemoveProfilePicture = () => {
+    setProfilePicture(null);
+    setProfilePicturePreview(null);
+  };
+
+  const handleUploadProfilePicture = async () => {
+    if (!profilePicture) return;
+    
+    setIsUploadingPicture(true);
+    try {
+      const formData = new FormData();
+      formData.append('profilePicture', profilePicture);
+      
+      const response = await axiosPrivate.post('/users/profile-picture', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      
+      // Update user data with new profile picture URL
+      const updatedUser = { ...user, profilePictureUrl: response.data.profilePictureUrl };
+      setUser(updatedUser);
+      setProfilePicture(null);
+      toast.success("Profile picture updated successfully");
+    } catch (error) {
+      console.error("Error uploading profile picture:", error);
+      toast.error("Failed to upload profile picture");
+    } finally {
+      setIsUploadingPicture(false);
+    }
+  };
 
   const handleLogout = async () => {
     localStorage.removeItem("access");
@@ -120,6 +182,62 @@ export default function Profile() {
               <LogOut size={18} />
               Logout
             </button>
+          </div>
+          
+          {/* Profile Picture Section */}
+          <div className="flex flex-col items-center py-6 border-b-2">
+            <div className="relative">
+              <Avatar
+                src={profilePicturePreview}
+                fallback={user?.fname?.[0] || user?.lname?.[0] || "U"}
+                className="h-24 w-24 text-2xl"
+              />
+              <label
+                htmlFor="profile-picture"
+                className="absolute bottom-0 right-0 bg-primary text-white rounded-full p-2 cursor-pointer hover:bg-primary/80 transition-colors"
+                title="Change profile picture"
+              >
+                <Camera className="h-4 w-4" />
+              </label>
+              <input
+                id="profile-picture"
+                type="file"
+                accept="image/*"
+                onChange={handleProfilePictureChange}
+                className="hidden"
+              />
+            </div>
+            
+            {profilePicturePreview && (
+              <div className="mt-4 flex items-center gap-2">
+                <Button
+                  onClick={handleUploadProfilePicture}
+                  disabled={isUploadingPicture}
+                  size="sm"
+                  className="flex items-center gap-2"
+                >
+                  {isUploadingPicture ? (
+                    <ReactLoading type="bubbles" color="#ffffff" height={16} width={16} />
+                  ) : (
+                    <Upload className="h-4 w-4" />
+                  )}
+                  {isUploadingPicture ? "Uploading..." : "Upload"}
+                </Button>
+                <Button
+                  onClick={handleRemoveProfilePicture}
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-2"
+                >
+                  <X className="h-4 w-4" />
+                  Remove
+                </Button>
+              </div>
+            )}
+            
+            <p className="text-sm text-gray-500 mt-2 text-center">
+              Click the camera icon to change your profile picture
+            </p>
           </div>
           <div className="flex gap-10">
             <form
