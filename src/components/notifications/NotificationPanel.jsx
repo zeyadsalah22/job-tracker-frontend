@@ -16,6 +16,7 @@ import useNotificationStore from "../../store/notification.store";
 import { useAxiosPrivate } from "../../utils/axios";
 import { toast } from "react-toastify";
 import clsx from "clsx";
+import { API_BASE_URL } from "../../config/api";
 
 const NotificationPanel = ({ 
   trigger,
@@ -61,7 +62,7 @@ const NotificationPanel = ({
           return;
         }
         
-        const hubUrl = 'http://localhost:5253/notificationhub';
+        const hubUrl = `${API_BASE_URL}/notificationhub`;
         console.log('Connecting to SignalR hub:', hubUrl);
         
         const connection = new HubConnectionBuilder()
