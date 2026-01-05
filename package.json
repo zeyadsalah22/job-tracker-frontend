@@ -12,6 +12,7 @@
   "dependencies": {
     "@heroicons/react": "^2.1.5",
     "@lottiefiles/dotlottie-react": "^0.15.0",
+    "@microsoft/signalr": "^9.0.6",
     "@radix-ui/react-dialog": "^1.1.15",
     "@radix-ui/react-dropdown-menu": "^2.1.16",
     "@radix-ui/react-separator": "^1.1.7",
@@ -36,6 +37,7 @@
     "react-toastify": "^10.0.5",
     "recharts": "^3.1.2",
     "tailwind-merge": "^3.3.1",
+    "tanstack": "^1.0.3",
     "tw-elements-react": "^1.0.0-alpha-end",
     "use-debounce": "^10.0.3",
     "yup": "^1.4.0",
@@ -54,6 +56,6 @@
     "globals": "^15.9.0",
     "postcss": "^8.4.47",
     "tailwindcss": "^3.4.11",
-    "vite": "^5.4.1"
+    "vite": "^5.4.21"
   }
 }

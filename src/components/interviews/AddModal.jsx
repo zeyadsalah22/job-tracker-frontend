@@ -206,11 +206,22 @@ export default function AddModal({ open, setOpen, refetch, onStartRecording }) {
       console.error("Failed to create interview:", error);
       
       let errorMessage = "Failed to start interview. Please try again.";
-      if (error.response?.data) {
+      
+      // Handle ML service specific errors (timeout, service unavailable, etc.)
+      if (error.response?.status === 504) {
+        errorMessage = "Request timed out. The ML service is taking too long to generate questions. Please try again.";
+      } else if (error.response?.status === 502) {
+        errorMessage = "Error communicating with ML service. Please try again later.";
+      } else if (error.response?.status === 500) {
+        errorMessage = "Server error occurred while processing your request. Please try again later.";
+      } else if (error.response?.data) {
         if (typeof error.response.data === 'string') {
           errorMessage = error.response.data;
         } else if (error.response.data.message) {
           errorMessage = error.response.data.message;
+          if (error.response.data.details) {
+            errorMessage = `${errorMessage}. ${error.response.data.details}`;
+          }
         }
       }
       

@@ -4,7 +4,7 @@ import { toast } from "react-toastify";
 import { Trash2, Download, Eye } from "lucide-react";
 import ReactLoading from "react-loading";
 import { useAxiosPrivate } from "../../utils/axios";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 
 export default function ManageCv() {
   const user = useUserStore((state) => state.user);
@@ -24,8 +24,23 @@ export default function ManageCv() {
 
   const { data = [], isLoading, refetch } = useQuery(["cvs"], fetchCvs);
 
+  // Memoize the CV IDs to avoid unnecessary re-renders
+  const cvIds = useMemo(() => 
+    data.map(cv => cv.resumeId).sort().join(','), 
+    [data]
+  );
+
   // Convert base64 resume data to blob URLs for viewing
   useEffect(() => {
+    if (!data || data.length === 0) {
+      // Clean up existing URLs and reset state
+      setResumeUrls(prev => {
+        Object.values(prev).forEach(url => URL.revokeObjectURL(url));
+        return {};
+      });
+      return;
+    }
+
     const urls = {};
     data.forEach(cv => {
       try {
@@ -43,13 +58,18 @@ export default function ManageCv() {
         console.error(`Error creating URL for resume ${cv.resumeId}:`, error);
       }
     });
-    setResumeUrls(urls);
 
-    // Clean up URLs on component unmount
+    setResumeUrls(prev => {
+      // Clean up old URLs
+      Object.values(prev).forEach(url => URL.revokeObjectURL(url));
+      return urls;
+    });
+
+    // Clean up URLs on component unmount or data change
     return () => {
       Object.values(urls).forEach(url => URL.revokeObjectURL(url));
     };
-  }, [data]);
+  }, [cvIds]);
 
   const handleUpload = async (e) => {
     if (e.target.files.length === 0) return;
