@@ -28,7 +28,12 @@ const useChatStore = create(
       setIsLoading: (isLoading) => set({ isLoading }),
       setIsStreaming: (isStreaming) => set({ isStreaming }),
 
-      // Reset chat (for closing/clearing)
+      // Close chat (minimize - keep session)
+      closeChat: () => set({
+        isOpen: false,
+      }),
+
+      // Reset chat (clear all - for logout or manual clear)
       resetChat: () => set({
         sessionId: null,
         messages: [],
