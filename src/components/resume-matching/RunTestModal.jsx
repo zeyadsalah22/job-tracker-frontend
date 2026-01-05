@@ -43,13 +43,18 @@ export default function RunTestModal({ openRunTest, setOpenRunTest, refetch }) {
     onSubmit: async (values) => {
       setLoading(true);
       try {
-        const requestData = {
-          resumeId: parseInt(values.selectedResume, 10),
-          jobDescription: values.jobDescription.trim()
-        };
+        const resumeId = parseInt(values.selectedResume, 10);
+        const jobDescription = values.jobDescription.trim();
 
-        console.log("Running resume test with data:", requestData);
-        const response = await axiosPrivate.post("/resumetest", requestData);
+        console.log("Running resume test with data:", { resumeId, jobDescription });
+        
+        // The ResumeTestService should now use the ML service internally
+        // If it doesn't, we can update this to use /cvs/{id}/match directly
+        const response = await axiosPrivate.post("/resumetest", {
+          resumeId: resumeId,
+          jobDescription: jobDescription
+        });
+        
         console.log("Resume test response:", response.data);
 
         setOpenRunTest(false);
@@ -71,8 +76,12 @@ export default function RunTestModal({ openRunTest, setOpenRunTest, refetch }) {
         
         let errorMessage = "An error occurred while running the test. Please try again.";
         
-        // For server errors (500), show a generic message instead of the raw error
-        if (error.response?.status === 500) {
+        // Handle ML service specific errors (timeout, service unavailable, etc.)
+        if (error.response?.status === 504) {
+          errorMessage = "Request timed out. The ML service is taking too long to respond. Please try again.";
+        } else if (error.response?.status === 502) {
+          errorMessage = "Error communicating with ML service. Please try again later.";
+        } else if (error.response?.status === 500) {
           errorMessage = "Server error occurred while processing your request. Please try again later.";
         } else if (error.response?.data) {
           // For other errors, try to extract a meaningful message
@@ -80,6 +89,8 @@ export default function RunTestModal({ openRunTest, setOpenRunTest, refetch }) {
             errorMessage = error.response.data;
           } else if (error.response.data.message) {
             errorMessage = error.response.data.message;
+          } else if (error.response.data.details) {
+            errorMessage = `${error.response.data.message || errorMessage}. ${error.response.data.details}`;
           } else if (error.response.data.error) {
             errorMessage = error.response.data.error;
           } else if (error.response.data.title) {

@@ -28,7 +28,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "../ui/Dialog";
-import { Separator } from "../ui/Separator";
+import { Separator } from "../ui/separator";
 
 export default function ViewModal({ application, open, setOpen, onEdit, onDelete }) {
   const axiosPrivate = useAxiosPrivate();

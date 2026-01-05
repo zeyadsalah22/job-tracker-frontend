@@ -97,7 +97,7 @@ export default function Register() {
                 label="First Name"
                 value={values.Fname}
                 onChange={handleChange}
-                onBlur={handleBlur}
+                //onBlur={handleBlur}
                 error={errors.Fname || error?.response?.data?.Fname}
                 touched={touched.Fname}
               />
@@ -108,7 +108,7 @@ export default function Register() {
                 label="Last Name"
                 value={values.Lname}
                 onChange={handleChange}
-                onBlur={handleBlur}
+                //onBlur={handleBlur}
                 error={errors.Lname || error?.response?.data?.Lname}
                 touched={touched.Lname}
               />
@@ -120,7 +120,7 @@ export default function Register() {
               label="Email"
               value={values.Email}
               onChange={handleChange}
-              onBlur={handleBlur}
+              //onBlur={handleBlur}
               error={errors.Email || error?.response?.data?.Email}
               touched={touched.Email}
             />
@@ -131,7 +131,7 @@ export default function Register() {
               label="Password"
               value={values.Password}
               onChange={handleChange}
-              onBlur={handleBlur}
+              //onBlur={handleBlur}
               error={errors.Password || error?.response?.data?.Password}
               touched={touched.Password}
             />
@@ -142,7 +142,7 @@ export default function Register() {
               label="Confirm Password"
               value={values.ConfirmPassword}
               onChange={handleChange}
-              onBlur={handleBlur}
+              //onBlur={handleBlur}
               error={errors.ConfirmPassword || error?.response?.data?.ConfirmPassword}
               touched={touched.ConfirmPassword}
             />
@@ -154,7 +154,7 @@ export default function Register() {
                 label="Address"
                 value={values.Address}
                 onChange={handleChange}
-                onBlur={handleBlur}
+                //onBlur={handleBlur}
                 error={errors.Address || error?.response?.data?.Address}
                 touched={touched.Address}
               />
