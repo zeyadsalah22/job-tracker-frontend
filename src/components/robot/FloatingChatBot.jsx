@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MessageCircle, X, Send, Minimize2 } from 'lucide-react';
+import { MessageCircle, X, Send } from 'lucide-react';
 import useUserStore from '../../store/user.store';
 import useChatStore from '../../store/chat.store';
 import { useAxiosPrivate } from '../../utils/axios';
 import LottieRobot from './LottieRobot';
 import { useLocation } from 'react-router-dom';
+import ReactMarkdown from 'react-markdown';
 
 const FloatingChatBot = () => {
   const user = useUserStore((state) => state.user);
@@ -27,6 +28,7 @@ const FloatingChatBot = () => {
     setIsOpen,
     setIsLoading,
     setIsStreaming,
+    closeChat: closeChatStore,
     resetChat,
     initializeWithWelcome
   } = useChatStore();
@@ -73,35 +75,16 @@ const FloatingChatBot = () => {
     };
   }, [location.pathname, isOpen]);
 
-  // Initialize chat session
-  const initializeChat = async () => {
-    console.log('Initializing chat...', { user, userId: user?.userId });
-    
+
+  // Send message with lazy session initialization
+  const sendMessage = async () => {
+    if (!inputMessage.trim() || isStreaming) return;
+
+    // Check if user is logged in
     if (!user?.userId) {
-      console.log('No user ID found, cannot initialize chat');
+      console.log('No user ID found, cannot send message');
       return;
     }
-    
-    setIsLoading(true);
-    try {
-      console.log('Making API call to initialize chat...');
-      const response = await axiosPrivate.post(`/chatbot/initialize/${user.userId}`);
-      console.log('Initialize chat response:', response.data);
-      
-      // Use store method to initialize with welcome message
-      initializeWithWelcome(response.data.session_id);
-    } catch (error) {
-      console.error('Error initializing chat:', error);
-      console.error('Error details:', error.response?.data);
-      alert('Failed to initialize chat. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Send message with simple response
-  const sendMessage = async () => {
-    if (!inputMessage.trim() || !sessionId || isStreaming) return;
 
     const userMessage = {
       id: Date.now(),
@@ -109,8 +92,6 @@ const FloatingChatBot = () => {
       content: inputMessage.trim(),
       timestamp: new Date().toISOString()
     };
-
-    console.log('Sending message:', { sessionId, message: userMessage.content });
 
     addMessage(userMessage);
     setInputMessage('');
@@ -129,10 +110,38 @@ const FloatingChatBot = () => {
     addMessage(botMessage);
 
     try {
-      console.log('Making API call to send message...');
-      
+      let currentSessionId = sessionId;
+
+      // Lazy initialization: create session if it doesn't exist
+      if (!currentSessionId) {
+        console.log('No session ID found, initializing chat session...');
+        setIsLoading(true);
+        
+        try {
+          const initResponse = await axiosPrivate.post(`/chatbot/initialize/${user.userId}`);
+          console.log('Initialize chat response:', initResponse.data);
+          
+          currentSessionId = initResponse.data.sessionId;
+          setSessionId(currentSessionId);
+        } catch (initError) {
+          console.error('Error initializing chat:', initError);
+          updateMessage(botMessageId, {
+            content: 'Sorry, I couldn\'t initialize the chat session. Please try again.',
+            isComplete: true,
+            isError: true
+          });
+          setIsStreaming(false);
+          setIsLoading(false);
+          return;
+        } finally {
+          setIsLoading(false);
+        }
+      }
+
+      console.log('Sending message:', { sessionId: currentSessionId, message: userMessage.content });
+
       const response = await axiosPrivate.post('/chatbot/send-message', {
-        sessionId: sessionId,
+        sessionId: currentSessionId,
         message: userMessage.content
       });
 
@@ -173,33 +182,10 @@ const FloatingChatBot = () => {
     }
   };
 
-  // Close chat session
-  const closeChat = async () => {
-    console.log('Close chat clicked, sessionId:', sessionId);
-    
-    if (!sessionId) {
-      console.log('No session ID, skipping API call');
-      // Still reset the UI state even if no session
-      resetChat();
-      return;
-    }
-
-    try {
-      console.log('Making API call to close chat...');
-      const response = await axiosPrivate.post('/chatbot/close-chat', { sessionId });
-      console.log('Close chat response:', response.data);
-
-      // Reset state using store
-      resetChat();
-      console.log('Chat state reset successfully');
-    } catch (error) {
-      console.error('Error closing chat:', error);
-      console.error('Error details:', error.response?.data);
-      
-      // Reset state even if API call fails
-      resetChat();
-      console.log('Chat state reset after error');
-    }
+  // Close chat panel (minimize only - keep session)
+  const handleCloseChat = () => {
+    console.log('Closing chat panel (session persists)');
+    closeChatStore();
   };
 
   // Handle Enter key press
@@ -214,6 +200,22 @@ const FloatingChatBot = () => {
   const handleOpenChat = () => {
     setIsOpen(true);
     setIntroMessage(null); // Hide intro message when chat opens
+    
+    // If chat is not initialized yet, show welcome message immediately
+    if (!isInitialized) {
+      setIsInitialized(true);
+      
+      // Add welcome message if messages array is empty
+      if (messages.length === 0) {
+        addMessage({
+          id: Date.now(),
+          type: 'bot',
+          content: 'Hello! I\'m your job application assistant. I can help you with questions about your applications, companies, and interview progress. What would you like to know?',
+          timestamp: new Date().toISOString(),
+          isComplete: true
+        });
+      }
+    }
   };
 
   // Hide robot when chat is open
@@ -236,14 +238,9 @@ const FloatingChatBot = () => {
             </div>
             <div className="flex items-center gap-2">
               <button
-                onClick={() => setIsOpen(false)}
+                onClick={handleCloseChat}
                 className="p-1 hover:bg-white/20 rounded transition-colors"
-              >
-                <Minimize2 size={16} />
-              </button>
-              <button
-                onClick={closeChat}
-                className="p-1 hover:bg-white/20 rounded transition-colors"
+                title="Close chat"
               >
                 <X size={16} />
               </button>
@@ -251,77 +248,91 @@ const FloatingChatBot = () => {
           </div>
 
           {/* Chat Content */}
-          {!isInitialized ? (
-            <div className="flex-1 flex flex-col items-center justify-center p-4 text-center">
-              <MessageCircle size={40} className="text-primary/20 mb-3" />
-              <h4 className="font-semibold text-gray-800 mb-2 text-sm">Welcome to your personal job assistant!</h4>
-              <p className="text-xs text-gray-600 mb-4">I can help you with questions about your job applications, companies, interview status, and more.</p>
-              <button 
-                onClick={initializeChat} 
-                disabled={isLoading}
-                className="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg transition-all disabled:opacity-50 text-sm"
-              >
-                {isLoading ? 'Getting Ready...' : 'Start Chat'}
-              </button>
-            </div>
-          ) : (
-            <>
-              {/* Messages */}
-              <div className="flex-1 overflow-y-auto p-3 space-y-3">
-                {messages.map((message) => (
-                  <motion.div
-                    key={message.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
+          <>
+            {/* Messages */}
+            <div className="flex-1 overflow-y-auto p-3 space-y-3">
+              {messages.map((message) => (
+                <motion.div
+                  key={message.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
+                >
+                  <div
+                    className={`max-w-[85%] p-2 rounded-lg text-sm ${
+                      message.type === 'user'
+                        ? 'bg-primary text-white'
+                        : message.isError
+                        ? 'bg-red-50 text-red-800 border border-red-200'
+                        : 'bg-gray-100 text-gray-800'
+                    }`}
                   >
-                    <div
-                      className={`max-w-[85%] p-2 rounded-lg text-sm ${
-                        message.type === 'user'
-                          ? 'bg-primary text-white'
-                          : message.isError
-                          ? 'bg-red-50 text-red-800 border border-red-200'
-                          : 'bg-gray-100 text-gray-800'
-                      }`}
-                    >
-                      <div className="whitespace-pre-wrap">
-                        {message.content}
-                        {message.type === 'bot' && !message.isComplete && (
-                          <span className="inline-block ml-2 animate-pulse">●●●</span>
-                        )}
-                      </div>
-                      <div className="text-xs opacity-70 mt-1">
-                        {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </div>
+                    <div className={message.type === 'user' ? 'whitespace-pre-wrap' : 'prose prose-sm max-w-none'}>
+                      {message.type === 'user' ? (
+                        message.content
+                      ) : (
+                        <>
+                          <ReactMarkdown
+                            components={{
+                              // Customize markdown elements to fit chat bubble styling
+                              p: ({node, ...props}) => <p className="mb-2 last:mb-0" {...props} />,
+                              ul: ({node, ...props}) => <ul className="mb-2 ml-4 list-disc" {...props} />,
+                              ol: ({node, ...props}) => <ol className="mb-2 ml-4 list-decimal" {...props} />,
+                              li: ({node, ...props}) => <li className="mb-1" {...props} />,
+                              code: ({node, inline, ...props}) => 
+                                inline ? (
+                                  <code className="bg-gray-200 px-1 py-0.5 rounded text-xs" {...props} />
+                                ) : (
+                                  <code className="block bg-gray-200 p-2 rounded text-xs overflow-x-auto my-2" {...props} />
+                                ),
+                              pre: ({node, ...props}) => <pre className="my-2" {...props} />,
+                              a: ({node, ...props}) => <a className="text-blue-600 underline hover:text-blue-800" target="_blank" rel="noopener noreferrer" {...props} />,
+                              strong: ({node, ...props}) => <strong className="font-bold" {...props} />,
+                              em: ({node, ...props}) => <em className="italic" {...props} />,
+                              h1: ({node, ...props}) => <h1 className="text-base font-bold mb-2" {...props} />,
+                              h2: ({node, ...props}) => <h2 className="text-sm font-bold mb-2" {...props} />,
+                              h3: ({node, ...props}) => <h3 className="text-sm font-semibold mb-1" {...props} />,
+                            }}
+                          >
+                            {message.content}
+                          </ReactMarkdown>
+                          {message.type === 'bot' && !message.isComplete && (
+                            <span className="inline-block ml-2 animate-pulse">●●●</span>
+                          )}
+                        </>
+                      )}
                     </div>
-                  </motion.div>
-                ))}
-                <div ref={messagesEndRef} />
-              </div>
+                    <div className="text-xs opacity-70 mt-1">
+                      {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+              <div ref={messagesEndRef} />
+            </div>
 
-              {/* Input */}
-              <div className="p-3 border-t border-gray-200 rounded-b-lg">
-                <div className="flex gap-2">
-                  <textarea
-                    value={inputMessage}
-                    onChange={(e) => setInputMessage(e.target.value)}
-                    onKeyPress={handleKeyPress}
-                    placeholder="Ask me about your applications..."
-                    disabled={isStreaming}
-                    rows="2"
-                    className="flex-1 resize-none rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary min-h-[2.5rem]"
-                  />
-                  <button 
-                    onClick={sendMessage}
-                    disabled={!inputMessage.trim() || isStreaming}
-                    className="bg-primary hover:bg-primary/90 text-white p-2 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed self-end"
-                  >
-                    <Send size={16} />
-                  </button>
-                </div>
+            {/* Input */}
+            <div className="p-3 border-t border-gray-200 rounded-b-lg">
+              <div className="flex gap-2">
+                <textarea
+                  value={inputMessage}
+                  onChange={(e) => setInputMessage(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  placeholder="Ask me about your applications..."
+                  disabled={isStreaming}
+                  rows="2"
+                  className="flex-1 resize-none rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary min-h-[2.5rem]"
+                />
+                <button 
+                  onClick={sendMessage}
+                  disabled={!inputMessage.trim() || isStreaming}
+                  className="bg-primary hover:bg-primary/90 text-white p-2 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed self-end"
+                >
+                  <Send size={16} />
+                </button>
               </div>
-            </>
-          )}
+            </div>
+          </>
         </motion.div>
       </AnimatePresence>
     );
