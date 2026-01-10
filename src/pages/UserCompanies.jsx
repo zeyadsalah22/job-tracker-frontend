@@ -1,6 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "react-query";
 import { useAxiosPrivate } from "../utils/axios";
+import { useSearchParams } from "react-router-dom";
+import { format } from "date-fns";
+import { toast } from "react-toastify";
 import Button from "../components/ui/Button";
 import Input from "../components/ui/Input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/Select";
@@ -12,6 +15,8 @@ import {
   Building2,
   ChevronLeft,
   ChevronRight,
+  FileDown,
+  FileUp,
 } from 'lucide-react';
 import Table from "../components/Table";
 import AddModal from "../components/user-companies/AddModal";
@@ -19,8 +24,10 @@ import EditModal from "../components/user-companies/EditModal";
 import DeleteModal from "../components/user-companies/DeleteModal";
 import ViewModal from "../components/user-companies/ViewModal";
 import useUserStore from "../store/user.store";
+import { fetchAllData, exportToCSV } from "../utils/csvExport";
 
 export default function UserCompanies() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = useState('');
   const [interestFilter, setInterestFilter] = useState('');
   const [favoriteFilter, setFavoriteFilter] = useState('');
@@ -34,6 +41,7 @@ export default function UserCompanies() {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [selectedUserCompany, setSelectedUserCompany] = useState(null);
   const [selectedId, setSelectedId] = useState(null);
+  const [isExporting, setIsExporting] = useState(false);
 
   const axiosPrivate = useAxiosPrivate();
   const queryClient = useQueryClient();
@@ -109,6 +117,43 @@ export default function UserCompanies() {
   const paginatedCompanies = Array.isArray(companiesData?.companies) ? companiesData.companies : [];
   const totalPages = companiesData?.totalPages || 1;
 
+  // Auto-open view modal from URL parameter (from search results)
+  useEffect(() => {
+    const viewId = searchParams.get('view');
+    if (viewId) {
+      // First check if item is in current page
+      const companyToView = paginatedCompanies.find(c => c.companyId?.toString() === viewId || c.id?.toString() === viewId);
+      if (companyToView) {
+        setSelectedId(companyToView.companyId || companyToView.id);
+        setSelectedUserCompany(companyToView);
+        setIsDetailModalOpen(true);
+        // Remove the query param after opening
+        searchParams.delete('view');
+        setSearchParams(searchParams, { replace: true });
+      } else {
+        // If not in current page, fetch it directly by ID
+        axiosPrivate.get(`/user-companies/${viewId}`)
+          .then(response => {
+            const fetchedCompany = response.data;
+            if (fetchedCompany) {
+              setSelectedId(fetchedCompany.companyId || fetchedCompany.id);
+              setSelectedUserCompany(fetchedCompany);
+              setIsDetailModalOpen(true);
+              // Remove the query param after opening
+              searchParams.delete('view');
+              setSearchParams(searchParams, { replace: true });
+            }
+          })
+          .catch(error => {
+            console.error('Error fetching user company by ID:', error);
+            // Remove the query param even if fetch fails
+            searchParams.delete('view');
+            setSearchParams(searchParams, { replace: true });
+          });
+      }
+    }
+  }, [searchParams, setSearchParams, paginatedCompanies, axiosPrivate]);
+
   const handleSort = (column) => {
     if (sortColumn === column) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
@@ -128,6 +173,50 @@ export default function UserCompanies() {
     setSelectedUserCompany(userCompany);
     setSelectedId(userCompany.companyId);
     setIsDeleteModalOpen(true);
+  };
+
+  // Export handler
+  const handleExport = async () => {
+    try {
+      setIsExporting(true);
+      toast.info('Preparing export... This may take a moment for large datasets.');
+
+      // Fetch all user companies using pagination
+      const allUserCompanies = await fetchAllData(
+        (pageNumber, pageSize) => axiosPrivate.get('/user-companies', {
+          params: { 
+            PageNumber: pageNumber, 
+            PageSize: pageSize,
+            UserId: user?.userId 
+          }
+        })
+      );
+
+      // Transform data for CSV export
+      const csvData = allUserCompanies.map(company => ({
+        'Company Name': company.companyName || 'N/A',
+        'Location': company.companyLocation || 'N/A',
+        'Interest Level': company.interestLevel || 'N/A',
+        'Favorite': company.favorite ? 'Yes' : 'No',
+        'Personal Notes': company.personalNotes || '',
+        'Careers Link': company.companyCareersLink || '',
+        'LinkedIn Link': company.companyLinkedinLink || '',
+        'Logo URL': company.companyLogoUrl || '',
+        'Tags': Array.isArray(company.tags) ? company.tags.join('; ') : '',
+        'Created At': company.createdAt ? format(new Date(company.createdAt), 'MMM dd, yyyy') : 'N/A',
+        'Updated At': company.updatedAt ? format(new Date(company.updatedAt), 'MMM dd, yyyy') : 'N/A'
+      }));
+
+      // Export to CSV
+      exportToCSV(csvData, 'user-companies');
+      
+      toast.success(`Successfully exported ${allUserCompanies.length} company(s)!`);
+    } catch (error) {
+      console.error('Error exporting user companies:', error);
+      toast.error('Failed to export user companies. Please try again.');
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   const handleView = (userCompany) => {
@@ -240,6 +329,20 @@ export default function UserCompanies() {
 
   // Header actions
   const headerActions = [
+    <Button key="import" variant="outline" size="sm" disabled>
+      <FileUp className="w-4 h-4 mr-2" />
+      Import
+    </Button>,
+    <Button 
+      key="export" 
+      variant="outline" 
+      size="sm"
+      onClick={handleExport}
+      disabled={isExporting}
+    >
+      <FileDown className="w-4 h-4 mr-2" />
+      {isExporting ? 'Exporting...' : 'Export'}
+    </Button>,
     <Button key="add" onClick={() => setIsAddModalOpen(true)}>
       <Plus className="w-4 h-4 mr-2" />
       Add Company

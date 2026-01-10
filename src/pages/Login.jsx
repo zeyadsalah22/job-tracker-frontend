@@ -77,9 +77,9 @@ export default function Login() {
     },
   });
 
-  // Don't automatically redirect to dashboard if on the login page
+  // Redirect to dashboard if user is already logged in
   useEffect(() => {
-    if (token && window.location.pathname !== "/") {
+    if (token) {
       navigate("/dashboard");
     }
   }, [token, navigate]);

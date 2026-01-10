@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Search, User, LogOut, Settings } from "lucide-react";
 import Button from "../ui/Button";
 import {
@@ -14,11 +15,18 @@ import { NotificationPanel } from "../notifications";
 import useUserStore from "../../store/user.store";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import { useGlobalSearch } from "../../hooks/useGlobalSearch";
+import SearchDropdown from "../search/SearchDropdown";
 
 export function AppHeader() {
   const user = useUserStore((state) => state.user);
   const logout = useUserStore((state) => state.logout);
   const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showDropdown, setShowDropdown] = useState(false);
+
+  // Use global search hook
+  const { results, isLoading, hasQuery } = useGlobalSearch(searchQuery, 3);
 
   const handleLogout = async () => {
     localStorage.removeItem("access");
@@ -43,14 +51,41 @@ export function AppHeader() {
         <SidebarTrigger className="-ml-1" />
         
         {/* Search */}
-        <div className="flex-1 mx-4 max-w-md">
+        <div className="flex-1 mx-4 max-w-2xl relative">
           <div className="relative">
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search jobs, companies..."
+              placeholder="Search jobs, companies, employees..."
               className="pl-8"
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setShowDropdown(true);
+              }}
+              onFocus={() => {
+                if (searchQuery.trim().length >= 2) {
+                  setShowDropdown(true);
+                }
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && searchQuery.trim().length >= 2) {
+                  navigate(`/search?q=${encodeURIComponent(searchQuery)}`);
+                  setShowDropdown(false);
+                }
+              }}
             />
           </div>
+          
+          {/* Search Dropdown */}
+          {showDropdown && hasQuery && (
+            <SearchDropdown
+              results={results}
+              isLoading={isLoading}
+              searchQuery={searchQuery}
+              onClose={() => setShowDropdown(false)}
+              hasQuery={hasQuery}
+            />
+          )}
         </div>
 
         {/* Right side */}
@@ -85,7 +120,7 @@ export function AppHeader() {
                 <User className="mr-2 h-4 w-4" />
                 <span>Profile</span>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate("/settings")}>
+              <DropdownMenuItem onClick={() => navigate("/profile")}>
                 <Settings className="mr-2 h-4 w-4" />
                 <span>Settings</span>
               </DropdownMenuItem>

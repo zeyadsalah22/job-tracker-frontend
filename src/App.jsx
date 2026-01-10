@@ -37,6 +37,7 @@ import DraftedPosts from "./pages/DraftedPosts";
 import InterviewQuestions from "./pages/InterviewQuestions";
 
 import GmailCallback from "./pages/GmailCallback";
+import SearchResults from "./pages/SearchResults";
 
 
 export default function App() {
@@ -278,6 +279,16 @@ export default function App() {
             <ProtectedRoute>
               <AppLayout>
                 <Table />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/search"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <SearchResults />
               </AppLayout>
             </ProtectedRoute>
           }

@@ -1,6 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "react-query";
 import { useAxiosPrivate } from "../utils/axios";
+import { useSearchParams } from "react-router-dom";
+import { format } from "date-fns";
+import { toast } from "react-toastify";
 import Button from "../components/ui/Button";
 import Input from "../components/ui/Input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/Select";
@@ -15,6 +18,8 @@ import {
   Linkedin,
   ChevronLeft,
   ChevronRight,
+  FileDown,
+  FileUp,
 } from 'lucide-react';
 import Table from "../components/Table";
 import AddModal from "../components/employees/AddModal";
@@ -22,8 +27,10 @@ import EditModal from "../components/employees/EditModal";
 import DeleteModal from "../components/employees/DeleteModal";
 import ViewModal from "../components/employees/ViewModal";
 import useUserStore from "../store/user.store";
+import { fetchAllData, exportToCSV } from "../utils/csvExport";
 
 export default function Employees() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = useState('');
   const [companyFilter, setCompanyFilter] = useState(''); // This will store companyId
   const [departmentFilter, setDepartmentFilter] = useState('');
@@ -38,6 +45,7 @@ export default function Employees() {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [selectedId, setSelectedId] = useState(null);
+  const [isExporting, setIsExporting] = useState(false);
 
   const axiosPrivate = useAxiosPrivate();
   const queryClient = useQueryClient();
@@ -147,6 +155,43 @@ export default function Employees() {
   const paginatedEmployees = Array.isArray(employeesData?.employees) ? employeesData.employees : [];
   const totalPages = employeesData?.totalPages || 1;
 
+  // Auto-open view modal from URL parameter (from search results)
+  useEffect(() => {
+    const viewId = searchParams.get('view');
+    if (viewId) {
+      // First check if item is in current page
+      const employeeToView = paginatedEmployees.find(e => e.employeeId?.toString() === viewId || e.id?.toString() === viewId);
+      if (employeeToView) {
+        setSelectedId(employeeToView.employeeId || employeeToView.id);
+        setSelectedEmployee(employeeToView);
+        setIsDetailModalOpen(true);
+        // Remove the query param after opening
+        searchParams.delete('view');
+        setSearchParams(searchParams, { replace: true });
+      } else {
+        // If not in current page, fetch it directly by ID
+        axiosPrivate.get(`/employees/${viewId}`)
+          .then(response => {
+            const fetchedEmployee = response.data;
+            if (fetchedEmployee) {
+              setSelectedId(fetchedEmployee.employeeId || fetchedEmployee.id);
+              setSelectedEmployee(fetchedEmployee);
+              setIsDetailModalOpen(true);
+              // Remove the query param after opening
+              searchParams.delete('view');
+              setSearchParams(searchParams, { replace: true });
+            }
+          })
+          .catch(error => {
+            console.error('Error fetching employee by ID:', error);
+            // Remove the query param even if fetch fails
+            searchParams.delete('view');
+            setSearchParams(searchParams, { replace: true });
+          });
+      }
+    }
+  }, [searchParams, setSearchParams, paginatedEmployees, axiosPrivate]);
+
   // Extract unique filter options from all employees data
   const getUniqueCompanies = () => {
     const companies = new Map();
@@ -207,6 +252,45 @@ export default function Employees() {
     setSelectedEmployee(employee);
     setSelectedId(employee.employeeId);
     setIsDeleteModalOpen(true);
+  };
+
+  // Export handler
+  const handleExport = async () => {
+    try {
+      setIsExporting(true);
+      toast.info('Preparing export... This may take a moment for large datasets.');
+
+      // Fetch all employees using pagination
+      const allEmployees = await fetchAllData(
+        (pageNumber, pageSize) => axiosPrivate.get('/employees', {
+          params: { PageNumber: pageNumber, PageSize: pageSize }
+        })
+      );
+
+      // Transform data for CSV export
+      const csvData = allEmployees.map(employee => ({
+        'Name': employee.name || 'N/A',
+        'Email': employee.email || 'N/A',
+        'Phone': employee.phone || '',
+        'LinkedIn': employee.linkedinLink || '',
+        'Company': employee.company?.name || employee.companyName || 'N/A',
+        'Job Title': employee.jobTitle || 'N/A',
+        'Department': employee.department || 'N/A',
+        'Contacted': employee.contacted || 'N/A',
+        'Created At': employee.createdAt ? format(new Date(employee.createdAt), 'MMM dd, yyyy') : 'N/A',
+        'Updated At': employee.updatedAt ? format(new Date(employee.updatedAt), 'MMM dd, yyyy') : 'N/A'
+      }));
+
+      // Export to CSV
+      exportToCSV(csvData, 'employees');
+      
+      toast.success(`Successfully exported ${allEmployees.length} employee(s)!`);
+    } catch (error) {
+      console.error('Error exporting employees:', error);
+      toast.error('Failed to export employees. Please try again.');
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   const handleView = (employee) => {
@@ -345,6 +429,20 @@ export default function Employees() {
 
   // Header actions
   const headerActions = [
+    <Button key="import" variant="outline" size="sm" disabled>
+      <FileUp className="w-4 h-4 mr-2" />
+      Import
+    </Button>,
+    <Button 
+      key="export" 
+      variant="outline" 
+      size="sm"
+      onClick={handleExport}
+      disabled={isExporting}
+    >
+      <FileDown className="w-4 h-4 mr-2" />
+      {isExporting ? 'Exporting...' : 'Export'}
+    </Button>,
     <Button key="add" onClick={() => setIsAddModalOpen(true)}>
       <Plus className="w-4 h-4 mr-2" />
       Add Employee

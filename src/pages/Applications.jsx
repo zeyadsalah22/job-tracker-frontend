@@ -1,7 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "react-query";
 import { useAxiosPrivate } from "../utils/axios";
+import { useSearchParams } from "react-router-dom";
 import { format } from "date-fns";
+import { toast } from "react-toastify";
 import {
   Search,
   Plus,
@@ -20,10 +22,12 @@ import AddModal from "../components/applications/AddModal";
 import EditModal from "../components/applications/EditModal";
 import ViewModal from "../components/applications/ViewModal";
 import DeleteModal from "../components/applications/DeleteModal";
+import { fetchAllData, exportToCSV } from "../utils/csvExport";
 
 const Applications = () => {
   const axiosPrivate = useAxiosPrivate();
   const queryClient = useQueryClient();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   // State management
   const [searchTerm, setSearchTerm] = useState("");
@@ -42,6 +46,7 @@ const Applications = () => {
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedApplication, setSelectedApplication] = useState(null);
+  const [isExporting, setIsExporting] = useState(false);
 
   // Fetch applications with filters and pagination
   const fetchApplications = async () => {
@@ -93,6 +98,41 @@ const Applications = () => {
   const applications = applicationsData?.items || [];
   const totalPages = applicationsData?.totalPages || 1;
   const totalCount = applicationsData?.totalCount || 0;
+
+  // Auto-open view modal from URL parameter (from search results)
+  useEffect(() => {
+    const viewId = searchParams.get('view');
+    if (viewId) {
+      // First check if item is in current page
+      const appToView = applications.find(app => app.applicationId?.toString() === viewId || app.id?.toString() === viewId);
+      if (appToView) {
+        setSelectedApplication(appToView);
+        setIsViewModalOpen(true);
+        // Remove the query param after opening
+        searchParams.delete('view');
+        setSearchParams(searchParams, { replace: true });
+      } else {
+        // If not in current page, fetch it directly by ID
+        axiosPrivate.get(`/applications/${viewId}`)
+          .then(response => {
+            const fetchedApp = response.data;
+            if (fetchedApp) {
+              setSelectedApplication(fetchedApp);
+              setIsViewModalOpen(true);
+              // Remove the query param after opening
+              searchParams.delete('view');
+              setSearchParams(searchParams, { replace: true });
+            }
+          })
+          .catch(error => {
+            console.error('Error fetching application by ID:', error);
+            // Remove the query param even if fetch fails
+            searchParams.delete('view');
+            setSearchParams(searchParams, { replace: true });
+          });
+      }
+    }
+  }, [searchParams, setSearchParams, applications, axiosPrivate]);
 
   // Extract unique companies from all applications data (only dynamic filter needed)
   const getUniqueCompanies = () => {
@@ -219,15 +259,79 @@ const Applications = () => {
     setIsDeleteModalOpen(true);
   };
 
+  // Export handler
+  const handleExport = async () => {
+    try {
+      setIsExporting(true);
+      toast.info('Preparing export... This may take a moment for large datasets.');
+
+      // Fetch all applications using pagination
+      const allApplications = await fetchAllData(
+        (pageNumber, pageSize) => axiosPrivate.get('/applications', {
+          params: { PageNumber: pageNumber, PageSize: pageSize }
+        })
+      );
+
+      // Transform data for CSV export
+      const csvData = allApplications.map(app => ({
+        'Company Name': app.companyName || app.company?.name || 'N/A',
+        'Job Title': app.jobTitle || 'N/A',
+        'Job Type': app.jobType || 'N/A',
+        'Submission Date': app.submissionDate ? format(new Date(app.submissionDate), 'MMM dd, yyyy') : 'N/A',
+        'Stage': formatStageForExport(app.stage),
+        'Status': app.status || 'N/A',
+        'ATS Score': app.atsScore || 0,
+        'Description': app.description || '',
+        'Link': app.link || '',
+        'Submitted CV ID': app.submittedCvId || '',
+        'Created At': app.createdAt ? format(new Date(app.createdAt), 'MMM dd, yyyy') : 'N/A',
+        'Updated At': app.updatedAt ? format(new Date(app.updatedAt), 'MMM dd, yyyy') : 'N/A'
+      }));
+
+      // Export to CSV
+      exportToCSV(csvData, 'applications');
+      
+      toast.success(`Successfully exported ${allApplications.length} application(s)!`);
+    } catch (error) {
+      console.error('Error exporting applications:', error);
+      toast.error('Failed to export applications. Please try again.');
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  // Helper function to format stage enum for export
+  const formatStageForExport = (stage) => {
+    if (!stage) return 'N/A';
+    // Stage values from API: Applied, PhoneScreen, HrInterview, TechnicalInterview, OnlineAssessment, FinalRound, Offer, Rejected
+    switch (stage) {
+      case 'PhoneScreen': return 'Phone Screen';
+      case 'HrInterview': return 'HR Interview';
+      case 'TechnicalInterview': return 'Technical Interview';
+      case 'OnlineAssessment': return 'Online Assessment';
+      case 'FinalRound': return 'Final Round';
+      case 'Applied': return 'Applied';
+      case 'Offer': return 'Offer';
+      case 'Rejected': return 'Rejected';
+      default: return stage;
+    }
+  };
+
   // Header actions
   const headerActions = [
-    <Button key="import" variant="outline" size="sm">
+    <Button key="import" variant="outline" size="sm" disabled>
       <FileUp className="w-4 h-4 mr-2" />
       Import
     </Button>,
-    <Button key="export" variant="outline" size="sm">
+    <Button 
+      key="export" 
+      variant="outline" 
+      size="sm"
+      onClick={handleExport}
+      disabled={isExporting}
+    >
       <FileDown className="w-4 h-4 mr-2" />
-      Export
+      {isExporting ? 'Exporting...' : 'Export'}
     </Button>,
     <Button key="add" onClick={() => setIsAddModalOpen(true)}>
       <Plus className="w-4 h-4 mr-2" />

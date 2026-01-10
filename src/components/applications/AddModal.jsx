@@ -329,7 +329,9 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
                 onValueChange={(value) => setFormData(prev => ({ ...prev, jobType: value }))}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select job type" />
+                  <SelectValue placeholder="Select job type">
+                    {formData.jobType || "Select job type"}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Full-time">Full-time</SelectItem>
@@ -368,7 +370,12 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
                 onValueChange={(value) => setFormData(prev => ({ ...prev, stage: value }))}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select stage" />
+                  <SelectValue placeholder="Select stage">
+                    {formData.stage === "PhoneScreen" ? "Phone Screen" :
+                     formData.stage === "HrInterview" ? "HR Interview" :
+                     formData.stage === "TechnicalInterview" ? "Technical Interview" :
+                     formData.stage || "Select stage"}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Applied">Applied</SelectItem>
@@ -392,7 +399,9 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
                 onValueChange={(value) => setFormData(prev => ({ ...prev, status: value }))}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select status" />
+                  <SelectValue placeholder="Select status">
+                    {formData.status || "Select status"}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Pending">Pending</SelectItem>
@@ -438,7 +447,12 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
               onValueChange={(value) => setFormData(prev => ({ ...prev, submittedCvId: value }))}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select CV" />
+                <SelectValue placeholder="Select CV">
+                  {formData.submittedCvId && cvs.find(cv => cv.resumeId.toString() === formData.submittedCvId) ? 
+                    `Resume ${cvs.find(cv => cv.resumeId.toString() === formData.submittedCvId).resumeId} (${new Date(cvs.find(cv => cv.resumeId.toString() === formData.submittedCvId).createdAt).toLocaleDateString()})` :
+                    "Select CV"
+                  }
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {cvsLoading ? (

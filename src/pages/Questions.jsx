@@ -1,7 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "react-query";
 import { useAxiosPrivate } from "../utils/axios";
+import { useSearchParams } from "react-router-dom";
 import { format } from "date-fns";
+import { toast } from "react-toastify";
 import {
   Search,
   Plus,
@@ -10,6 +12,8 @@ import {
   Eye,
   Edit,
   Trash2,
+  FileDown,
+  FileUp,
 } from "lucide-react";
 import Button from "../components/ui/Button";
 import Input from "../components/ui/Input";
@@ -21,10 +25,12 @@ import AddModal from "../components/questions/AddModal";
 import EditModal from "../components/questions/EditModal";
 import ViewModal from "../components/questions/ViewModal";
 import DeleteModal from "../components/questions/DeleteModal";
+import { fetchAllData, exportToCSV } from "../utils/csvExport";
 
 const Questions = () => {
   const axiosPrivate = useAxiosPrivate();
   const queryClient = useQueryClient();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   // State management
   const [searchTerm, setSearchTerm] = useState("");
@@ -44,6 +50,7 @@ const Questions = () => {
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedQuestion, setSelectedQuestion] = useState(null);
+  const [isExporting, setIsExporting] = useState(false);
 
   // Fetch questions with filters and pagination
   const fetchQuestions = async () => {
@@ -101,6 +108,41 @@ const Questions = () => {
   const questions = questionsData?.items || [];
   const totalPages = questionsData?.totalPages || 1;
   const totalCount = questionsData?.totalCount || 0;
+
+  // Auto-open view modal from URL parameter (from search results)
+  useEffect(() => {
+    const viewId = searchParams.get('view');
+    if (viewId) {
+      // First check if item is in current page
+      const questionToView = questions.find(q => q.questionId?.toString() === viewId || q.id?.toString() === viewId);
+      if (questionToView) {
+        setSelectedQuestion(questionToView);
+        setIsViewModalOpen(true);
+        // Remove the query param after opening
+        searchParams.delete('view');
+        setSearchParams(searchParams, { replace: true });
+      } else {
+        // If not in current page, fetch it directly by ID
+        axiosPrivate.get(`/questions/${viewId}`)
+          .then(response => {
+            const fetchedQuestion = response.data;
+            if (fetchedQuestion) {
+              setSelectedQuestion(fetchedQuestion);
+              setIsViewModalOpen(true);
+              // Remove the query param after opening
+              searchParams.delete('view');
+              setSearchParams(searchParams, { replace: true });
+            }
+          })
+          .catch(error => {
+            console.error('Error fetching question by ID:', error);
+            // Remove the query param even if fetch fails
+            searchParams.delete('view');
+            setSearchParams(searchParams, { replace: true });
+          });
+      }
+    }
+  }, [searchParams, setSearchParams, questions, axiosPrivate]);
 
   // Toggle favorite mutation
   const toggleFavoriteMutation = useMutation(
@@ -280,6 +322,66 @@ const Questions = () => {
     setIsDeleteModalOpen(true);
   };
 
+  // Export handler
+  const handleExport = async () => {
+    try {
+      setIsExporting(true);
+      toast.info('Preparing export... This may take a moment for large datasets.');
+
+      // Fetch all questions using pagination
+      const allQuestions = await fetchAllData(
+        (pageNumber, pageSize) => axiosPrivate.get('/questions', {
+          params: { PageNumber: pageNumber, PageSize: pageSize }
+        })
+      );
+
+      // Also fetch all applications to resolve names
+      const allApplications = await fetchAllData(
+        (pageNumber, pageSize) => axiosPrivate.get('/applications', {
+          params: { PageNumber: pageNumber, PageSize: pageSize }
+        })
+      );
+
+      // Create a map for quick application lookup
+      const applicationMap = {};
+      allApplications.forEach(app => {
+        applicationMap[app.applicationId || app.id] = app;
+      });
+
+      // Transform data for CSV export
+      const csvData = allQuestions.map(question => {
+        const application = applicationMap[question.applicationId];
+        const applicationName = application 
+          ? `${application.companyName} - ${application.jobTitle}`
+          : 'N/A';
+
+        return {
+          'Question': question.question1 || 'N/A',
+          'Answer': question.answer || '',
+          'Application': applicationName,
+          'Type': question.type || 'N/A',
+          'Answer Status': question.answerStatus || 'N/A',
+          'Difficulty': question.difficulty || 'N/A',
+          'Preparation Note': question.preparationNote || '',
+          'Favorite': question.favorite ? 'Yes' : 'No',
+          'Tags': Array.isArray(question.tags) ? question.tags.join('; ') : '',
+          'Created At': question.createdAt ? format(new Date(question.createdAt), 'MMM dd, yyyy') : 'N/A',
+          'Updated At': question.updatedAt ? format(new Date(question.updatedAt), 'MMM dd, yyyy') : 'N/A'
+        };
+      });
+
+      // Export to CSV
+      exportToCSV(csvData, 'questions');
+      
+      toast.success(`Successfully exported ${allQuestions.length} question(s)!`);
+    } catch (error) {
+      console.error('Error exporting questions:', error);
+      toast.error('Failed to export questions. Please try again.');
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   const handleToggleFavorite = (row) => {
     const question = row._originalData || row;
     toggleFavoriteMutation.mutate({
@@ -312,6 +414,20 @@ const Questions = () => {
 
   // Header actions
   const headerActions = [
+    <Button key="import" variant="outline" size="sm" disabled>
+      <FileUp className="w-4 h-4 mr-2" />
+      Import
+    </Button>,
+    <Button 
+      key="export" 
+      variant="outline" 
+      size="sm"
+      onClick={handleExport}
+      disabled={isExporting}
+    >
+      <FileDown className="w-4 h-4 mr-2" />
+      {isExporting ? 'Exporting...' : 'Export'}
+    </Button>,
     <Button key="add" onClick={() => setIsAddModalOpen(true)}>
       <Plus className="w-4 h-4 mr-2" />
       Add Question
