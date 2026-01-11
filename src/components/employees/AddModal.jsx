@@ -230,7 +230,9 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
                 <Label>Department</Label>
                 <Select value={formData.department} onValueChange={(value) => handleInputChange('department', value)}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select department" />
+                    <SelectValue placeholder="Select department">
+                      {formData.department || "Select department"}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {departmentOptions.map((dept) => (
@@ -246,7 +248,9 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
                 <Label>Contact Status</Label>
                 <Select value={formData.contacted} onValueChange={(value) => handleInputChange('contacted', value)}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select contact status" />
+                    <SelectValue placeholder="Select contact status">
+                      {formData.contacted ? contactStatusOptions.find(opt => opt.value === formData.contacted)?.label : "Select contact status"}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {contactStatusOptions.map((option) => (

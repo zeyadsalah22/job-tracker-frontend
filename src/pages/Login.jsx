@@ -48,13 +48,20 @@ export default function Login() {
         if (response.data.userId) localStorage.setItem("userId", response.data.userId);
         if (response.data.email) localStorage.setItem("email", response.data.email);
         if (response.data.fullName) localStorage.setItem("fullName", response.data.fullName);
-        if (response.data.role !== undefined) localStorage.setItem("role", response.data.role);
+        if (response.data.role !== undefined) {
+          localStorage.setItem("role", response.data.role);
+        }
         if (response.data.expiresAt) localStorage.setItem("expiresAt", response.data.expiresAt);
         
         // Get user info
         try {
           const userResponse = await axiosPrivate.get("/users/me");
           setUser(userResponse.data);
+          
+          // If role wasn't in login response, try to get it from /users/me
+          if (response.data.role === undefined && userResponse.data.role !== undefined) {
+            localStorage.setItem("role", userResponse.data.role);
+          }
         } catch (error) {
           console.error("Failed to fetch user data:", error);
         }
@@ -77,9 +84,9 @@ export default function Login() {
     },
   });
 
-  // Don't automatically redirect to dashboard if on the login page
+  // Redirect to dashboard if user is already logged in
   useEffect(() => {
-    if (token && window.location.pathname !== "/") {
+    if (token) {
       navigate("/dashboard");
     }
   }, [token, navigate]);

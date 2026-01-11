@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { useQuery } from "react-query";
+import { useQuery, useQueryClient } from "react-query";
 import { useAxiosPrivate } from "../../utils/axios";
 import { toast } from "react-toastify";
 import useUserStore from "../../store/user.store";
-import { X, CalendarIcon, Loader2 } from "lucide-react";
+import { X, CalendarIcon, Loader2, Plus } from "lucide-react";
 import Button from "../ui/Button";
 import Input from "../ui/Input";
 import Label from "../ui/Label";
@@ -23,14 +23,22 @@ import {
 } from "../ui/Popover";
 import { format } from "date-fns";
 import { cn } from "../../lib/utils.ts";
+import CompanyRequestModal from "../companies/CompanyRequestModal";
 
 export default function AddModal({ refetch, openAdd, setOpenAdd }) {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const [companySearch, setCompanySearch] = useState("");
   const [employeeSearch, setEmployeeSearch] = useState("");
+  const [isCompanyRequestModalOpen, setIsCompanyRequestModalOpen] = useState(false);
   const user = useUserStore((state) => state.user);
   const axiosPrivate = useAxiosPrivate();
+  const queryClient = useQueryClient();
+  
+  // Get user role from localStorage
+  // Backend returns either "Admin" (string) or 1 (number) for admin
+  const userRole = localStorage.getItem("role");
+  const isAdmin = userRole === "Admin" || userRole === "1" || parseInt(userRole) === 1;
 
   const [formData, setFormData] = useState({
     companyId: "",
@@ -46,26 +54,28 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
     contactedEmployeeIds: []
   });
 
-  // Fetch user companies for dropdown
+  // Fetch all companies for dropdown (changed from user-companies to all companies)
   const fetchCompanies = async () => {
     try {
       const params = {
         SearchTerm: companySearch || undefined,
-        PageSize: 100
+        PageSize: 500
       };
       
-      const response = await axiosPrivate.get('/user-companies', { params });
+      const response = await axiosPrivate.get('/companies', { params });
       
       let companies = [];
       if (Array.isArray(response.data)) {
+        // Direct array response
         companies = response.data;
       } else if (response.data && Array.isArray(response.data.items)) {
+        // Paginated response
         companies = response.data.items;
       }
       
       return companies;
     } catch (error) {
-      console.error("Error fetching user companies:", error);
+      console.error("Error fetching companies:", error);
       return [];
     }
   };
@@ -238,7 +248,19 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
     }));
   };
 
+  // Handle successful company creation/request from nested modal
+  const handleCompanyRequestSuccess = (newCompany) => {
+    // Invalidate companies query to refetch
+    queryClient.invalidateQueries(["companies-for-application"]);
+    
+    // If admin added a company, pre-select it
+    if (isAdmin && newCompany && newCompany.companyId) {
+      setFormData(prev => ({ ...prev, companyId: newCompany.companyId.toString() }));
+    }
+  };
+
   return (
+    <>
     <Dialog open={openAdd} onOpenChange={setOpenAdd}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
@@ -268,7 +290,7 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select company">
-                    {formData.companyId && companies.find(c => c.companyId.toString() === formData.companyId)?.companyName}
+                    {formData.companyId && companies.find(c => c.companyId.toString() === formData.companyId)?.name}
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
@@ -288,9 +310,9 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
                     companies.map((company) => (
                       <SelectItem key={company.companyId} value={company.companyId.toString()}>
                         <div className="flex flex-col">
-                          <span className="font-medium">{company.companyName}</span>
-                          {company.companyLocation && (
-                            <span className="text-xs text-muted-foreground">{company.companyLocation}</span>
+                          <span className="font-medium">{company.name}</span>
+                          {company.location && (
+                            <span className="text-xs text-muted-foreground">{company.location}</span>
                           )}
                         </div>
                       </SelectItem>
@@ -305,6 +327,16 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
               {errors.companyId && (
                 <p className="text-sm text-destructive">{errors.companyId}</p>
               )}
+              
+              {/* Can't find company button */}
+              <button
+                type="button"
+                onClick={() => setIsCompanyRequestModalOpen(true)}
+                className="text-sm text-primary hover:underline flex items-center gap-1 mt-2"
+              >
+                <Plus className="h-3 w-3" />
+                Can't find your company?
+              </button>
             </div>
 
             {/* Job Title */}
@@ -329,7 +361,9 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
                 onValueChange={(value) => setFormData(prev => ({ ...prev, jobType: value }))}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select job type" />
+                  <SelectValue placeholder="Select job type">
+                    {formData.jobType || "Select job type"}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Full-time">Full-time</SelectItem>
@@ -368,7 +402,12 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
                 onValueChange={(value) => setFormData(prev => ({ ...prev, stage: value }))}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select stage" />
+                  <SelectValue placeholder="Select stage">
+                    {formData.stage === "PhoneScreen" ? "Phone Screen" :
+                     formData.stage === "HrInterview" ? "HR Interview" :
+                     formData.stage === "TechnicalInterview" ? "Technical Interview" :
+                     formData.stage || "Select stage"}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Applied">Applied</SelectItem>
@@ -392,7 +431,9 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
                 onValueChange={(value) => setFormData(prev => ({ ...prev, status: value }))}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select status" />
+                  <SelectValue placeholder="Select status">
+                    {formData.status || "Select status"}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Pending">Pending</SelectItem>
@@ -438,7 +479,12 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
               onValueChange={(value) => setFormData(prev => ({ ...prev, submittedCvId: value }))}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select CV" />
+                <SelectValue placeholder="Select CV">
+                  {formData.submittedCvId && cvs.find(cv => cv.resumeId.toString() === formData.submittedCvId) ? 
+                    `Resume ${cvs.find(cv => cv.resumeId.toString() === formData.submittedCvId).resumeId} (${new Date(cvs.find(cv => cv.resumeId.toString() === formData.submittedCvId).createdAt).toLocaleDateString()})` :
+                    "Select CV"
+                  }
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {cvsLoading ? (
@@ -606,5 +652,14 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
         </form>
       </DialogContent>
     </Dialog>
+
+    {/* Company Request Modal */}
+    <CompanyRequestModal
+      isOpen={isCompanyRequestModalOpen}
+      onClose={() => setIsCompanyRequestModalOpen(false)}
+      isAdminMode={isAdmin}
+      onSuccess={handleCompanyRequestSuccess}
+    />
+  </>
   );
 }

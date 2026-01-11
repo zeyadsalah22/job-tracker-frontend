@@ -14,6 +14,7 @@ import {
   Bell,
   MessageCircle,
   Bookmark,
+  ClipboardList,
 } from "lucide-react";
 import {
   Sidebar,
@@ -52,6 +53,10 @@ const mainItems = [
   { title: "Notifications", url: "/notifications", icon: Bell },
 ];
 
+const adminItems = [
+  { title: "Company Requests", url: "/company-requests", icon: ClipboardList },
+];
+
 export function AppSidebar() {
   const { state } = useSidebar();
   const location = useLocation();
@@ -66,6 +71,12 @@ export function AppSidebar() {
   const isCollapsed = state === "collapsed";
   const isActive = (path) => currentPath === path;
   const isTrackerActive = trackerItems.some((item) => currentPath === item.url);
+
+  // Get user role from localStorage
+  // Backend returns either "Admin" (string) or 1 (number) for admin
+  // Returns either "User" (string) or 0 (number) for regular user
+  const userRole = localStorage.getItem("role");
+  const isAdmin = userRole === "Admin" || userRole === "1" || parseInt(userRole) === 1;
 
   return (
     <Sidebar collapsible="icon">
@@ -165,6 +176,21 @@ export function AppSidebar() {
 
               {/* Main Items */}
               {mainItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild tooltip={isCollapsed ? item.title : undefined}>
+                    <Link
+                      to={item.url}
+                      className={isActive(item.url) ? "bg-primary/10 text-primary font-medium" : "text-gray-900 hover:bg-muted/50 hover:text-foreground"}
+                    >
+                      <item.icon className="mr-2 h-4 w-4" />
+                      {!isCollapsed && <span>{item.title}</span>}
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+
+              {/* Admin Items (only visible to admins) */}
+              {isAdmin && adminItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild tooltip={isCollapsed ? item.title : undefined}>
                     <Link

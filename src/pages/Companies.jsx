@@ -1,6 +1,9 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from "react-query";
 import { useAxiosPrivate } from "../utils/axios";
+import { useSearchParams } from "react-router-dom";
+import { format } from "date-fns";
+import { toast } from "react-toastify";
 import Button from "../components/ui/Button";
 import Input from "../components/ui/Input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/Select";
@@ -19,8 +22,11 @@ import AddModal from "../components/companies/AddModal";
 import EditModal from "../components/companies/EditModal";
 import DeleteModal from "../components/companies/DeleteModal";
 import ViewModal from "../components/companies/ViewModal";
+import CompanyRequestModal from "../components/companies/CompanyRequestModal";
+import { fetchAllData, exportToCSV } from "../utils/csvExport";
 
 export default function Companies() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [companies, setCompanies] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [locationFilter, setLocationFilter] = useState('');
@@ -32,18 +38,21 @@ export default function Companies() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [selectedCompany, setSelectedCompany] = useState(null);
   const [selectedId, setSelectedId] = useState(null);
+  const [isExporting, setIsExporting] = useState(false);
 
   const axiosPrivate = useAxiosPrivate();
   const queryClient = useQueryClient();
 
-  // Get user role from localStorage (1 = Admin, 0 = User)
-  const userRole = parseInt(localStorage.getItem("role")) || 0;
-  const isAdmin = userRole === 1;
+  // Get user role from localStorage
+  // Backend returns either "Admin" (string) or 1 (number) for admin
+  const userRole = localStorage.getItem("role");
+  const isAdmin = userRole === "Admin" || userRole === "1" || parseInt(userRole) === 1;
 
   // Fetch industries for filter dropdown
   const fetchIndustries = async () => {
@@ -145,6 +154,43 @@ export default function Companies() {
   const paginatedCompanies = Array.isArray(companiesData?.companies) ? companiesData.companies : [];
   const totalPages = companiesData?.totalPages || 1;
 
+  // Auto-open view modal from URL parameter (from search results)
+  useEffect(() => {
+    const viewId = searchParams.get('view');
+    if (viewId) {
+      // First check if item is in current page
+      const companyToView = paginatedCompanies.find(c => c.companyId?.toString() === viewId || c.id?.toString() === viewId);
+      if (companyToView) {
+        setSelectedId(companyToView.companyId || companyToView.id);
+        setSelectedCompany(companyToView);
+        setIsDetailModalOpen(true);
+        // Remove the query param after opening
+        searchParams.delete('view');
+        setSearchParams(searchParams, { replace: true });
+      } else {
+        // If not in current page, fetch it directly by ID
+        axiosPrivate.get(`/companies/${viewId}`)
+          .then(response => {
+            const fetchedCompany = response.data;
+            if (fetchedCompany) {
+              setSelectedId(fetchedCompany.companyId || fetchedCompany.id);
+              setSelectedCompany(fetchedCompany);
+              setIsDetailModalOpen(true);
+              // Remove the query param after opening
+              searchParams.delete('view');
+              setSearchParams(searchParams, { replace: true });
+            }
+          })
+          .catch(error => {
+            console.error('Error fetching company by ID:', error);
+            // Remove the query param even if fetch fails
+            searchParams.delete('view');
+            setSearchParams(searchParams, { replace: true });
+          });
+      }
+    }
+  }, [searchParams, setSearchParams, paginatedCompanies, axiosPrivate]);
+
   const handleSort = (column) => {
     if (sortColumn === column) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
@@ -184,6 +230,52 @@ export default function Companies() {
     setSelectedCompany(company);
     setSelectedId(company.companyId);
     setIsDeleteModalOpen(true);
+  };
+
+  // Handle successful company request
+  const handleCompanyRequestSuccess = (newCompany) => {
+    // Invalidate companies query to refetch
+    queryClient.invalidateQueries(["companies"]);
+    refetch();
+  };
+
+  // Export handler
+  const handleExport = async () => {
+    try {
+      setIsExporting(true);
+      toast.info('Preparing export... This may take a moment for large datasets.');
+
+      // Fetch all companies using pagination
+      const allCompanies = await fetchAllData(
+        (pageNumber, pageSize) => axiosPrivate.get('/companies', {
+          params: { PageNumber: pageNumber, PageSize: pageSize }
+        })
+      );
+
+      // Transform data for CSV export
+      const csvData = allCompanies.map(company => ({
+        'Company Name': company.name || 'N/A',
+        'Industry': company.industry?.name || 'N/A',
+        'Location': company.location || 'N/A',
+        'Company Size': company.companySize || 'N/A',
+        'Careers Link': company.careersLink || '',
+        'LinkedIn Link': company.linkedinLink || '',
+        'Logo URL': company.logoUrl || '',
+        'Description': company.description || '',
+        'Created At': company.createdAt ? format(new Date(company.createdAt), 'MMM dd, yyyy') : 'N/A',
+        'Updated At': company.updatedAt ? format(new Date(company.updatedAt), 'MMM dd, yyyy') : 'N/A'
+      }));
+
+      // Export to CSV
+      exportToCSV(csvData, 'companies');
+      
+      toast.success(`Successfully exported ${allCompanies.length} company(s)!`);
+    } catch (error) {
+      console.error('Error exporting companies:', error);
+      toast.error('Failed to export companies. Please try again.');
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   const handleView = (company) => {
@@ -280,20 +372,31 @@ export default function Companies() {
 
   // Header actions
   const headerActions = [
-    <Button key="import" variant="outline" size="sm">
+    <Button key="import" variant="outline" size="sm" disabled>
       <Upload className="w-4 h-4 mr-2" />
       Import
     </Button>,
-    <Button key="export" variant="outline" size="sm">
+    <Button 
+      key="export" 
+      variant="outline" 
+      size="sm"
+      onClick={handleExport}
+      disabled={isExporting}
+    >
       <Download className="w-4 h-4 mr-2" />
-      Export
+      {isExporting ? 'Exporting...' : 'Export'}
     </Button>,
     ...(isAdmin ? [
       <Button key="add" onClick={() => setIsAddModalOpen(true)}>
         <Plus className="w-4 h-4 mr-2" />
         Add Company
       </Button>
-    ] : [])
+    ] : [
+      <Button key="request" onClick={() => setIsRequestModalOpen(true)}>
+        <Plus className="w-4 h-4 mr-2" />
+        Request Company
+      </Button>
+    ])
   ];
 
   // Filters
@@ -458,6 +561,14 @@ export default function Companies() {
         company={selectedCompany}
         open={isDetailModalOpen}
         setOpen={setIsDetailModalOpen}
+      />
+
+      {/* Company Request Modal (for non-admin users) */}
+      <CompanyRequestModal
+        isOpen={isRequestModalOpen}
+        onClose={() => setIsRequestModalOpen(false)}
+        isAdminMode={false}
+        onSuccess={handleCompanyRequestSuccess}
       />
     </>
   );

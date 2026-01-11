@@ -302,7 +302,7 @@ export default function Dashboard() {
       console.log("Percents response:", response.data);
       
       // Return all stages directly from the API
-      return {
+      const percentsData = {
         counts: {
           applied: response.data.applied_stage || 0,
           phonescreen: response.data.phonescreen_stage || 0,
@@ -312,6 +312,9 @@ export default function Dashboard() {
         },
         total: response.data.total_applications || 0
       };
+      
+      console.log("Processed percents data:", percentsData);
+      return percentsData;
     } catch (error) {
       console.error("Error fetching percents:", error);
       return {
@@ -726,6 +729,19 @@ export default function Dashboard() {
                     width={50}
                   />
                 </div>
+              ) : percents?.total === 0 || 
+                  (percents?.counts?.applied === 0 && 
+                   percents?.counts?.phonescreen === 0 && 
+                   percents?.counts?.assessment === 0 && 
+                   percents?.counts?.interview === 0 && 
+                   percents?.counts?.offer === 0) ? (
+                <div className="flex flex-col justify-center items-center h-full text-center text-muted-foreground">
+                  <div className="w-24 h-24 bg-muted rounded-full flex items-center justify-center mb-4">
+                    <Building2 className="w-12 h-12 text-muted-foreground/50" />
+                  </div>
+                  <p className="font-medium">No Application Data</p>
+                  <p className="text-sm mt-1">Start applying to see stage breakdown</p>
+                </div>
               ) : (
                 <TEChart
                   type="doughnut"
@@ -740,11 +756,11 @@ export default function Dashboard() {
                     datasets: [
                       {
                         data: [
-                          percents?.counts?.applied,
-                          percents?.counts?.phonescreen,
-                          percents?.counts?.assessment,
-                          percents?.counts?.interview,
-                          percents?.counts?.offer,
+                          percents?.counts?.applied || 0,
+                          percents?.counts?.phonescreen || 0,
+                          percents?.counts?.assessment || 0,
+                          percents?.counts?.interview || 0,
+                          percents?.counts?.offer || 0,
                         ],
                         backgroundColor: [
                           "#7571f9",  // Applied - Primary
@@ -763,7 +779,11 @@ export default function Dashboard() {
                       legend: {
                         position: 'bottom',
                         labels: {
-                          padding: 20
+                          padding: 20,
+                          boxWidth: 15,
+                          font: {
+                            size: 11
+                          }
                         }
                       },
                       tooltip: {

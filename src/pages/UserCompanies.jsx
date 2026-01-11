@@ -1,6 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "react-query";
 import { useAxiosPrivate } from "../utils/axios";
+import { useSearchParams } from "react-router-dom";
+import { format } from "date-fns";
+import { toast } from "react-toastify";
 import Button from "../components/ui/Button";
 import Input from "../components/ui/Input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/Select";
@@ -12,15 +15,24 @@ import {
   Building2,
   ChevronLeft,
   ChevronRight,
+  FileDown,
+  FileUp,
+  Clock,
+  Eye,
 } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/Tabs";
 import Table from "../components/Table";
 import AddModal from "../components/user-companies/AddModal";
 import EditModal from "../components/user-companies/EditModal";
 import DeleteModal from "../components/user-companies/DeleteModal";
 import ViewModal from "../components/user-companies/ViewModal";
+import CompanyRequestViewModal from "../components/companies/CompanyRequestViewModal";
 import useUserStore from "../store/user.store";
+import { fetchAllData, exportToCSV } from "../utils/csvExport";
 
 export default function UserCompanies() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState('companies');
   const [searchTerm, setSearchTerm] = useState('');
   const [interestFilter, setInterestFilter] = useState('');
   const [favoriteFilter, setFavoriteFilter] = useState('');
@@ -32,8 +44,15 @@ export default function UserCompanies() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [isRequestDetailModalOpen, setIsRequestDetailModalOpen] = useState(false);
   const [selectedUserCompany, setSelectedUserCompany] = useState(null);
+  const [selectedRequest, setSelectedRequest] = useState(null);
   const [selectedId, setSelectedId] = useState(null);
+  const [isExporting, setIsExporting] = useState(false);
+  
+  // Requests pagination state
+  const [requestsCurrentPage, setRequestsCurrentPage] = useState(1);
+  const [requestsItemsPerPage, setRequestsItemsPerPage] = useState(10);
 
   const axiosPrivate = useAxiosPrivate();
   const queryClient = useQueryClient();
@@ -109,6 +128,64 @@ export default function UserCompanies() {
   const paginatedCompanies = Array.isArray(companiesData?.companies) ? companiesData.companies : [];
   const totalPages = companiesData?.totalPages || 1;
 
+  // Fetch my company requests
+  const fetchMyRequests = async () => {
+    try {
+      const response = await axiosPrivate.get('/company-requests/my-requests');
+      return response.data || [];
+    } catch (error) {
+      console.error("Error fetching my requests:", error);
+      toast.error("Failed to fetch your requests");
+      return [];
+    }
+  };
+
+  const { data: myRequests = [], isLoading: requestsLoading } = useQuery(
+    ["my-company-requests"],
+    fetchMyRequests,
+    {
+      enabled: activeTab === 'requests',
+      staleTime: 30000,
+    }
+  );
+
+  // Auto-open view modal from URL parameter (from search results)
+  useEffect(() => {
+    const viewId = searchParams.get('view');
+    if (viewId) {
+      // First check if item is in current page
+      const companyToView = paginatedCompanies.find(c => c.companyId?.toString() === viewId || c.id?.toString() === viewId);
+      if (companyToView) {
+        setSelectedId(companyToView.companyId || companyToView.id);
+        setSelectedUserCompany(companyToView);
+        setIsDetailModalOpen(true);
+        // Remove the query param after opening
+        searchParams.delete('view');
+        setSearchParams(searchParams, { replace: true });
+      } else {
+        // If not in current page, fetch it directly by ID
+        axiosPrivate.get(`/user-companies/${viewId}`)
+          .then(response => {
+            const fetchedCompany = response.data;
+            if (fetchedCompany) {
+              setSelectedId(fetchedCompany.companyId || fetchedCompany.id);
+              setSelectedUserCompany(fetchedCompany);
+              setIsDetailModalOpen(true);
+              // Remove the query param after opening
+              searchParams.delete('view');
+              setSearchParams(searchParams, { replace: true });
+            }
+          })
+          .catch(error => {
+            console.error('Error fetching user company by ID:', error);
+            // Remove the query param even if fetch fails
+            searchParams.delete('view');
+            setSearchParams(searchParams, { replace: true });
+          });
+      }
+    }
+  }, [searchParams, setSearchParams, paginatedCompanies, axiosPrivate]);
+
   const handleSort = (column) => {
     if (sortColumn === column) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
@@ -128,6 +205,50 @@ export default function UserCompanies() {
     setSelectedUserCompany(userCompany);
     setSelectedId(userCompany.companyId);
     setIsDeleteModalOpen(true);
+  };
+
+  // Export handler
+  const handleExport = async () => {
+    try {
+      setIsExporting(true);
+      toast.info('Preparing export... This may take a moment for large datasets.');
+
+      // Fetch all user companies using pagination
+      const allUserCompanies = await fetchAllData(
+        (pageNumber, pageSize) => axiosPrivate.get('/user-companies', {
+          params: { 
+            PageNumber: pageNumber, 
+            PageSize: pageSize,
+            UserId: user?.userId 
+          }
+        })
+      );
+
+      // Transform data for CSV export
+      const csvData = allUserCompanies.map(company => ({
+        'Company Name': company.companyName || 'N/A',
+        'Location': company.companyLocation || 'N/A',
+        'Interest Level': company.interestLevel || 'N/A',
+        'Favorite': company.favorite ? 'Yes' : 'No',
+        'Personal Notes': company.personalNotes || '',
+        'Careers Link': company.companyCareersLink || '',
+        'LinkedIn Link': company.companyLinkedinLink || '',
+        'Logo URL': company.companyLogoUrl || '',
+        'Tags': Array.isArray(company.tags) ? company.tags.join('; ') : '',
+        'Created At': company.createdAt ? format(new Date(company.createdAt), 'MMM dd, yyyy') : 'N/A',
+        'Updated At': company.updatedAt ? format(new Date(company.updatedAt), 'MMM dd, yyyy') : 'N/A'
+      }));
+
+      // Export to CSV
+      exportToCSV(csvData, 'user-companies');
+      
+      toast.success(`Successfully exported ${allUserCompanies.length} company(s)!`);
+    } catch (error) {
+      console.error('Error exporting user companies:', error);
+      toast.error('Failed to export user companies. Please try again.');
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   const handleView = (userCompany) => {
@@ -240,6 +361,20 @@ export default function UserCompanies() {
 
   // Header actions
   const headerActions = [
+    <Button key="import" variant="outline" size="sm" disabled>
+      <FileUp className="w-4 h-4 mr-2" />
+      Import
+    </Button>,
+    <Button 
+      key="export" 
+      variant="outline" 
+      size="sm"
+      onClick={handleExport}
+      disabled={isExporting}
+    >
+      <FileDown className="w-4 h-4 mr-2" />
+      {isExporting ? 'Exporting...' : 'Export'}
+    </Button>,
     <Button key="add" onClick={() => setIsAddModalOpen(true)}>
       <Plus className="w-4 h-4 mr-2" />
       Add Company
@@ -337,8 +472,116 @@ export default function UserCompanies() {
     </>
   );
 
-  return (
+  // Get status badge for requests
+  const getRequestStatusBadge = (status) => {
+    // Handle both string and number status values
+    const normalizedStatus = typeof status === 'string' ? status.toLowerCase() : status;
+    
+    switch (normalizedStatus) {
+      case 0:
+      case 'pending':
+        return <Badge className="bg-yellow-100 text-yellow-800 border-yellow-300">Pending</Badge>;
+      case 1:
+      case 'approved':
+        return <Badge className="bg-green-100 text-green-800 border-green-300">Approved</Badge>;
+      case 2:
+      case 'rejected':
+        return <Badge className="bg-red-100 text-red-800 border-red-300">Rejected</Badge>;
+      default:
+        return <Badge variant="secondary">Unknown ({status})</Badge>;
+    }
+  };
+
+  // Client-side pagination for requests
+  const totalRequests = myRequests.length;
+  const requestsTotalPages = Math.max(1, Math.ceil(totalRequests / requestsItemsPerPage));
+  const paginatedRequests = myRequests.slice(
+    (requestsCurrentPage - 1) * requestsItemsPerPage,
+    requestsCurrentPage * requestsItemsPerPage
+  );
+
+  // Requests pagination component
+  const requestsPaginationComponent = (
     <>
+      {/* Rows per page selector */}
+      <div className="flex items-center space-x-2">
+        <p className="text-sm font-medium">Rows per page</p>
+        <Select
+          value={requestsItemsPerPage.toString()}
+          onValueChange={(value) => {
+            setRequestsItemsPerPage(Number(value));
+            setRequestsCurrentPage(1);
+          }}
+        >
+          <SelectTrigger className="h-8 w-[70px]">
+            <SelectValue placeholder={requestsItemsPerPage.toString()} />
+          </SelectTrigger>
+          <SelectContent side="top" className="min-w-[70px]">
+            <SelectItem value="10">10</SelectItem>
+            <SelectItem value="25">25</SelectItem>
+            <SelectItem value="50">50</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      
+      {/* Pagination info and controls */}
+      <div className="flex items-center space-x-6">
+        <div className="flex items-center justify-center text-sm font-medium">
+          <span className="mr-2">
+            Showing {Math.min((requestsCurrentPage - 1) * requestsItemsPerPage + 1, totalRequests)} to {Math.min(requestsCurrentPage * requestsItemsPerPage, totalRequests)} of {totalRequests} results
+          </span>
+          <span className="mx-2">•</span>
+          <span>Page {requestsCurrentPage} of {requestsTotalPages}</span>
+        </div>
+        <div className="flex items-center space-x-2">
+          <Button
+            variant="outline"
+            className="h-8 w-8 p-0"
+            onClick={() => setRequestsCurrentPage(Math.max(1, requestsCurrentPage - 1))}
+            disabled={requestsCurrentPage === 1}
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="outline"
+            className="h-8 w-8 p-0"
+            onClick={() => setRequestsCurrentPage(Math.min(requestsTotalPages, requestsCurrentPage + 1))}
+            disabled={requestsCurrentPage === requestsTotalPages}
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+    </>
+  );
+
+  return (
+    <div className="p-6 space-y-6">
+      {/* Page Header */}
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">My Companies</h1>
+          <p className="text-gray-600 mt-1">
+            Track companies you're interested in and view your company requests
+          </p>
+        </div>
+      </div>
+
+      {/* Tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <TabsList>
+          <TabsTrigger value="companies">
+            <Building2 className="h-4 w-4 mr-2" />
+            My Companies
+          </TabsTrigger>
+          <TabsTrigger value="requests">
+            <Clock className="h-4 w-4 mr-2" />
+            My Requests
+          </TabsTrigger>
+        </TabsList>
+
+        {/* Companies Tab */}
+        <TabsContent value="companies" className="space-y-4">
       <Table
         useModernUI={true}
         title="My Companies"
@@ -364,6 +607,59 @@ export default function UserCompanies() {
           </div>
         }
       />
+        </TabsContent>
+
+        {/* Requests Tab */}
+        <TabsContent value="requests" className="space-y-4">
+          <Table
+            useModernUI={true}
+            title="My Company Requests"
+            description="View the status of your company request submissions"
+            pagination={requestsPaginationComponent}
+            table_head={[
+              { name: "Company Name", key: "companyName" },
+              { name: "Location", key: "location" },
+              { name: "Industry", key: "industryName" },
+              { name: "Status", key: "status" },
+              { name: "Requested Date", key: "requestedDate" },
+              { name: "Reviewed Date", key: "reviewedDate" },
+            ]}
+            table_rows={paginatedRequests.map((request) => ({
+              companyName: request.companyName || 'N/A',
+              location: request.location || 'N/A',
+              industryName: request.industryName || 'N/A',
+              status: request.requestStatus,
+              requestedDate: request.requestedAt ? format(new Date(request.requestedAt), 'MMM dd, yyyy') : 'N/A',
+              reviewedDate: request.reviewedAt ? format(new Date(request.reviewedAt), 'MMM dd, yyyy') : '-',
+              _originalData: request
+            }))}
+            isLoading={requestsLoading}
+            actions={true}
+            customRenderers={{
+              companyName: (value, row) => (
+                <div>
+                  <div className="font-medium">{value}</div>
+                  {row.location !== 'N/A' && (
+                    <div className="text-sm text-muted-foreground">{row.location}</div>
+                  )}
+                </div>
+              ),
+              status: (value) => getRequestStatusBadge(value),
+            }}
+            handleOpenView={(row) => {
+              setSelectedRequest(row._originalData);
+              setIsRequestDetailModalOpen(true);
+            }}
+            emptyState={
+              <div className="text-center py-12 text-muted-foreground">
+                <Clock className="mx-auto h-12 w-12 mb-4 opacity-50" />
+                <p className="text-lg font-medium mb-2">No requests found</p>
+                <p>You haven't submitted any company requests yet.</p>
+              </div>
+            }
+          />
+        </TabsContent>
+      </Tabs>
 
       {/* Modals */}
       <AddModal 
@@ -389,6 +685,12 @@ export default function UserCompanies() {
         open={isDetailModalOpen}
         setOpen={setIsDetailModalOpen}
       />
-    </>
+
+      <CompanyRequestViewModal
+        request={selectedRequest}
+        open={isRequestDetailModalOpen}
+        setOpen={setIsRequestDetailModalOpen}
+      />
+    </div>
   );
 }
