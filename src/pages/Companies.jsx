@@ -22,6 +22,7 @@ import AddModal from "../components/companies/AddModal";
 import EditModal from "../components/companies/EditModal";
 import DeleteModal from "../components/companies/DeleteModal";
 import ViewModal from "../components/companies/ViewModal";
+import CompanyRequestModal from "../components/companies/CompanyRequestModal";
 import { fetchAllData, exportToCSV } from "../utils/csvExport";
 
 export default function Companies() {
@@ -37,6 +38,7 @@ export default function Companies() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
@@ -47,9 +49,10 @@ export default function Companies() {
   const axiosPrivate = useAxiosPrivate();
   const queryClient = useQueryClient();
 
-  // Get user role from localStorage (1 = Admin, 0 = User)
-  const userRole = parseInt(localStorage.getItem("role")) || 0;
-  const isAdmin = userRole === 1;
+  // Get user role from localStorage
+  // Backend returns either "Admin" (string) or 1 (number) for admin
+  const userRole = localStorage.getItem("role");
+  const isAdmin = userRole === "Admin" || userRole === "1" || parseInt(userRole) === 1;
 
   // Fetch industries for filter dropdown
   const fetchIndustries = async () => {
@@ -229,6 +232,13 @@ export default function Companies() {
     setIsDeleteModalOpen(true);
   };
 
+  // Handle successful company request
+  const handleCompanyRequestSuccess = (newCompany) => {
+    // Invalidate companies query to refetch
+    queryClient.invalidateQueries(["companies"]);
+    refetch();
+  };
+
   // Export handler
   const handleExport = async () => {
     try {
@@ -381,7 +391,12 @@ export default function Companies() {
         <Plus className="w-4 h-4 mr-2" />
         Add Company
       </Button>
-    ] : [])
+    ] : [
+      <Button key="request" onClick={() => setIsRequestModalOpen(true)}>
+        <Plus className="w-4 h-4 mr-2" />
+        Request Company
+      </Button>
+    ])
   ];
 
   // Filters
@@ -546,6 +561,14 @@ export default function Companies() {
         company={selectedCompany}
         open={isDetailModalOpen}
         setOpen={setIsDetailModalOpen}
+      />
+
+      {/* Company Request Modal (for non-admin users) */}
+      <CompanyRequestModal
+        isOpen={isRequestModalOpen}
+        onClose={() => setIsRequestModalOpen(false)}
+        isAdminMode={false}
+        onSuccess={handleCompanyRequestSuccess}
       />
     </>
   );

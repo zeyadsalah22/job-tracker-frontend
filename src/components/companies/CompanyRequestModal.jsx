@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useQuery } from "react-query";
-import { toast } from "react-toastify";
 import { useAxiosPrivate } from "../../utils/axios";
+import { toast } from "react-toastify";
 import { X, Loader2 } from "lucide-react";
 import Button from "../ui/Button";
 import Input from "../ui/Input";
@@ -13,9 +13,15 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "../ui/Dialog";
 
-export default function AddModal({ refetch, openAdd, setOpenAdd }) {
+export default function CompanyRequestModal({ 
+  isOpen, 
+  onClose, 
+  isAdminMode = false, 
+  onSuccess 
+}) {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const axiosPrivate = useAxiosPrivate();
@@ -79,11 +85,11 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
       newErrors.description = "Description must not exceed 2000 characters";
     }
 
-    if (!formData.industryId) {
+    if (isAdminMode && !formData.industryId) {
       newErrors.industryId = "Industry is required";
     }
 
-    if (!formData.companySize) {
+    if (isAdminMode && !formData.companySize) {
       newErrors.companySize = "Company size is required";
     }
 
@@ -110,25 +116,46 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
     setLoading(true);
 
     try {
-      const payload = {
-        name: formData.name,
-        location: formData.location || null,
-        industryId: formData.industryId ? parseInt(formData.industryId) : null,
-        linkedinLink: formData.linkedinLink || null,
-        careersLink: formData.careersLink || null,
-        logoUrl: formData.logoUrl || null,
-        description: formData.description || null,
-        companySize: formData.companySize,
-      };
+      let payload;
+      
+      if (isAdminMode) {
+        // Admin adding company to /companies endpoint
+        payload = {
+          name: formData.name,
+          location: formData.location || null,
+          industryId: formData.industryId ? parseInt(formData.industryId) : null,
+          linkedinLink: formData.linkedinLink || null,
+          careersLink: formData.careersLink || null,
+          logoUrl: formData.logoUrl || null,
+          description: formData.description || null,
+          companySize: formData.companySize,
+        };
+      } else {
+        // User requesting company to /company-requests endpoint
+        payload = {
+          companyName: formData.name,
+          location: formData.location || null,
+          industryId: formData.industryId ? parseInt(formData.industryId) : null,
+          linkedinLink: formData.linkedinLink || null,
+          careersLink: formData.careersLink || null,
+          description: formData.description || null,
+        };
+      }
 
-      // Remove null values
+      // Remove null values for cleaner payload
       const cleanedPayload = Object.fromEntries(
         Object.entries(payload).filter(([_, value]) => value !== null && value !== "")
       );
 
-      const response = await axiosPrivate.post('/companies', cleanedPayload);
+      // Use different endpoints based on mode
+      const endpoint = isAdminMode ? '/companies' : '/company-requests';
+      const response = await axiosPrivate.post(endpoint, cleanedPayload);
+
+      const successMessage = isAdminMode 
+        ? "Company added successfully"
+        : "Your company request has been submitted successfully. You'll be notified once it's reviewed.";
       
-      toast.success("Company added successfully");
+      toast.success(successMessage);
 
       // Reset form
       setFormData({
@@ -143,11 +170,17 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
       });
       setErrors({});
 
-      refetch();
-      setOpenAdd(false);
+      // Call success callback with new company data (for admin mode)
+      if (onSuccess && isAdminMode && response.data) {
+        onSuccess(response.data);
+      } else if (onSuccess) {
+        onSuccess();
+      }
+
+      onClose();
 
     } catch (error) {
-      console.error("Error adding company:", error);
+      console.error("Error submitting company:", error);
       
       let errorMessage = "An error occurred. Please try again";
       if (error.response?.data) {
@@ -180,15 +213,15 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
       companySize: "",
     });
     setErrors({});
-    setOpenAdd(false);
+    onClose();
   };
 
   return (
-    <Dialog open={openAdd} onOpenChange={handleClose}>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
-            Add New Company
+            {isAdminMode ? "Add New Company" : "Request New Company"}
             <button
               onClick={handleClose}
               className="rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none"
@@ -197,6 +230,11 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
               <span className="sr-only">Close</span>
             </button>
           </DialogTitle>
+          {!isAdminMode && (
+            <DialogDescription>
+              Can't find your company? Request to add it to our database. We'll review your request and notify you once it's approved.
+            </DialogDescription>
+          )}
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -233,7 +271,7 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
 
             {/* Industry */}
             <div className="space-y-2">
-              <Label htmlFor="industryId">Industry *</Label>
+              <Label htmlFor="industryId">Industry {isAdminMode && "*"}</Label>
               <Select
                 value={formData.industryId}
                 onValueChange={(value) => setFormData(prev => ({ ...prev, industryId: value }))}
@@ -256,28 +294,30 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
               )}
             </div>
 
-            {/* Company Size */}
-            <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="companySize">Company Size *</Label>
-              <Select
-                value={formData.companySize}
-                onValueChange={(value) => setFormData(prev => ({ ...prev, companySize: value }))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select company size">
-                    {formData.companySize || "Select company size"}
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Small">Small (1-50 employees)</SelectItem>
-                  <SelectItem value="Medium">Medium (51-500 employees)</SelectItem>
-                  <SelectItem value="Large">Large (500+ employees)</SelectItem>
-                </SelectContent>
-              </Select>
-              {errors.companySize && (
-                <p className="text-sm text-destructive">{errors.companySize}</p>
-              )}
-            </div>
+            {/* Company Size (Admin only) */}
+            {isAdminMode && (
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="companySize">Company Size *</Label>
+                <Select
+                  value={formData.companySize}
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, companySize: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select company size">
+                      {formData.companySize || "Select company size"}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Small">Small (1-50 employees)</SelectItem>
+                    <SelectItem value="Medium">Medium (51-500 employees)</SelectItem>
+                    <SelectItem value="Large">Large (500+ employees)</SelectItem>
+                  </SelectContent>
+                </Select>
+                {errors.companySize && (
+                  <p className="text-sm text-destructive">{errors.companySize}</p>
+                )}
+              </div>
+            )}
 
             {/* LinkedIn Link */}
             <div className="space-y-2">
@@ -362,10 +402,10 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
               {loading ? (
                 <div className="flex items-center gap-2">
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  <span>Adding...</span>
+                  <span>Submitting...</span>
                 </div>
               ) : (
-                "Add Company"
+                isAdminMode ? "Add Company" : "Submit Request"
               )}
             </Button>
           </div>
@@ -374,3 +414,4 @@ export default function AddModal({ refetch, openAdd, setOpenAdd }) {
     </Dialog>
   );
 }
+

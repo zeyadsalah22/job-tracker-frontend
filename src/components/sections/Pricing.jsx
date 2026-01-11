@@ -72,111 +72,112 @@ const Pricing = () => {
         <div className="text-center mb-16">
           <div className="inline-flex items-center space-x-2 bg-primary/10 border border-primary/20 rounded-full px-4 py-2 mb-6">
             <Star className="w-4 h-4 text-primary" />
-            <span className="text-sm font-medium text-primary">Simple Pricing</span>
+            <span className="text-sm font-medium text-primary">Limited Time Offer</span>
           </div>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-6">
-            Choose Your{" "}
-            <span className="gradient-text">Success Plan</span>
+            Everything is{" "}
+            <span className="gradient-text">100% Free</span>
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
-            Start free and upgrade when you're ready. No hidden fees, cancel anytime.
+            Get full access to all features during our beta launch. No credit card required, no hidden fees.
           </p>
+        </div>
 
-          {/* Billing Toggle */}
-          <div className="inline-flex items-center space-x-4 bg-gray-100 rounded-full p-1">
-            <button
-              className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
-                !isYearly 
-                  ? "bg-white text-primary shadow-sm" 
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-              onClick={() => setIsYearly(false)}
-            >
-              Monthly
-            </button>
-            <button
-              className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
-                isYearly 
-                  ? "bg-white text-primary shadow-sm" 
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-              onClick={() => setIsYearly(true)}
-            >
-              Yearly
-              <Badge className="ml-2 bg-success text-success-foreground">Save 20%</Badge>
-            </button>
+        {/* Pricing Cards - Blurred */}
+        <div className="relative max-w-6xl mx-auto min-h-[600px]">
+          {/* Blurred Cards in Background */}
+          <div className="grid md:grid-cols-3 gap-8 blur-sm opacity-40 pointer-events-none">
+            {plans.map((plan, index) => (
+              <Card 
+                key={index} 
+                className={`relative card-glow transition-all duration-500 scale-in ${
+                  plan.popular 
+                    ? "ring-2 ring-primary shadow-2xl shadow-primary/20 scale-105" 
+                    : ""
+                }`}
+                style={{ animationDelay: `${index * 0.1}s` }}
+              >
+                {plan.popular && (
+                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                    <Badge className="bg-gradient-primary text-white px-4 py-1 text-sm font-semibold">
+                      <Zap className="w-3 h-3 mr-1" />
+                      Most Popular
+                    </Badge>
+                  </div>
+                )}
+
+                <CardHeader className="text-center pb-4">
+                  <h3 className="text-xl font-semibold mb-2">{plan.name}</h3>
+                  <p className="text-sm text-muted-foreground mb-4">{plan.description}</p>
+                  
+                  <div className="space-y-1">
+                    <div className="flex items-baseline justify-center">
+                      <span className="text-4xl font-bold text-primary">
+                        ${isYearly ? plan.yearlyPrice : plan.monthlyPrice}
+                      </span>
+                      <span className="text-muted-foreground ml-1">
+                        /{isYearly ? "year" : "month"}
+                      </span>
+                    </div>
+                    {isYearly && plan.monthlyPrice > 0 && (
+                      <div className="text-sm text-muted-foreground">
+                        ${Math.round((plan.yearlyPrice / 12) * 10) / 10}/month billed annually
+                      </div>
+                    )}
+                  </div>
+                </CardHeader>
+
+                <CardContent className="pt-0">
+                  <Button 
+                    className={plan.buttonVariant === "hero" ? "btn-hero w-full" : "btn-outline-hero w-full"}
+                    onClick={handleGetStarted}
+                  >
+                    {plan.buttonText}
+                  </Button>
+
+                  <ul className="space-y-3 mt-6">
+                    {plan.features.map((feature, featureIndex) => (
+                      <li key={featureIndex} className="flex items-start space-x-3">
+                        <Check className="w-5 h-5 text-success flex-shrink-0 mt-0.5" />
+                        <span className="text-sm text-muted-foreground">{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          {/* Overlay with "Everything is Free" message */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border-4 border-primary/20 px-12 py-10 text-center transform hover:scale-105 transition-transform duration-300">
+              <div className="mb-4">
+                <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-primary rounded-full mb-4">
+                  <Zap className="w-10 h-10 text-white" />
+                </div>
+              </div>
+              <h3 className="text-3xl font-bold mb-4">
+                <span className="gradient-text">Everything is Free!</span>
+              </h3>
+              <p className="text-lg text-muted-foreground mb-6 max-w-md">
+                All premium features are available at no cost during our beta launch. Start your job search journey today!
+              </p>
+              <Button 
+                className="btn-hero text-lg px-8 py-6"
+                onClick={handleGetStarted}
+              >
+                Get Started Free
+              </Button>
+            </div>
           </div>
         </div>
 
-        {/* Pricing Cards */}
-        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-          {plans.map((plan, index) => (
-            <Card 
-              key={index} 
-              className={`relative card-glow transition-all duration-500 scale-in ${
-                plan.popular 
-                  ? "ring-2 ring-primary shadow-2xl shadow-primary/20 scale-105" 
-                  : ""
-              }`}
-              style={{ animationDelay: `${index * 0.1}s` }}
-            >
-              {plan.popular && (
-                <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                  <Badge className="bg-gradient-primary text-white px-4 py-1 text-sm font-semibold">
-                    <Zap className="w-3 h-3 mr-1" />
-                    Most Popular
-                  </Badge>
-                </div>
-              )}
-
-              <CardHeader className="text-center pb-4">
-                <h3 className="text-xl font-semibold mb-2">{plan.name}</h3>
-                <p className="text-sm text-muted-foreground mb-4">{plan.description}</p>
-                
-                <div className="space-y-1">
-                  <div className="flex items-baseline justify-center">
-                    <span className="text-4xl font-bold text-primary">
-                      ${isYearly ? plan.yearlyPrice : plan.monthlyPrice}
-                    </span>
-                    <span className="text-muted-foreground ml-1">
-                      /{isYearly ? "year" : "month"}
-                    </span>
-                  </div>
-                  {isYearly && plan.monthlyPrice > 0 && (
-                    <div className="text-sm text-muted-foreground">
-                      ${Math.round((plan.yearlyPrice / 12) * 10) / 10}/month billed annually
-                    </div>
-                  )}
-                </div>
-              </CardHeader>
-
-              <CardContent className="pt-0">
-                <Button 
-                  className={plan.buttonVariant === "hero" ? "btn-hero w-full" : "btn-outline-hero w-full"}
-                  onClick={handleGetStarted}
-                >
-                  {plan.buttonText}
-                </Button>
-
-                <ul className="space-y-3 mt-6">
-                  {plan.features.map((feature, featureIndex) => (
-                    <li key={featureIndex} className="flex items-start space-x-3">
-                      <Check className="w-5 h-5 text-success flex-shrink-0 mt-0.5" />
-                      <span className="text-sm text-muted-foreground">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        {/* Enterprise CTA */}
+        {/* Bottom Info */}
         <div className="text-center mt-16">
           <div className="inline-flex items-center space-x-4 bg-gradient-to-r from-primary/5 to-primary-dark/5 rounded-2xl border border-primary/20 px-8 py-4">
-            <span className="text-sm text-muted-foreground">Need a custom solution?</span>
+            <span className="text-sm text-muted-foreground">Questions about our beta program?</span>
             <Button variant="ghost" className="text-primary hover:text-primary-dark">
-              Contact our team →
+              Contact us →
             </Button>
           </div>
         </div>

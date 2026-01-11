@@ -288,7 +288,9 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
                   onValueChange={(value) => setFormData(prev => ({ ...prev, jobType: value }))}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select job type" />
+                    <SelectValue placeholder="Select job type">
+                      {formData.jobType || "Select job type"}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="Full-time">Full-time</SelectItem>
@@ -327,7 +329,9 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
                   onValueChange={(value) => setFormData(prev => ({ ...prev, stage: value }))}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select stage" />
+                    <SelectValue placeholder="Select stage">
+                      {formData.stage || "Select stage"}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="Applied">Applied</SelectItem>
@@ -351,7 +355,9 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
                   onValueChange={(value) => setFormData(prev => ({ ...prev, status: value }))}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select status" />
+                    <SelectValue placeholder="Select status">
+                      {formData.status || "Select status"}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="Pending">Pending</SelectItem>
@@ -372,7 +378,17 @@ export default function EditModal({ id, refetch, openEdit, setOpenEdit }) {
                   onValueChange={(value) => setFormData(prev => ({ ...prev, submittedCvId: value }))}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select CV" />
+                    <SelectValue placeholder="Select CV">
+                      {formData.submittedCvId 
+                        ? (() => {
+                            const selectedCv = cvs.find(cv => cv.resumeId.toString() === formData.submittedCvId);
+                            return selectedCv 
+                              ? `Resume ${selectedCv.resumeId} (${new Date(selectedCv.createdAt).toLocaleDateString()})`
+                              : "Select CV";
+                          })()
+                        : "Select CV"
+                      }
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {cvsLoading ? (

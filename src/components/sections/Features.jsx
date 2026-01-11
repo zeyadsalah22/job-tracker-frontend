@@ -1,43 +1,93 @@
 import { Card, CardContent } from "../ui/Card";
-import { Brain, FileText, Users, Target, Zap, Shield } from "lucide-react";
+import { 
+  Brain, 
+  FileText, 
+  Users, 
+  Target, 
+  Zap, 
+  Shield, 
+  Building2, 
+  TrendingUp, 
+  MessageSquare,
+  FileBarChart,
+  Sparkles,
+  Send,
+  UsersRound
+} from "lucide-react";
 
 const Features = () => {
   const features = [
     {
-      icon: Brain,
-      title: "AI Job Matching",
-      description: "Our advanced AI analyzes your skills, experience, and preferences to find perfect job matches tailored just for you.",
+      icon: Target,
+      title: "Application Tracking",
+      description: "Track all your job applications in one organized dashboard. Monitor stages, statuses, and never miss a follow-up with smart reminders.",
       color: "from-primary to-primary-dark"
     },
     {
-      icon: FileText,
-      title: "Resume Optimization",
-      description: "AI-powered resume analysis and optimization ensures your resume stands out and passes ATS systems.",
+      icon: Brain,
+      title: "Mock Interviews",
+      description: "Practice with AI-powered mock interviews. Get real-time feedback, improve your answers, and build confidence for the real thing.",
+      color: "from-primary to-purple-500"
+    },
+    {
+      icon: UsersRound,
+      title: "Community & Support",
+      description: "Connect with fellow job seekers, share experiences, get advice, and support each other throughout your job search journey.",
+      color: "from-primary to-primary-glow"
+    },
+    {
+      icon: TrendingUp,
+      title: "Analytics & Insights",
+      description: "Visualize your job search progress with detailed charts and statistics. Track acceptance rates, application trends, and optimize your strategy.",
+      color: "from-primary-glow to-primary"
+    },
+    {
+      icon: Send,
+      title: "Auto Apply",
+      description: "Automatically apply to relevant job postings that match your profile. Save time and apply to more opportunities effortlessly.",
+      color: "from-primary-dark to-purple-500"
+    },
+    {
+      icon: MessageSquare,
+      title: "AI Chatbot Assistant",
+      description: "Get instant answers about your applications, personalized advice, and insights powered by AI to help you throughout your job search.",
+      color: "from-primary-dark to-primary-glow"
+    },
+    {
+      icon: Sparkles,
+      title: "Resume Matching",
+      description: "AI analyzes your resume against job descriptions to calculate ATS scores and provide optimization suggestions for better matches.",
+      color: "from-purple-500 to-primary-dark"
+    },
+    {
+      icon: Building2,
+      title: "Company Management",
+      description: "Research and save companies you're interested in. Add personal notes, track interest levels, and organize your target companies.",
       color: "from-primary-glow to-primary"
     },
     {
       icon: Users,
-      title: "Interview Preparation",
-      description: "Practice with AI-powered mock interviews and get real-time feedback to ace your next interview.",
+      title: "Employee Networking",
+      description: "Keep track of employees you've contacted at different companies. Manage your professional connections and referral opportunities.",
       color: "from-primary-dark to-primary-glow"
     },
     {
-      icon: Target,
-      title: "Application Tracking",
-      description: "Keep track of all your applications in one place with smart reminders and follow-up suggestions.",
+      icon: FileText,
+      title: "Question Bank",
+      description: "Build your own question bank with interview questions, coding challenges, and preparation notes. Mark favorites and track your progress.",
       color: "from-purple-500 to-primary"
     },
     {
-      icon: Zap,
-      title: "Instant Insights",
-      description: "Get real-time market insights, salary data, and company information to make informed decisions.",
-      color: "from-primary to-purple-500"
+      icon: FileBarChart,
+      title: "Resume Management",
+      description: "Store and manage multiple versions of your resume. Track which CV you used for each application and monitor ATS scores.",
+      color: "from-purple-500 to-primary"
     },
     {
       icon: Shield,
-      title: "Privacy First",
-      description: "Your data is encrypted and secure. We never share your information without your explicit consent.",
-      color: "from-primary-glow to-primary-dark"
+      title: "Privacy & Security",
+      description: "Your data is encrypted and secure. Complete control over your information with GDPR compliance and data export options.",
+      color: "from-primary-glow to-purple-500"
     }
   ];
 
@@ -52,10 +102,10 @@ const Features = () => {
           </div>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-6">
             Everything You Need to{" "}
-            <span className="gradient-text">Succeed</span>
+            <span className="gradient-text">Organize Your Job Search</span>
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Our comprehensive suite of AI-powered tools gives you the competitive edge in today's job market.
+            A comprehensive platform designed to streamline your job search process and help you land your dream job faster.
           </p>
         </div>
 
@@ -90,8 +140,8 @@ const Features = () => {
         {/* Bottom CTA */}
         <div className="text-center mt-16">
           <div className="inline-flex items-center space-x-4 bg-white rounded-2xl shadow-lg px-8 py-4 border border-gray-200/50">
-            <span className="text-sm text-muted-foreground">Ready to get started?</span>
-            <span className="font-semibold text-primary">Join 10,000+ job seekers</span>
+            <span className="text-sm text-muted-foreground">Ready to streamline your job search?</span>
+            <span className="font-semibold text-primary">Join us today!</span>
           </div>
         </div>
       </div>
