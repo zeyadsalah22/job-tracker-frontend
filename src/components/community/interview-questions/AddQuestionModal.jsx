@@ -123,7 +123,9 @@ const AddQuestionModal = ({ isOpen, onClose, onQuestionCreated, companies }) => 
   const buildCompanyLogoUrl = (name) => {
     const slug = normalizeCompanySlug(name);
     if (!slug) return "";
-    return `https://logo.clearbit.com/${slug}.com`;
+    //return `https://logo.clearbit.com/${slug}.com`;
+    //return `https://img.logo.dev/shopify.com?token=pk_ZFeON8EXRIikGV1-IWKOfA&retina=true`;
+    return `https://img.logo.dev/${slug}.com?token=pk_ZFeON8EXRIikGV1-IWKOfA`;
   };
 
   const hasRoleTypeSelection = formData.roleType !== null && formData.roleType !== "";

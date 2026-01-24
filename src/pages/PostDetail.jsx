@@ -30,6 +30,7 @@ import EditPostModal from "../components/community/posts/EditModal";
 import DeletePostModal from "../components/community/posts/DeleteModal";
 import CommentSection from "../components/community/comments/CommentSection";
 import WhoReactedModal from "../components/community/reactions/WhoReactedModal";
+import { DEFAULT_ANONYMOUS_AVATAR } from "../utils/defaultAvatar";
 
 const PostDetail = () => {
   const { id } = useParams();
@@ -192,7 +193,7 @@ const PostDetail = () => {
         <div className="flex justify-between items-start mb-6">
           <div className="flex items-center gap-3 flex-1">
             <Avatar
-              src={post.authorProfilePictureUrl}
+              src={post.isAnonymous ? DEFAULT_ANONYMOUS_AVATAR : post.authorProfilePictureUrl}
               fallback={post.isAnonymous ? "A" : post.authorName?.[0] || "U"}
               className="h-12 w-12"
             />
