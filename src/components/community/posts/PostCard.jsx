@@ -18,6 +18,7 @@ import {
 import { Badge } from "../../ui/Badge";
 import Button from "../../ui/Button";
 import Avatar from "../../ui/Avatar";
+import { DEFAULT_ANONYMOUS_AVATAR } from "../../../utils/defaultAvatar";
 import { 
   DropdownMenu,
   DropdownMenuContent,
@@ -152,7 +153,7 @@ const PostCard = ({ post, onClick, onUpdate }) => {
         <div className="flex justify-between items-start mb-4">
           <div className="flex items-center gap-3 flex-1">
             <Avatar
-              src={post.authorProfilePictureUrl}
+              src={post.isAnonymous ? DEFAULT_ANONYMOUS_AVATAR : post.authorProfilePictureUrl}
               fallback={post.isAnonymous ? "A" : post.authorName?.[0] || "U"}
               className="h-10 w-10"
             />
