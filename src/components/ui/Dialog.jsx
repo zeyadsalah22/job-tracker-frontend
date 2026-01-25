@@ -11,7 +11,7 @@ export const Dialog = ({ open, onOpenChange, children }) => {
         className="fixed inset-0 z-50 bg-black/80 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0"
         onClick={() => onOpenChange?.(false)}
       />
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
         {children}
       </div>
     </div>
@@ -23,7 +23,7 @@ export const DialogContent = forwardRef(({ className, children, ...props }, ref)
     <div
       ref={ref}
       className={clsx(
-        "relative grid w-full max-w-4xl gap-4 border bg-background p-6 shadow-lg duration-200 sm:rounded-lg",
+        "relative grid w-full max-w-4xl gap-4 border bg-background p-6 shadow-lg duration-200 sm:rounded-lg pointer-events-auto",
         "animate-in fade-in-0 zoom-in-95 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
         className
       )}
