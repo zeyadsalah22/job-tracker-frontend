@@ -29,6 +29,7 @@ import ViewModal from "../components/user-companies/ViewModal";
 import CompanyRequestViewModal from "../components/companies/CompanyRequestViewModal";
 import useUserStore from "../store/user.store";
 import { fetchAllData, exportToCSV } from "../utils/csvExport";
+import { getLogoUrl } from "../utils/logoUtils";
 
 export default function UserCompanies() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -276,7 +277,7 @@ export default function UserCompanies() {
     company: {
       name: userCompany.companyName,
       location: userCompany.companyLocation,
-      logoUrl: userCompany.companyLogoUrl,
+      logoUrl: getLogoUrl(userCompany.companyLogoUrl, userCompany.companyName),
       favorite: userCompany.favorite
     },
     interestLevel: userCompany.interestLevel,

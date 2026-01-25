@@ -14,6 +14,7 @@ import {
   resolveDifficultyMetadata,
   getDifficultyColorClasses,
 } from "../../../utils/interviewQuestionMetadata";
+import { getLogoUrl } from "../../../utils/logoUtils";
 
 const QuestionDetailModal = ({ isOpen, onClose, question, onUpdate }) => {
   const axiosPrivate = useAxiosPrivate();
@@ -168,15 +169,18 @@ const QuestionDetailModal = ({ isOpen, onClose, question, onUpdate }) => {
               {/* Company */}
               {questionDetail.companyName && (
                 <div className="flex items-center gap-2">
-                  {questionDetail.companyLogo ? (
-                    <img
-                      src={questionDetail.companyLogo}
-                      alt={questionDetail.companyName}
-                      className="w-8 h-8 rounded object-contain"
-                    />
-                  ) : (
-                    <Building2 className="h-6 w-6 text-gray-400" />
-                  )}
+                  {(() => {
+                    const logoUrl = getLogoUrl(questionDetail.companyLogo, questionDetail.companyName);
+                    return logoUrl ? (
+                      <img
+                        src={logoUrl}
+                        alt={questionDetail.companyName}
+                        className="w-8 h-8 rounded object-contain"
+                      />
+                    ) : (
+                      <Building2 className="h-6 w-6 text-gray-400" />
+                    );
+                  })()}
                   <span className="text-lg font-semibold text-gray-900">{questionDetail.companyName}</span>
                 </div>
               )}
