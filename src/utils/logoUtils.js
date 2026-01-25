@@ -118,7 +118,12 @@ export const getLogoUrl = (logoUrl, companyName = null) => {
   
   // If it's a Clearbit URL, convert it
   if (isClearbitUrl(logoUrl)) {
-    return convertClearbitToLogoDev(logoUrl);
+    const converted = convertClearbitToLogoDev(logoUrl);
+    // Debug logging (only in development)
+    if (import.meta.env.DEV) {
+      console.log('Converting Clearbit URL:', logoUrl, ' to ', converted);
+    }
+    return converted;
   }
   
   // Otherwise return the original URL (could be a custom URL or other service)
