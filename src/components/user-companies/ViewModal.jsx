@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/Dialog";
 import { Badge } from "../ui/Badge";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/Card";
 import { ExternalLink, Building2, MapPin, Briefcase, X, Calendar, Star, Heart } from 'lucide-react';
+import { getLogoUrl } from "../../utils/logoUtils";
 
 export default function ViewModal({ userCompany, open, setOpen }) {
   const axiosPrivate = useAxiosPrivate();
@@ -57,19 +58,22 @@ export default function ViewModal({ userCompany, open, setOpen }) {
         <DialogHeader>
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 bg-primary/10 rounded-lg flex items-center justify-center overflow-hidden">
-              {displayUserCompany.companyLogoUrl && (displayUserCompany.companyLogoUrl.startsWith('http://') || displayUserCompany.companyLogoUrl.startsWith('https://')) ? (
-                <img 
-                  src={displayUserCompany.companyLogoUrl} 
-                  alt={`${displayUserCompany.companyName} logo`}
-                  className="w-full h-full object-contain"
-                  onError={(e) => {
-                    e.target.style.display = 'none';
-                    e.target.parentElement.innerHTML = '<span class="text-2xl">🏢</span>';
-                  }}
-                />
-              ) : (
-                <span className="text-2xl">🏢</span>
-              )}
+              {(() => {
+                const logoUrl = getLogoUrl(displayUserCompany.companyLogoUrl, displayUserCompany.companyName);
+                return logoUrl && (logoUrl.startsWith('http://') || logoUrl.startsWith('https://')) ? (
+                  <img 
+                    src={logoUrl} 
+                    alt={`${displayUserCompany.companyName} logo`}
+                    className="w-full h-full object-contain"
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                      e.target.parentElement.innerHTML = '<span class="text-2xl">🏢</span>';
+                    }}
+                  />
+                ) : (
+                  <span className="text-2xl">🏢</span>
+                );
+              })()}
             </div>
             <div>
               <DialogTitle className="text-2xl flex items-center gap-2">
