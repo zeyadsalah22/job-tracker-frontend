@@ -3,6 +3,9 @@ import VideoRecorder from "./VideoRecorder";
 import SpeechToTextRecorder from "./SpeechToTextRecorder";
 import { ArrowLeft, CheckCircle, Play, RefreshCw, Loader2, Pause, Square, Mic, MicOff, Video, VideoOff, Clock } from "lucide-react";
 import { useAxiosPrivate } from "../../utils/axios";
+import { combineVideoBlobs, blobToFile, validateVideoConstraints } from "../../utils/videoUtils";
+import { useInterviewFeedback } from "../../hooks/useInterviewFeedback";
+import { toast } from "react-toastify";
 import {
   Dialog,
   DialogContent,
@@ -19,6 +22,14 @@ export default function InterviewRecordingModal({ open, setOpen, interviewId, re
   const axiosPrivate = useAxiosPrivate();
   const speechRef = useRef(null);
   const videoRecorderRef = useRef(null);
+
+  // Use the feedback hook
+  const { 
+    analyzeVideo, 
+    gradeQuestionsBatch, 
+    isAnalyzingVideo, 
+    isGradingQuestions 
+  } = useInterviewFeedback(interviewId);
 
   const [interview, setInterview] = useState(null);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -215,12 +226,60 @@ export default function InterviewRecordingModal({ open, setOpen, interviewId, re
       console.log("Sending interview data:", updateData);
       console.log("Answers being sent:", updatedAnswers);
       await axiosPrivate.patch(`/mockinterview/${interviewId}`, updateData);
+      
+      // Generate feedback automatically after saving interview
+      toast.info("Generating AI feedback for your interview...");
+      
+      // 1. Combine video recordings
+      const combinedVideoBlob = combineVideoBlobs(recordings);
+      
+      // 2. Validate video constraints
+      if (combinedVideoBlob) {
+        const validation = validateVideoConstraints(combinedVideoBlob);
+        
+        if (!validation.isValid) {
+          toast.warning(`Video feedback skipped: ${validation.error}`);
+        } else {
+          // 3. Upload and analyze video (async, don't wait)
+          const videoFile = blobToFile(combinedVideoBlob, `interview-${interviewId}.webm`);
+          analyzeVideo(videoFile).catch(error => {
+            console.error("Video analysis error:", error);
+            // Error is already handled by the hook
+          });
+        }
+      } else {
+        console.warn("No video recordings to combine");
+      }
+      
+      // 4. Grade all questions (async, don't wait)
+      // Try multiple possible field names for question IDs
+      const questionIds = questions
+        .map(q => q.interviewQuestionId || q.id || q.questionId)
+        .filter(id => id);
+      
+      console.log("Question IDs being sent for grading:", questionIds);
+      console.log("Full questions structure:", questions);
+      
+      if (questionIds.length > 0) {
+        const context = interview?.jobDescription || interview?.position || "";
+        gradeQuestionsBatch({ questionIds, context }).catch(error => {
+          console.error("Question grading error:", error);
+          console.error("Error response:", error.response?.data);
+          // Error is already handled by the hook
+        });
+      } else {
+        console.warn("No valid question IDs found for grading");
+      }
+      
+      // Don't wait for feedback generation - close modal and let it happen in background
       if (refetch) refetch();
       setOpen(false);
+      
+      toast.success("Interview saved! Feedback will be ready shortly.");
     } catch (error) {
       console.error("Error saving interview:", error);
       console.log("Error response:", error.response?.data);
-      alert("Failed to save interview data: " + (error.response?.data?.title || error.message));
+      toast.error("Failed to save interview data: " + (error.response?.data?.title || error.message));
     } finally {
       setIsFinishing(false);
     }
@@ -563,7 +622,7 @@ export default function InterviewRecordingModal({ open, setOpen, interviewId, re
                       {isFinishing ? (
                         <>
                           <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          Saving...
+                          Saving & Generating Feedback...
                         </>
                       ) : (
                         <>
