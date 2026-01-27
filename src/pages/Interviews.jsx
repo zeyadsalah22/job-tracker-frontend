@@ -20,6 +20,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/Tabs"
 import Table from "../components/Table";
 import AddModal from "../components/interviews/AddModal";
 import ViewModal from "../components/interviews/ViewModal";
+import OnboardingTour from "../components/onboarding/OnboardingTour";
 import DeleteModal from "../components/interviews/DeleteModal";
 import InterviewRecordingModal from "../components/interviews/InterviewRecordingModal";
 
@@ -257,14 +258,16 @@ export default function Interviews() {
   ];
 
   return (
-    <div className="space-y-6">
+    <>
+      <OnboardingTour page="interviews" />
+      <div className="space-y-6" data-tour="interview-table">
 
-  <Table
-      useModernUI={true}
-      title="Interview Sessions"
+    <Table
+        useModernUI={true}
+        title="Interview Sessions"
       description={`${interviewsData?.totalCount || 0} total interviews`}
       headerActions={[
-        <Button key="start-interview" onClick={() => setOpenAdd(true)}>
+        <Button key="start-interview" onClick={() => setOpenAdd(true)} data-tour="add-interview-btn">
           <Plus className="w-4 h-4 mr-2" />
           Start New Interview
         </Button>
@@ -330,6 +333,7 @@ export default function Interviews() {
           refetch={refetch}
         />
       )}
-    </div>
+      </div>
+    </>
   );
 }

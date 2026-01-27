@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../co
 import { Badge } from "../components/ui/Badge";
 import Button from "../components/ui/Button";
 import Checkbox, { CheckboxWithLabel } from "../components/ui/Checkbox";
+import OnboardingTour from "../components/onboarding/OnboardingTour";
 
 function Todo() {
   const [openAdd, setOpenAdd] = useState(false);
@@ -505,16 +506,18 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="space-y-6 animate-fade-in px-4 sm:px-6 lg:px-8 pt-2 pb-4 sm:pb-6 lg:pb-8 max-w-7xl mx-auto">
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Dashboard</h1>
-        <p className="text-muted-foreground text-sm sm:text-base">
-          Track your job search progress and manage applications
-        </p>
-      </div>
+    <>
+      <OnboardingTour page="dashboard" />
+      <div className="space-y-6 animate-fade-in px-4 sm:px-6 lg:px-8 pt-2 pb-4 sm:pb-6 lg:pb-8 max-w-7xl mx-auto">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Dashboard</h1>
+          <p className="text-muted-foreground text-sm sm:text-base">
+            Track your job search progress and manage applications
+          </p>
+        </div>
 
-      {/* Stats Grid */}
-      <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+        {/* Stats Grid */}
+        <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4" data-tour="dashboard-stats">
         <div className="bg-white rounded-lg p-4 sm:p-6 shadow-md">
           <div className="flex items-center gap-3 sm:gap-4">
             <div className="flex-1 min-w-0">
@@ -809,7 +812,7 @@ export default function Dashboard() {
       {/* Bottom Section */}
       <div className="grid gap-4 sm:gap-6 grid-cols-1 lg:grid-cols-3">
         {/* Recent Applications */}
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-2" data-tour="recent-applications">
           <Card className="hover-scale">
             <CardHeader>
               <CardTitle className="text-lg sm:text-xl">Recent Applications</CardTitle>
@@ -876,8 +879,11 @@ export default function Dashboard() {
         </div>
 
         {/* Todo List */}
-        <Todo />
+        <div data-tour="todo-list">
+          <Todo />
+        </div>
       </div>
       </div>
+    </>
   );
 }

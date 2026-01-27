@@ -23,6 +23,7 @@ import EditModal from "../components/applications/EditModal";
 import ViewModal from "../components/applications/ViewModal";
 import DeleteModal from "../components/applications/DeleteModal";
 import { fetchAllData, exportToCSV } from "../utils/csvExport";
+import OnboardingTour from "../components/onboarding/OnboardingTour";
 
 const Applications = () => {
   const axiosPrivate = useAxiosPrivate();
@@ -333,7 +334,7 @@ const Applications = () => {
       <FileDown className="w-4 h-4 mr-2" />
       {isExporting ? 'Exporting...' : 'Export'}
     </Button>,
-    <Button key="add" onClick={() => setIsAddModalOpen(true)}>
+    <Button key="add" onClick={() => setIsAddModalOpen(true)} data-tour="add-application-btn">
       <Plus className="w-4 h-4 mr-2" />
       Add Application
     </Button>
@@ -341,7 +342,7 @@ const Applications = () => {
 
   // Filters
   const filters = [
-    <div key="search" className="flex-1">
+    <div key="search" className="flex-1" data-tour="filters">
       <div className="relative">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
         <Input
@@ -440,11 +441,13 @@ const Applications = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <Table
-        useModernUI={true}
-        title="Applications"
-        description="Track and manage your job applications"
+    <>
+      <OnboardingTour page="applications" />
+      <div className="space-y-6" data-tour="application-table">
+        <Table
+          useModernUI={true}
+          title="Applications"
+          description="Track and manage your job applications"
         headerActions={headerActions}
         filters={filters}
         table_head={tableHead}
@@ -505,7 +508,8 @@ const Applications = () => {
           queryClient.invalidateQueries("applications-for-filters");
         }}
       />
-    </div>
+      </div>
+    </>
   );
 };
 

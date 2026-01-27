@@ -29,6 +29,7 @@ import ViewModal from "../components/user-companies/ViewModal";
 import CompanyRequestViewModal from "../components/companies/CompanyRequestViewModal";
 import useUserStore from "../store/user.store";
 import { fetchAllData, exportToCSV } from "../utils/csvExport";
+import OnboardingTour from "../components/onboarding/OnboardingTour";
 
 export default function UserCompanies() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -375,7 +376,7 @@ export default function UserCompanies() {
       <FileDown className="w-4 h-4 mr-2" />
       {isExporting ? 'Exporting...' : 'Export'}
     </Button>,
-    <Button key="add" onClick={() => setIsAddModalOpen(true)}>
+    <Button key="add" onClick={() => setIsAddModalOpen(true)} data-tour="add-company-btn">
       <Plus className="w-4 h-4 mr-2" />
       Add Company
     </Button>
@@ -556,25 +557,27 @@ export default function UserCompanies() {
   );
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Page Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">My Companies</h1>
-          <p className="text-gray-600 mt-1">
-            Track companies you're interested in and view your company requests
-          </p>
+    <>
+      <OnboardingTour page="user-companies" />
+      <div className="p-6 space-y-6">
+        {/* Page Header */}
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">My Companies</h1>
+            <p className="text-gray-600 mt-1">
+              Track companies you're interested in and view your company requests
+            </p>
+          </div>
         </div>
-      </div>
 
-      {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList>
+        {/* Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <TabsList data-tour="tabs">
           <TabsTrigger value="companies">
             <Building2 className="h-4 w-4 mr-2" />
             My Companies
           </TabsTrigger>
-          <TabsTrigger value="requests">
+          <TabsTrigger value="requests" data-tour="requests-tab">
             <Clock className="h-4 w-4 mr-2" />
             My Requests
           </TabsTrigger>
@@ -582,6 +585,7 @@ export default function UserCompanies() {
 
         {/* Companies Tab */}
         <TabsContent value="companies" className="space-y-4">
+      <div data-tour="company-table">
       <Table
         useModernUI={true}
         title="My Companies"
@@ -607,6 +611,7 @@ export default function UserCompanies() {
           </div>
         }
       />
+      </div>
         </TabsContent>
 
         {/* Requests Tab */}
@@ -691,6 +696,7 @@ export default function UserCompanies() {
         open={isRequestDetailModalOpen}
         setOpen={setIsRequestDetailModalOpen}
       />
-    </div>
+      </div>
+    </>
   );
 }

@@ -16,6 +16,7 @@ import Button from "../components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/Card";
 import { Badge } from "../components/ui/Badge";
 import Input from "../components/ui/Input";
+import OnboardingTour from "../components/onboarding/OnboardingTour";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/Select";
 import Table from "../components/Table";
 import RunTestModal from "../components/resume-matching/RunTestModal";
@@ -312,16 +313,18 @@ const ResumeMatching = () => {
   ];
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Resume Matching & ATS Analysis</h1>
-          <p className="text-muted-foreground">
-            Optimize your resumes for better ATS compatibility and job matching
-          </p>
-        </div>
-        <Button onClick={() => setOpenRunTest(true)} size="md">
+    <>
+      <OnboardingTour page="resume-matching" />
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">Resume Matching & ATS Analysis</h1>
+            <p className="text-muted-foreground">
+              Optimize your resumes for better ATS compatibility and job matching
+            </p>
+          </div>
+        <Button onClick={() => setOpenRunTest(true)} size="md" data-tour="upload-resume">
           <Plus className="h-4 w-4 mr-2" />
           Run New Test
         </Button>
@@ -337,7 +340,7 @@ const ResumeMatching = () => {
           </CardContent>
         </Card>
         
-        <Card>
+        <Card data-tour="ats-score">
           <CardContent className="p-6 text-center">
             <TrendingUp className="h-8 w-8 mx-auto mb-2 mt-4 text-blue-500" />
             <div className="text-2xl font-bold">{stats.averageScore || 0}%</div>
@@ -364,7 +367,7 @@ const ResumeMatching = () => {
 
       {/* Score Distribution Dashboard */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
+        <Card data-tour="job-matching">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <BarChart3 className="h-5 w-5" />
@@ -391,7 +394,7 @@ const ResumeMatching = () => {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card data-tour="improvements">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Target className="h-5 w-5" />
@@ -399,22 +402,28 @@ const ResumeMatching = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              {tableData.slice(0, 5).map((test, index) => (
-                <div key={test.id} className="flex items-center gap-3">
-                  <div className="flex items-center justify-center w-6 h-6 rounded-full bg-muted text-xs font-medium">
-                    {index + 1}
+            {tableData.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <p className="text-sm">No tests yet. Run your first test to get started!</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {tableData.slice(0, 5).map((test, index) => (
+                  <div key={test.id} className="flex items-center gap-3">
+                    <div className="flex items-center justify-center w-6 h-6 rounded-full bg-muted text-xs font-medium">
+                      {index + 1}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium">Resume {test._originalData?.resumeId}</p>
+                      <p className="text-xs text-muted-foreground">{test.testDate}</p>
+                    </div>
+                    <div className={`text-sm font-medium ${getScoreColor(test._originalData?.atsScore)}`}>
+                      {test._originalData?.atsScore}%
+                    </div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium">Resume {test._originalData?.resumeId}</p>
-                    <p className="text-xs text-muted-foreground">{test.testDate}</p>
-                  </div>
-                  <div className={`text-sm font-medium ${getScoreColor(test._originalData?.atsScore)}`}>
-                    {test._originalData?.atsScore}%
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -484,7 +493,8 @@ const ResumeMatching = () => {
           refetch={refetch}
         />
       )}
-    </div>
+      </div>
+    </>
   );
 };
 

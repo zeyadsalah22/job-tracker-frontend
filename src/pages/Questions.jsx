@@ -26,6 +26,7 @@ import EditModal from "../components/questions/EditModal";
 import ViewModal from "../components/questions/ViewModal";
 import DeleteModal from "../components/questions/DeleteModal";
 import { fetchAllData, exportToCSV } from "../utils/csvExport";
+import OnboardingTour from "../components/onboarding/OnboardingTour";
 
 const Questions = () => {
   const axiosPrivate = useAxiosPrivate();
@@ -428,7 +429,7 @@ const Questions = () => {
       <FileDown className="w-4 h-4 mr-2" />
       {isExporting ? 'Exporting...' : 'Export'}
     </Button>,
-    <Button key="add" onClick={() => setIsAddModalOpen(true)}>
+    <Button key="add" onClick={() => setIsAddModalOpen(true)} data-tour="add-question-btn">
       <Plus className="w-4 h-4 mr-2" />
       Add Question
     </Button>
@@ -448,7 +449,8 @@ const Questions = () => {
       </div>
     </div>,
     
-    <Select key="type" value={typeFilter} onValueChange={setTypeFilter}>
+    <div key="type" data-tour="categories">
+    <Select value={typeFilter} onValueChange={setTypeFilter}>
       <SelectTrigger className="w-full sm:w-48">
         <SelectValue placeholder="Filter by type" />
       </SelectTrigger>
@@ -460,7 +462,8 @@ const Questions = () => {
         <SelectItem value="CulturalFit">Cultural Fit</SelectItem>
         <SelectItem value="ApplicationForm">Application Form</SelectItem>
       </SelectContent>
-    </Select>,
+    </Select>
+    </div>,
 
     <Select key="status" value={statusFilter} onValueChange={setStatusFilter}>
       <SelectTrigger className="w-full sm:w-40">
@@ -529,13 +532,15 @@ const Questions = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <>
+      <OnboardingTour page="questions" />
+      <div className="space-y-6" data-tour="question-table">
 
-      {/* Main Content */}
-      <Table
-        useModernUI={true}
-        title="Question Bank"
-        description="Manage your interview questions and preparation notes"
+        {/* Main Content */}
+        <Table
+          useModernUI={true}
+          title="Question Bank"
+          description="Manage your interview questions and preparation notes"
         headerActions={headerActions}
         filters={filters}
         table_head={tableHead}
@@ -603,7 +608,8 @@ const Questions = () => {
           queryClient.invalidateQueries("applications-for-questions-filter");
         }}
       />
-    </div>
+      </div>
+    </>
   );
 };
 

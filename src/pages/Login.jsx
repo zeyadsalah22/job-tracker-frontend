@@ -7,6 +7,7 @@ import ReactLoading from "react-loading";
 import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
 import useUserStore from "../store/user.store";
+import useOnboardingStore from "../store/onboarding.store";
 import axios, { useAxiosPrivate } from "../utils/axios";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/Card";
 import { CheckboxWithLabel } from "../components/ui/Checkbox";
@@ -17,6 +18,7 @@ export default function Login() {
   const token = localStorage.getItem("access");
   const navigate = useNavigate();
   const setUser = useUserStore((state) => state.setUser);
+  const { hasCompletedTour, visitedPages } = useOnboardingStore();
   const [loading, setLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const axiosPrivate = useAxiosPrivate();
@@ -66,9 +68,6 @@ export default function Login() {
           console.error("Failed to fetch user data:", error);
         }
         
-        navigate("/dashboard");
-        toast.success("Login successful");
-        
         // Set start date if not already set
         localStorage.setItem(
           "start_date",
@@ -76,6 +75,10 @@ export default function Login() {
             ? localStorage.getItem("start_date")
             : new Date().toISOString().split("T")[0]
         );
+        
+        // Navigate to dashboard (tour will auto-start if user hasn't completed it)
+        navigate("/dashboard");
+        toast.success("Login successful");
       } catch (error) {
         console.error("Login error:", error.response?.data);
         setLoading(false);

@@ -124,6 +124,7 @@ export default function ManageCv() {
         <label
           htmlFor="file"
           className="border border-blue-500 gap-4 border-dashed flex flex-col rounded  items-center justify-center h-20 cursor-pointer"
+          data-tour="cv-upload"
         >
           <input
             type="file"

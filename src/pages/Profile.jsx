@@ -1,13 +1,14 @@
 import { useFormik } from "formik";
 
 import useUserStore from "../store/user.store";
+import useOnboardingStore from "../store/onboarding.store";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import FormField from "../components/ui/FormField";
 import ReactLoading from "react-loading";
 import DeleteModal from "../components/user/DeleteModal";
 import { useNavigate } from "react-router-dom";
-import { LogOut, Trash2, Camera, Upload, X } from "lucide-react";
+import { LogOut, Trash2, Camera, Upload, X, GraduationCap } from "lucide-react";
 import ChangePass from "../components/user/ChangePass";
 import ManageCv from "../components/user/ManageCv";
 import GmailIntegration from "../components/user/GmailIntegration";
@@ -15,10 +16,12 @@ import NotificationPreferences from "../components/user/NotificationPreferences"
 import { useAxiosPrivate } from "../utils/axios";
 import Avatar from "../components/ui/Avatar";
 import Button from "../components/ui/Button";
+import OnboardingTour from "../components/onboarding/OnboardingTour";
 
 export default function Profile() {
   const user = useUserStore((state) => state.user);
   const setUser = useUserStore((state) => state.setUser);
+  const { restartTour } = useOnboardingStore();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [deleteModal, setDeleteModal] = useState(false);
@@ -172,19 +175,39 @@ export default function Profile() {
     );
   }
 
+  const handleRestartTour = () => {
+    restartTour();
+    toast.success("Tour restarted! Redirecting to dashboard...");
+    setTimeout(() => {
+      navigate("/dashboard");
+    }, 1000);
+  };
+
   return (
-      <div className="bg-white rounded-lg h-full flex flex-col p-4 justify-between">
-        <div className="flex flex-col">
-          <div className="flex items-center pb-4 border-b-2 justify-between">
-            <h1 className="text-2xl font-bold">Profile settings</h1>
-            <button
-              onClick={handleLogout}
-              className="bg-primary hover:bg-primary/85 transition-all text-white py-2 px-4 rounded-lg flex items-center justify-center gap-2"
-            >
-              <LogOut size={18} />
-              Logout
-            </button>
-          </div>
+      <>
+        <OnboardingTour page="profile" />
+        <div className="bg-white rounded-lg h-full flex flex-col p-4 justify-between">
+          <div className="flex flex-col">
+            <div className="flex items-center pb-4 border-b-2 justify-between">
+              <h1 className="text-2xl font-bold">Profile settings</h1>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleRestartTour}
+                  className="bg-primary/10 hover:bg-primary/20 transition-all text-primary py-2 px-4 rounded-lg flex items-center justify-center gap-2"
+                  title="Restart the guided tour"
+                >
+                  <GraduationCap size={18} />
+                  Restart Tour
+                </button>
+                <button
+                  onClick={handleLogout}
+                  className="bg-primary hover:bg-primary/85 transition-all text-white py-2 px-4 rounded-lg flex items-center justify-center gap-2"
+                >
+                  <LogOut size={18} />
+                  Logout
+                </button>
+              </div>
+            </div>
           
           {/* Profile Picture Section */}
           <div className="flex flex-col items-center py-6 border-b-2">
@@ -245,6 +268,7 @@ export default function Profile() {
             <form
               onSubmit={handleSubmit}
               className="flex flex-col w-[50%] gap-5 my-8"
+              data-tour="personal-info"
             >
               <FormField
                 type="text"
@@ -339,7 +363,9 @@ export default function Profile() {
                 </div>
               )}
             </form>
-            <ManageCv />
+            <div data-tour="cv-management">
+              <ManageCv />
+            </div>
           </div>
           <div className="flex gap-1">
             <p className="text-sm">{"Do you want to change your password?"}</p>
@@ -359,8 +385,9 @@ export default function Profile() {
           {/* Notification Preferences Section */}
           <NotificationPreferences user={user} />
         </div>
-        <DeleteModal openDelete={deleteModal} setOpenDelete={setDeleteModal} />
-        <ChangePass open={changePassword} setOpen={setChangePassword} />
-      </div>
+          <DeleteModal openDelete={deleteModal} setOpenDelete={setDeleteModal} />
+          <ChangePass open={changePassword} setOpen={setChangePassword} />
+        </div>
+      </>
   );
 }

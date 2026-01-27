@@ -8,6 +8,7 @@ import AddPostModal from "../components/community/posts/AddModal";
 import PostCard from "../components/community/posts/PostCard";
 import { Select } from "../components/ui/Select";
 import Input from "../components/ui/Input";
+import OnboardingTour from "../components/onboarding/OnboardingTour";
 import { Badge } from "../components/ui/Badge";
 
 const Community = () => {
@@ -149,14 +150,16 @@ const Community = () => {
   };
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="mb-6">
-        <div className="flex justify-between items-center mb-4">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Community</h1>
-            <p className="text-gray-600 mt-1">Share experiences, ask questions, and connect with fellow job seekers</p>
-          </div>
+    <>
+      <OnboardingTour page="community" />
+      <div className="p-6 max-w-7xl mx-auto" data-tour="community-feed">
+        {/* Header */}
+        <div className="mb-6">
+          <div className="flex justify-between items-center mb-4">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Community</h1>
+              <p className="text-gray-600 mt-1">Share experiences, ask questions, and connect with fellow job seekers</p>
+            </div>
           <div className="flex items-center gap-3">
             <Button 
               variant="outline" 
@@ -182,7 +185,7 @@ const Community = () => {
               <DraftIcon className="h-4 w-4" />
               Drafts
             </Button>
-            <Button onClick={() => setIsAddModalOpen(true)} className="flex items-center gap-2">
+            <Button onClick={() => setIsAddModalOpen(true)} className="flex items-center gap-2" data-tour="create-post-btn">
               <Plus className="h-4 w-4" />
               Create Post
             </Button>
@@ -318,7 +321,8 @@ const Community = () => {
         onClose={() => setIsAddModalOpen(false)}
         onPostCreated={handlePostCreated}
       />
-    </div>
+      </div>
+    </>
   );
 };
 

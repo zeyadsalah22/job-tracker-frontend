@@ -79,7 +79,7 @@ export function AppSidebar() {
   const isAdmin = userRole === "Admin" || userRole === "1" || parseInt(userRole) === 1;
 
   return (
-    <Sidebar collapsible="icon">
+    <Sidebar collapsible="icon" data-tour="sidebar">
       <SidebarContent>
         {/* Logo Section */}
         <div className="flex items-center justify-center p-4 border-b bg-primary">

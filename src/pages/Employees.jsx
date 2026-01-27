@@ -28,6 +28,7 @@ import DeleteModal from "../components/employees/DeleteModal";
 import ViewModal from "../components/employees/ViewModal";
 import useUserStore from "../store/user.store";
 import { fetchAllData, exportToCSV } from "../utils/csvExport";
+import OnboardingTour from "../components/onboarding/OnboardingTour";
 
 export default function Employees() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -443,7 +444,7 @@ export default function Employees() {
       <FileDown className="w-4 h-4 mr-2" />
       {isExporting ? 'Exporting...' : 'Export'}
     </Button>,
-    <Button key="add" onClick={() => setIsAddModalOpen(true)}>
+    <Button key="add" onClick={() => setIsAddModalOpen(true)} data-tour="add-employee-btn">
       <Plus className="w-4 h-4 mr-2" />
       Add Employee
     </Button>
@@ -571,6 +572,8 @@ export default function Employees() {
 
   return (
     <>
+      <OnboardingTour page="employees" />
+      <div data-tour="employee-table">
       <Table
         useModernUI={true}
         title="Employees"
@@ -596,6 +599,7 @@ export default function Employees() {
           </div>
         }
       />
+      </div>
 
       {/* Modals */}
       <AddModal 
