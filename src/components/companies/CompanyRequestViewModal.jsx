@@ -18,6 +18,7 @@ import {
   Clock
 } from 'lucide-react';
 import { format } from "date-fns";
+import { getLogoUrl } from "../../utils/logoUtils";
 
 export default function CompanyRequestViewModal({ request, open, setOpen, onApprove, onReject }) {
   if (!request) return null;
@@ -65,19 +66,22 @@ export default function CompanyRequestViewModal({ request, open, setOpen, onAppr
         <DialogHeader>
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 bg-primary/10 rounded-lg flex items-center justify-center overflow-hidden">
-              {request.logoUrl && (request.logoUrl.startsWith('http://') || request.logoUrl.startsWith('https://')) ? (
-                <img 
-                  src={request.logoUrl} 
-                  alt={`${request.companyName} logo`}
-                  className="w-full h-full object-contain"
-                  onError={(e) => {
-                    e.target.style.display = 'none';
-                    e.target.parentElement.innerHTML = '<span class="text-2xl">🏢</span>';
-                  }}
-                />
-              ) : (
-                <span className="text-2xl">🏢</span>
-              )}
+              {(() => {
+                const logoUrl = getLogoUrl(request.logoUrl, request.companyName);
+                return logoUrl && (logoUrl.startsWith('http://') || logoUrl.startsWith('https://')) ? (
+                  <img 
+                    src={logoUrl} 
+                    alt={`${request.companyName} logo`}
+                    className="w-full h-full object-contain"
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                      e.target.parentElement.innerHTML = '<span class="text-2xl">🏢</span>';
+                    }}
+                  />
+                ) : (
+                  <span className="text-2xl">🏢</span>
+                );
+              })()}
             </div>
             <div>
               <DialogTitle className="text-2xl">{request.companyName}</DialogTitle>

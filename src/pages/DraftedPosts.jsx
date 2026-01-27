@@ -15,6 +15,7 @@ import {
 import { MoreVertical } from "lucide-react";
 import EditPostModal from "../components/community/posts/EditModal";
 import DeletePostModal from "../components/community/posts/DeleteModal";
+import { DEFAULT_ANONYMOUS_AVATAR } from "../utils/defaultAvatar";
 
 const DraftedPosts = () => {
   const navigate = useNavigate();
@@ -140,7 +141,7 @@ const DraftedPosts = () => {
               <div className="flex justify-between items-start mb-4">
                 <div className="flex items-center gap-3 flex-1">
                   <Avatar
-                    src={post.authorProfilePictureUrl}
+                    src={post.isAnonymous ? DEFAULT_ANONYMOUS_AVATAR : post.authorProfilePictureUrl}
                     fallback={post.isAnonymous ? "A" : post.authorName?.[0] || "U"}
                     className="h-10 w-10"
                   />

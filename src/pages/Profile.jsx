@@ -135,9 +135,12 @@ export default function Profile() {
       const formData = new FormData();
       formData.append('profilePicture', profilePicture);
       
+      // Don't set Content-Type header manually - axios will automatically detect FormData
+      // and set the correct Content-Type with boundary. Setting it manually breaks the upload.
+      // Override the default Content-Type header from axiosPrivate config
       const response = await axiosPrivate.post('/users/profile-picture', formData, {
         headers: {
-          'Content-Type': 'multipart/form-data',
+          'Content-Type': undefined, // Remove default JSON header, let axios set multipart/form-data
         },
       });
       
@@ -148,7 +151,8 @@ export default function Profile() {
       toast.success("Profile picture updated successfully");
     } catch (error) {
       console.error("Error uploading profile picture:", error);
-      toast.error("Failed to upload profile picture");
+      const errorMessage = error.response?.data?.message || "Failed to upload profile picture";
+      toast.error(errorMessage);
     } finally {
       setIsUploadingPicture(false);
     }

@@ -1,0 +1,4 @@
+// Default anonymous user avatar - generic user icon
+// This is a base64 encoded SVG of a generic user icon (grey circle with white person silhouette)
+// Grey background (#9CA3AF) with white head circle and shoulders shape
+export const DEFAULT_ANONYMOUS_AVATAR = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiByeD0iNTAiIGZpbGw9IiM5Q0EzQUYiLz4KPGNpcmNsZSBjeD0iNTAiIGN5PSIzNSIgcj0iMTIiIGZpbGw9IndoaXRlIi8+CjxwYXRoIGQ9Ik0yNSA3NUMzMCA2NSAzNS42IDYwIDQyLjUgNjBINTcuNUM2NC40IDYwIDcwIDY1IDc1IDc1VjgwSDI1Vjc1WiIgZmlsbD0id2hpdGUiLz4KPC9zdmc+";

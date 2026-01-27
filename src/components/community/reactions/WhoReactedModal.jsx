@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAxiosPrivate } from "../../../utils/axios";
 import { toast } from "react-toastify";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../../ui/Dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from "../../ui/Dialog";
 import Avatar from "../../ui/Avatar";
 import { Tabs } from "../../ui/Tabs";
 import { ThumbsUp, ThumbsDown, Lightbulb, Brain, Heart } from "lucide-react";
@@ -103,7 +103,8 @@ const WhoReactedModal = ({ isOpen, onClose, postId }) => {
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Reactions ({totalCount})</DialogTitle>
+          <DialogTitle className="pr-10">Reactions ({totalCount})</DialogTitle>
+          <DialogClose type="button" onClick={onClose} />
         </DialogHeader>
 
         {loading ? (
