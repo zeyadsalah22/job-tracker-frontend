@@ -42,6 +42,11 @@ export const dashboardSteps = [
     placement: 'top',
   },
   {
+    target: '[data-tour="chatbot"]',
+    content: '🤖 Meet your AI assistant! Ask questions about your applications, get career advice, or help with any job search task. Click to start chatting!',
+    placement: 'left',
+  },
+  {
     target: 'body',
     content: "Great! Now let's set up your profile.",
     placement: 'center',
@@ -70,6 +75,16 @@ export const profileSteps = [
     target: '[data-tour="cv-upload"]',
     content: 'Upload your CV to unlock features like Resume Matching.',
     placement: 'bottom',
+  },
+  {
+    target: '[data-tour="gmail-integration"]',
+    content: 'Connect your Gmail to automatically track application status updates! We\'ll monitor emails from companies and notify you when your application status changes.',
+    placement: 'top',
+  },
+  {
+    target: '[data-tour="chrome-extension"]',
+    content: 'Install our Chrome Extension to auto-capture job applications and use AI-powered auto-fill across all job boards. It\'s a game-changer!',
+    placement: 'top',
   },
   {
     target: 'body',

@@ -166,7 +166,11 @@ const FloatingChatBot = () => {
       console.error('Error details:', error.response?.data);
       
       let errorMessage = 'Sorry, there was an error processing your message. Please try again.';
-      if (error.response?.data?.message) {
+      
+      // Handle rate limit (429 status code)
+      if (error.response?.status === 429) {
+        errorMessage = "You have reached your today's limit of messages. Please try again tomorrow.";
+      } else if (error.response?.data?.message) {
         errorMessage = error.response.data.message;
       } else if (error.response?.data?.error) {
         errorMessage = error.response.data.error;
@@ -339,7 +343,7 @@ const FloatingChatBot = () => {
   }
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-2 select-none group">
+    <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-2 select-none group" data-tour="chatbot">
       {/* Intro Message */}
       {introMessage && (
         <motion.div 

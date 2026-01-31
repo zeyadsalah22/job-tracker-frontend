@@ -60,6 +60,15 @@ export default function GmailIntegration() {
       setActionLoading(true);
       const response = await axiosPrivate.get('/Gmail/connect');
       console.log('OAuth URL:', response.data);
+      
+      // Debug: Log the redirect_uri parameter
+      const authUrl = response.data.authUrl || response.data.oauthUrl;
+      if (authUrl) {
+        const url = new URL(authUrl);
+        const redirectUri = url.searchParams.get('redirect_uri');
+        console.log('🔍 Backend is using redirect_uri:', redirectUri);
+        console.log('✅ Expected redirect_uri:', window.location.origin + '/gmail/callback');
+      }
 
       if (response.data.authUrl || response.data.oauthUrl) {
         const authUrl = response.data.authUrl || response.data.oauthUrl;

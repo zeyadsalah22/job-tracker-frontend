@@ -8,7 +8,7 @@ import FormField from "../components/ui/FormField";
 import ReactLoading from "react-loading";
 import DeleteModal from "../components/user/DeleteModal";
 import { useNavigate } from "react-router-dom";
-import { LogOut, Trash2, Camera, Upload, X, GraduationCap } from "lucide-react";
+import { LogOut, Trash2, Camera, Upload, X, GraduationCap, Chrome, Sparkles, Zap, Shield, Bot } from "lucide-react";
 import ChangePass from "../components/user/ChangePass";
 import ManageCv from "../components/user/ManageCv";
 import GmailIntegration from "../components/user/GmailIntegration";
@@ -378,12 +378,83 @@ export default function Profile() {
           </div>
           
           {/* Gmail Integration Section */}
-          <div className="mt-8 pt-8 border-t-2">
+          <div className="mt-8 pt-8 border-t-2" data-tour="gmail-integration">
             <GmailIntegration />
           </div>
           
           {/* Notification Preferences Section */}
           <NotificationPreferences user={user} />
+          
+          {/* Chrome Extension Section */}
+          <div className="mt-8 pt-8 border-t-2" data-tour="chrome-extension">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+              {/* Card Header */}
+              <div className="px-6 py-4 border-b bg-gradient-to-r from-primary/5 to-primary/10 border-gray-200">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center shadow-sm">
+                      <Chrome className="w-6 h-6 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                        Chrome Extension
+                        <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full font-medium">
+                          NEW
+                        </span>
+                      </h3>
+                      <p className="text-sm text-gray-600">
+                        Automate your job applications with AI
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Card Body */}
+              <div className="p-6 space-y-4">
+                <p className="text-sm text-gray-700 leading-relaxed">
+                  Install our Chrome extension to automatically capture job applications and use AI-powered 
+                  auto-fill to speed through applications across all major job boards.
+                </p>
+
+                {/* Features List */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="flex items-start gap-2 text-sm">
+                    <Zap className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                    <span className="text-gray-700">Auto-capture job details as you browse</span>
+                  </div>
+                  <div className="flex items-start gap-2 text-sm">
+                    <Bot className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                    <span className="text-gray-700">AI-powered smart form filling</span>
+                  </div>
+                  <div className="flex items-start gap-2 text-sm">
+                    <Sparkles className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                    <span className="text-gray-700">Works on all major job platforms</span>
+                  </div>
+                  <div className="flex items-start gap-2 text-sm">
+                    <Shield className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                    <span className="text-gray-700">Secure and private by design</span>
+                  </div>
+                </div>
+
+                {/* CTA Section */}
+                <div className="flex items-center gap-4 pt-2">
+                  <a
+                    href="https://chromewebstore.google.com/detail/ohhciboilkgeodnhpoehlpejnpfcekhc?utm_source=item-share-cb"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-primary hover:bg-primary/85 text-white font-semibold px-6 py-2.5 rounded-lg transition-all flex items-center gap-2"
+                  >
+                    <Chrome className="h-4 w-4" />
+                    Add to Chrome
+                  </a>
+                  <span className="text-xs text-gray-500">
+                    ⭐ 5.0 rating • Free to use
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
           <DeleteModal openDelete={deleteModal} setOpenDelete={setDeleteModal} />
           <ChangePass open={changePassword} setOpen={setChangePassword} />
