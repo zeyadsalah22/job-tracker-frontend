@@ -17,6 +17,7 @@ import {
   resolveDifficultyMetadata,
   getDifficultyColorClasses,
 } from "../../../utils/interviewQuestionMetadata";
+import { getLogoUrl } from "../../../utils/logoUtils";
 
 const QuestionCard = ({ question, onClick, onUpdate }) => {
   const axiosPrivate = useAxiosPrivate();
@@ -116,15 +117,18 @@ const QuestionCard = ({ question, onClick, onUpdate }) => {
           <div className="flex-1">
             {question.companyName && (
               <div className="flex items-center gap-2 mb-2">
-                {question.companyLogo ? (
-                  <img
-                    src={question.companyLogo}
-                    alt={question.companyName}
-                    className="w-6 h-6 rounded object-contain"
-                  />
-                ) : (
-                  <Building2 className="h-5 w-5 text-gray-400" />
-                )}
+                {(() => {
+                  const logoUrl = getLogoUrl(question.companyLogo, question.companyName);
+                  return logoUrl ? (
+                    <img
+                      src={logoUrl}
+                      alt={question.companyName}
+                      className="w-6 h-6 rounded object-contain"
+                    />
+                  ) : (
+                    <Building2 className="h-5 w-5 text-gray-400" />
+                  );
+                })()}
                 <span className="font-semibold text-gray-900">{question.companyName}</span>
               </div>
             )}

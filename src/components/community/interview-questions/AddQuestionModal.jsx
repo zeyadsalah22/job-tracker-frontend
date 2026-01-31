@@ -7,6 +7,7 @@ import Textarea from "../../ui/Textarea";
 import Label from "../../ui/Label";
 import { X, Plus } from "lucide-react";
 import SearchableSelect from "../../ui/SearchableSelect";
+import { buildLogoDevUrl } from "../../../utils/logoUtils";
 
 const AddQuestionModal = ({ isOpen, onClose, onQuestionCreated, companies }) => {
   const axiosPrivate = useAxiosPrivate();
@@ -121,9 +122,7 @@ const AddQuestionModal = ({ isOpen, onClose, onQuestionCreated, companies }) => 
       .replace(/[^a-z0-9]/g, "");
 
   const buildCompanyLogoUrl = (name) => {
-    const slug = normalizeCompanySlug(name);
-    if (!slug) return "";
-    return `https://logo.clearbit.com/${slug}.com`;
+    return buildLogoDevUrl(name);
   };
 
   const hasRoleTypeSelection = formData.roleType !== null && formData.roleType !== "";
@@ -360,7 +359,11 @@ const AddQuestionModal = ({ isOpen, onClose, onQuestionCreated, companies }) => 
                 allowCustomValue={true}
               />
               <p className="text-xs text-gray-500">
-                Start typing a company name to store it with this question (logo powered by Clearbit).
+                Start typing a company name to store it with this question (logo powered by{" "}
+                <a href="https://logo.dev" title="Logo API" className="text-primary hover:underline">
+                  Logo.dev
+                </a>
+                ).
               </p>
             </div>
 

@@ -25,6 +25,7 @@ import ViewModal from "../components/companies/ViewModal";
 import CompanyRequestModal from "../components/companies/CompanyRequestModal";
 import { fetchAllData, exportToCSV } from "../utils/csvExport";
 import OnboardingTour from "../components/onboarding/OnboardingTour";
+import { getLogoUrl } from "../utils/logoUtils";
 
 export default function Companies() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -300,7 +301,7 @@ export default function Companies() {
   // Prepare data for Table component
   const tableData = paginatedCompanies.map(company => ({
     id: company.companyId,
-    logo: company.logoUrl || '🏢',
+    logo: getLogoUrl(company.logoUrl, company.name) || '🏢',
     name: company.name,
     industry: company.industry?.name || 'N/A',
     location: company.location,

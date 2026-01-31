@@ -17,6 +17,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useGlobalSearch } from "../../hooks/useGlobalSearch";
 import SearchDropdown from "../search/SearchDropdown";
+import Avatar from "../ui/Avatar";
 
 export function AppHeader() {
   const user = useUserStore((state) => state.user);
@@ -101,9 +102,12 @@ export function AppHeader() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="relative h-8 w-8 rounded-full p-0 bg-transparent hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-semibold">
-                  {user?.username?.charAt(0)?.toUpperCase() || 'U'}
-                </div>
+                <Avatar
+                  src={user?.profilePictureUrl}
+                  fallback={user?.fname?.[0]?.toUpperCase() || user?.lname?.[0]?.toUpperCase() || user?.username?.[0]?.toUpperCase() || 'U'}
+                  className="h-8 w-8"
+                  size="sm"
+                />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-56" align="end" forceMount>
