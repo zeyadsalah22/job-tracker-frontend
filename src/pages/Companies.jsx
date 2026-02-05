@@ -416,7 +416,9 @@ export default function Companies() {
     </div>,
     <Select key="location" value={locationFilter} onValueChange={setLocationFilter}>
       <SelectTrigger className="w-full md:w-48">
-        <SelectValue placeholder="Filter by location" />
+        <SelectValue placeholder="Filter by location">
+          {locationFilter || "Filter by location"}
+        </SelectValue>
       </SelectTrigger>
       <SelectContent>
         <SelectItem value="">All Locations</SelectItem>
@@ -431,7 +433,9 @@ export default function Companies() {
     </Select>,
     <Select key="industry" value={industryFilter} onValueChange={setIndustryFilter}>
       <SelectTrigger className="w-full md:w-48">
-        <SelectValue placeholder="Filter by industry" />
+        <SelectValue placeholder="Filter by industry">
+          {industryFilter && industries.find(i => i.industryId.toString() === industryFilter)?.name || "Filter by industry"}
+        </SelectValue>
       </SelectTrigger>
       <SelectContent>
         <SelectItem value="">All Industries</SelectItem>
@@ -444,7 +448,9 @@ export default function Companies() {
     </Select>,
     <Select key="size" value={sizeFilter} onValueChange={setSizeFilter}>
       <SelectTrigger className="w-full md:w-48">
-        <SelectValue placeholder="Filter by size" />
+        <SelectValue placeholder="Filter by size">
+          {sizeFilter || "Filter by size"}
+        </SelectValue>
       </SelectTrigger>
       <SelectContent>
         <SelectItem value="">All Sizes</SelectItem>

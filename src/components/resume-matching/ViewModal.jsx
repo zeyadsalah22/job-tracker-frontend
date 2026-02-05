@@ -270,7 +270,7 @@ export default function ViewModal({ test, open, setOpen }) {
                       </ul>
                     </div>
                   </div>
-                ) : (
+                ) : displayData.matchedSkills && displayData.matchedSkills.length > 0 ? (
                   <div className="bg-green-50 p-4 rounded-lg border border-green-200">
                     <div className="flex items-center gap-2 text-green-800">
                       <Award className="h-5 w-5" />
@@ -278,6 +278,16 @@ export default function ViewModal({ test, open, setOpen }) {
                     </div>
                     <p className="text-sm text-green-700 mt-2">
                       Great job! Your resume covers all the key skills mentioned in the job description.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    <div className="flex items-center gap-2 text-gray-700">
+                      <AlertTriangle className="h-5 w-5" />
+                      <h4 className="font-medium">No Skills Analysis Available</h4>
+                    </div>
+                    <p className="text-sm text-gray-600 mt-2">
+                      No specific skills were identified in the job description for comparison. Make sure your job description includes relevant skills and keywords.
                     </p>
                   </div>
                 )}

@@ -452,7 +452,12 @@ const Questions = () => {
     <div key="type" data-tour="categories">
     <Select value={typeFilter} onValueChange={setTypeFilter}>
       <SelectTrigger className="w-full sm:w-48">
-        <SelectValue placeholder="Filter by type" />
+        <SelectValue placeholder="Filter by type">
+          {typeFilter === "CompanySpecific" ? "Company-Specific" :
+           typeFilter === "CulturalFit" ? "Cultural Fit" :
+           typeFilter === "ApplicationForm" ? "Application Form" :
+           typeFilter || "Filter by type"}
+        </SelectValue>
       </SelectTrigger>
       <SelectContent>
         <SelectItem value="">All Types</SelectItem>
@@ -467,7 +472,12 @@ const Questions = () => {
 
     <Select key="status" value={statusFilter} onValueChange={setStatusFilter}>
       <SelectTrigger className="w-full sm:w-40">
-        <SelectValue placeholder="Answer status" />
+        <SelectValue placeholder="Answer status">
+          {statusFilter === "InProgress" ? "In Progress" :
+           statusFilter === "NotStarted" ? "Not Started" :
+           statusFilter === "Completed" ? "Completed" :
+           "Answer status"}
+        </SelectValue>
       </SelectTrigger>
       <SelectContent>
         <SelectItem value="">All Status</SelectItem>
@@ -479,7 +489,9 @@ const Questions = () => {
 
     <Select key="difficulty" value={difficultyFilter} onValueChange={setDifficultyFilter}>
       <SelectTrigger className="w-full sm:w-40">
-        <SelectValue placeholder="Difficulty" />
+        <SelectValue placeholder="Difficulty">
+          {difficultyFilter ? `${'⭐'.repeat(parseInt(difficultyFilter))} (${difficultyFilter})` : "Difficulty"}
+        </SelectValue>
       </SelectTrigger>
       <SelectContent>
         <SelectItem value="">All Levels</SelectItem>
@@ -493,7 +505,9 @@ const Questions = () => {
 
     <Select key="application" value={applicationFilter} onValueChange={setApplicationFilter}>
       <SelectTrigger className="w-full sm:w-48">
-        <SelectValue placeholder="Filter by application" />
+        <SelectValue placeholder="Filter by application">
+          {applicationFilter && applicationsForFilter.find(app => app.applicationId.toString() === applicationFilter)?.companyName || "Filter by application"}
+        </SelectValue>
       </SelectTrigger>
       <SelectContent>
         <SelectItem value="">All Applications</SelectItem>
@@ -510,7 +524,11 @@ const Questions = () => {
 
     <Select key="favorite" value={favoriteFilter} onValueChange={setFavoriteFilter}>
       <SelectTrigger className="w-full sm:w-40">
-        <SelectValue placeholder="Favorites" />
+        <SelectValue placeholder="Favorites">
+          {favoriteFilter === "true" ? "⭐ Favorites Only" :
+           favoriteFilter === "false" ? "Non-Favorites" :
+           "Favorites"}
+        </SelectValue>
       </SelectTrigger>
       <SelectContent>
         <SelectItem value="">All Questions</SelectItem>

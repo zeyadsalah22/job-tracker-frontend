@@ -6,6 +6,12 @@ import { useAxiosPrivate } from "../../utils/axios";
 import { toast } from "react-toastify";
 import ReactLoading from "react-loading";
 import { useFormik } from "formik";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "../ui/Dialog";
 
 export default function RunTestModal({ openRunTest, setOpenRunTest, refetch }) {
   const navigate = useNavigate();
@@ -57,19 +63,16 @@ export default function RunTestModal({ openRunTest, setOpenRunTest, refetch }) {
         
         console.log("Resume test response:", response.data);
 
-        setOpenRunTest(false);
-        setLoading(false);
-        toast.success("Resume test completed successfully!");
-        
-        // Refresh the main table data
+        // Refresh the main table data and wait for it to complete
         if (refetch) {
-          refetch();
+          await refetch();
         }
 
-        // Navigate to the test details page
-        if (response.data.testId) {
-          navigate(`/resume-matching/${response.data.testId}`);
-        }
+        // Close modal and reset loading state
+        setLoading(false);
+        setOpenRunTest(false);
+        
+        toast.success("Resume test completed successfully!");
       } catch (error) {
         console.error("Error running resume test:", error);
         setLoading(false);
@@ -103,20 +106,12 @@ export default function RunTestModal({ openRunTest, setOpenRunTest, refetch }) {
     },
   });
 
-  if (!openRunTest) return null;
-
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-4/5 max-w-2xl">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold">Run New Resume Test</h2>
-          <button
-            onClick={() => setOpenRunTest(false)}
-            className="text-gray-500 hover:text-gray-700"
-          >
-            <X size={24} />
-          </button>
-        </div>
+    <Dialog open={openRunTest} onOpenChange={setOpenRunTest}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Run New Resume Test</DialogTitle>
+        </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="flex flex-col gap-2 w-full">
@@ -127,9 +122,10 @@ export default function RunTestModal({ openRunTest, setOpenRunTest, refetch }) {
               name="selectedResume"
               value={values.selectedResume}
               onChange={handleChange}
+              disabled={loading}
               className={`${
                 touched.selectedResume && errors.selectedResume && "border-red-500"
-              } w-full rounded-md border px-4 py-2 focus:border-primary focus:outline-none focus:ring-primary`}
+              } w-full rounded-md border px-4 py-2 focus:border-primary focus:outline-none focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed`}
             >
               <option value="" disabled>
                 Select a resume
@@ -161,9 +157,10 @@ export default function RunTestModal({ openRunTest, setOpenRunTest, refetch }) {
               name="jobDescription"
               value={values.jobDescription}
               onChange={handleChange}
+              disabled={loading}
               className={`${
                 touched.jobDescription && errors.jobDescription && "border-red-500"
-              } w-full p-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary h-32 resize-none`}
+              } w-full p-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary h-32 resize-none disabled:opacity-50 disabled:cursor-not-allowed`}
               placeholder="Paste the job description here..."
             />
             {errors.jobDescription && touched.jobDescription && (
@@ -177,7 +174,8 @@ export default function RunTestModal({ openRunTest, setOpenRunTest, refetch }) {
             <button
               type="button"
               onClick={() => setOpenRunTest(false)}
-              className="px-4 py-2 text-gray-600 hover:text-gray-800"
+              disabled={loading}
+              className="px-4 py-2 text-gray-600 hover:text-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Cancel
             </button>
@@ -200,7 +198,7 @@ export default function RunTestModal({ openRunTest, setOpenRunTest, refetch }) {
             )}
           </div>
         </form>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 } 

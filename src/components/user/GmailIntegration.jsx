@@ -76,6 +76,9 @@ export default function GmailIntegration() {
         // Clear any previous OAuth result
         localStorage.removeItem('gmailOAuthResult');
         
+        // Variable to store interval ID for cleanup
+        let popupCheckInterval;
+        
         // Set up message listener for OAuth callback
         const handleMessage = (event) => {
           // Verify the message is from our callback page
@@ -95,7 +98,8 @@ export default function GmailIntegration() {
               toast.error(event.data.error || 'Failed to connect Gmail account');
             }
             
-            // Remove event listener
+            // Clean up
+            if (popupCheckInterval) clearInterval(popupCheckInterval);
             window.removeEventListener('message', handleMessage);
             window.removeEventListener('focus', handleFocus);
           }
@@ -124,6 +128,8 @@ export default function GmailIntegration() {
                 toast.error(oauthResult.error || 'Failed to connect Gmail account');
               }
               
+              // Clean up
+              if (popupCheckInterval) clearInterval(popupCheckInterval);
               window.removeEventListener('message', handleMessage);
               window.removeEventListener('focus', handleFocus);
             } catch (e) {
@@ -155,7 +161,29 @@ export default function GmailIntegration() {
           window.removeEventListener('message', handleMessage);
           window.removeEventListener('focus', handleFocus);
           toast.error('Popup blocked. Please allow popups for this site.');
+          return;
         }
+
+        // Poll to detect if popup was closed without completing OAuth
+        popupCheckInterval = setInterval(() => {
+          if (popup.closed) {
+            clearInterval(popupCheckInterval);
+            
+            // Give a brief moment for postMessage or localStorage to update
+            setTimeout(() => {
+              const result = localStorage.getItem('gmailOAuthResult');
+              
+              // If popup closed and no OAuth result found, user cancelled
+              if (!result) {
+                console.log('Popup closed without completing OAuth');
+                setActionLoading(false);
+                window.removeEventListener('message', handleMessage);
+                window.removeEventListener('focus', handleFocus);
+                toast.info('Gmail connection cancelled');
+              }
+            }, 500);
+          }
+        }, 500);
       } else {
         throw new Error('No OAuth URL returned from server');
       }

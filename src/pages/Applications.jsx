@@ -356,7 +356,9 @@ const Applications = () => {
     
     <Select key="status" value={statusFilter} onValueChange={setStatusFilter}>
       <SelectTrigger className="w-full sm:w-40">
-        <SelectValue placeholder="Status" />
+        <SelectValue placeholder="Status">
+          {statusFilter || "Status"}
+        </SelectValue>
       </SelectTrigger>
       <SelectContent>
         <SelectItem value="">All Status</SelectItem>
@@ -368,7 +370,12 @@ const Applications = () => {
 
     <Select key="stage" value={stageFilter} onValueChange={setStageFilter}>
       <SelectTrigger className="w-full sm:w-40">
-        <SelectValue placeholder="Stage" />
+        <SelectValue placeholder="Stage">
+          {stageFilter === "PhoneScreen" ? "Phone Screen" :
+           stageFilter === "HrInterview" ? "HR Interview" :
+           stageFilter === "TechnicalInterview" ? "Technical Interview" :
+           stageFilter === "all" || !stageFilter ? "Stage" : stageFilter}
+        </SelectValue>
       </SelectTrigger>
       <SelectContent>
         <SelectItem value="all">All Stages</SelectItem>
@@ -383,7 +390,9 @@ const Applications = () => {
 
     <Select key="company" value={companyFilter} onValueChange={setCompanyFilter}>
       <SelectTrigger className="w-full sm:w-48">
-        <SelectValue placeholder="Filter by company" />
+        <SelectValue placeholder="Filter by company">
+          {companyFilter || "Filter by company"}
+        </SelectValue>
       </SelectTrigger>
       <SelectContent>
         <SelectItem value="">All Companies</SelectItem>
@@ -397,7 +406,9 @@ const Applications = () => {
 
     <Select key="jobType" value={jobTypeFilter} onValueChange={setJobTypeFilter}>
       <SelectTrigger className="w-full sm:w-40">
-        <SelectValue placeholder="Job Type" />
+        <SelectValue placeholder="Job Type">
+          {jobTypeFilter || "Job Type"}
+        </SelectValue>
       </SelectTrigger>
       <SelectContent>
         <SelectItem value="">All Types</SelectItem>

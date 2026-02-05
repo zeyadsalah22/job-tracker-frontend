@@ -398,7 +398,9 @@ export default function UserCompanies() {
     </div>,
     <Select key="interest" value={interestFilter} onValueChange={setInterestFilter}>
       <SelectTrigger className="w-full md:w-48">
-        <SelectValue placeholder="Filter by interest" />
+        <SelectValue placeholder="Filter by interest">
+          {interestFilter || "Filter by interest"}
+        </SelectValue>
       </SelectTrigger>
       <SelectContent>
         <SelectItem value="">All Interests</SelectItem>
@@ -409,7 +411,11 @@ export default function UserCompanies() {
     </Select>,
     <Select key="favorite" value={favoriteFilter} onValueChange={setFavoriteFilter}>
       <SelectTrigger className="w-full md:w-48">
-        <SelectValue placeholder="Filter by favorite" />
+        <SelectValue placeholder="Filter by favorite">
+          {favoriteFilter === "true" ? "Favorites Only" :
+           favoriteFilter === "false" ? "Non-Favorites" :
+           "Filter by favorite"}
+        </SelectValue>
       </SelectTrigger>
       <SelectContent>
         <SelectItem value="">All Companies</SelectItem>
